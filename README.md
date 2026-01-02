@@ -89,7 +89,7 @@ publish/
    ╠══════════════════════════════════════════════════════════════╣
    ║  Acceso local:     http://localhost:5179                     ║
    ╠══════════════════════════════════════════════════════════════╣
-   ║  Acceso desde otros dispositivos (misma red WiFi):          ║
+   ║  Acceso desde otros dispositivos (misma red WiFi):           ║
    ║    → http://192.168.1.100:5179                               ║
    ╚══════════════════════════════════════════════════════════════╝
    ```
