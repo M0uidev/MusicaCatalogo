@@ -12,9 +12,21 @@
         <nav>
             <a href="index.html">Inicio</a>
             <a href="buscar.html">Canciones</a>
-            <a href="formatos.html">Formatos</a>
+            <a href="medios.html">Medios</a>
+            <a href="albumes.html">Álbumes</a>
             <a href="interpretes.html" class="activo">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
+            
+            <div class="notif-container">
+                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
+                    🔔
+                    <span id="notifBadge" class="notif-badge"></span>
+                </button>
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header"><span>Problemas Pendientes</span></div>
+                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                </div>
+            </div>
         </nav>
     </header>
 
@@ -95,7 +107,7 @@
                 if (interprete.temas && interprete.temas.length > 0) {
                     seccionTemas.style.display = 'block';
                     
-                    // Agrupar por formato
+                    // Agrupar por Medio
                     const cassettes = interprete.temas.filter(t => t.tipo === 'cassette');
                     const cds = interprete.temas.filter(t => t.tipo !== 'cassette');
                     
@@ -132,7 +144,7 @@
                     <thead>
                         <tr>
                             <th>Tema</th>
-                            <th>Formato</th>
+                            <th>Medio</th>
                             <th>Posición</th>
                         </tr>
                     </thead>
@@ -141,9 +153,9 @@
                             <tr>
                                 <td><strong>${escapeHtml(t.tema)}</strong></td>
                                 <td>
-                                    <a href="formato.html?num=${encodeURIComponent(t.numFormato)}" 
+                                    <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
                                        style="color: var(--color-primario); text-decoration: none;">
-                                        ${escapeHtml(t.numFormato)}
+                                        ${escapeHtml(t.numMedio)}
                                     </a>
                                 </td>
                                 <td>${t.posicion || '-'}</td>

@@ -774,7 +774,7 @@
             <a href="index.html">Inicio</a>
             <a href="buscar.html">Canciones</a>
             <a href="albumes.html">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
+            <a href="medios.html">Medios</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
             
@@ -895,7 +895,7 @@
                 <div class="breadcrumb">
                     <a href="buscar.html">Canciones</a>
                     <span>›</span>
-                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numFormato)}</a>
+                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
                     <span>›</span>
                     <span>${escapeHtml(c.tema)}</span>
                 </div>
@@ -924,7 +924,7 @@
                             <div class="cancion-meta">
                                 <span class="meta-badge">
                                     ${esCassette ? '📼' : '💿'} 
-                                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numFormato)}</a>
+                                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
                                 </span>
                                 <span class="meta-badge">📍 ${posicion}</span>
                                 ${c.nombreAlbum ? `<span class="meta-badge">💿 <a href="albumes.html?id=${c.idAlbum}">${escapeHtml(c.nombreAlbum)}</a></span>` : ''}

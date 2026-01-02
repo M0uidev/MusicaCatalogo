@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canciones Duplicadas - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
     <style>
         .stats-duplicados {
             display: grid;
@@ -33,9 +35,17 @@
             margin-top: 0.25rem;
         }
 
-        .stat-card.mixto .valor { color: #8b5cf6; }
-        .stat-card.cassette .valor { color: #f59e0b; }
-        .stat-card.cd .valor { color: #3b82f6; }
+        .stat-card.mixto .valor {
+            color: #8b5cf6;
+        }
+
+        .stat-card.cassette .valor {
+            color: #f59e0b;
+        }
+
+        .stat-card.cd .valor {
+            color: #3b82f6;
+        }
 
         .filtros-duplicados {
             display: flex;
@@ -259,29 +269,10 @@
         }
     </style>
 </head>
+
 <body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <section class="seccion">
@@ -290,9 +281,9 @@
 
             <div class="info-duplicados">
                 <h4>ℹ️ ¿Qué son los duplicados?</h4>
-                <p>Son canciones con el mismo nombre y artista que aparecen en diferentes formatos (CD y cassette) 
-                   o múltiples veces en el mismo tipo de formato. Esto es normal cuando tienes la misma canción 
-                   grabada en varios medios.</p>
+                <p>Son canciones con el mismo nombre y artista que aparecen en diferentes formatos (CD y cassette)
+                    o múltiples veces en el mismo tipo de formato. Esto es normal cuando tienes la misma canción
+                    grabada en varios medios.</p>
             </div>
 
             <div id="statsContainer">
@@ -312,10 +303,13 @@
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
 
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         let gruposData = [];
@@ -450,7 +444,7 @@
         function toggleGrupo(index) {
             const contenido = document.getElementById(`grupo-${index}`);
             const header = contenido.previousElementSibling;
-            
+
             contenido.classList.toggle('visible');
             header.classList.toggle('expandido');
         }
@@ -463,4 +457,5 @@
         }
     </script>
 </body>
+
 </html>

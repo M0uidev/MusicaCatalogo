@@ -1,42 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intérpretes - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
 </head>
+
 <body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="interpretes.html" class="activo">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <section class="seccion">
             <h2>🎤 Intérpretes</h2>
             <p class="seccion-descripcion">Busque un intérprete por nombre o navegue por la lista alfabética</p>
-            
+
             <div class="buscador">
-                <input type="text" id="filtroInterprete" placeholder="Escriba el nombre del intérprete..." autocomplete="off">
+                <input type="text" id="filtroInterprete" placeholder="Escriba el nombre del intérprete..."
+                    autocomplete="off">
                 <button id="btnFiltrar" class="btn btn-primario">Buscar</button>
             </div>
         </section>
@@ -51,10 +35,13 @@
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
 
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -82,12 +69,12 @@
         async function cargarInterpretes(filtro = '') {
             const lista = document.getElementById('listaInterpretes');
             const contador = document.getElementById('contadorInterpretes');
-            
+
             try {
-                const url = filtro 
+                const url = filtro
                     ? `/api/interpretes?filtro=${encodeURIComponent(filtro)}&limite=9999`
                     : '/api/interpretes?limite=9999';
-                
+
                 const resp = await fetch(url);
                 const interpretes = await resp.json();
 
@@ -115,4 +102,5 @@
         }
     </script>
 </body>
+
 </html>

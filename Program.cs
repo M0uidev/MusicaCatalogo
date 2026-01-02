@@ -156,7 +156,7 @@ if (!File.Exists(rutaDb) && File.Exists(rutaDbOriginal))
 // MOSTRAR BANNER DE INICIO
 // ============================================
 
-Console.Clear();
+try { Console.Clear(); } catch { /* Ignorar si no hay consola */ }
 Console.ForegroundColor = ConsoleColor.Cyan;
 Console.WriteLine();
 Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");

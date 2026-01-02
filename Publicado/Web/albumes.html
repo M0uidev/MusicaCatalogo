@@ -415,13 +415,24 @@
             flex: 1;
             font-weight: 500;
         }
+        
+        .cancion-nombre-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .cancion-nombre-link:hover {
+            color: var(--color-primario);
+            text-decoration: underline;
+        }
 
         .cancion-artista {
             color: var(--color-texto-secundario);
             font-size: 0.9rem;
         }
 
-        .cancion-formato {
+        .cancion-Medio {
             font-size: 0.85rem;
             color: var(--color-texto-claro);
         }
@@ -841,7 +852,7 @@
             <a href="index.html">Inicio</a>
             <a href="buscar.html">Canciones</a>
             <a href="albumes.html" class="activo">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
+            <a href="medios.html">Medios</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
             
@@ -1014,6 +1025,17 @@
         let albumActual = null;
         let ordenActual = 'nombre';
         let filtroTipo = 'todos'; // 'todos', 'albumes', 'singles'
+        
+        // Obtener canciones únicas por tema+intérprete
+        function obtenerCancionesUnicas(canciones) {
+            const vistas = new Set();
+            return canciones.filter(c => {
+                const clave = `${c.tema.toLowerCase()}|${(c.interprete || '').toLowerCase()}`;
+                if (vistas.has(clave)) return false;
+                vistas.add(clave);
+                return true;
+            });
+        }
 
         const params = new URLSearchParams(window.location.search);
         const idAlbum = params.get('id');
@@ -1191,14 +1213,13 @@
                             </div>
                         ` : `
                             <div class="lista-canciones">
-                                ${a.canciones.map((c, i) => `
+                                ${obtenerCancionesUnicas(a.canciones).map((c, i) => `
                                     <div class="cancion-item-editable">
                                         <span class="cancion-numero">${i + 1}</span>
                                         <div style="flex: 1">
-                                            <div class="cancion-nombre">${escapeHtml(c.tema)}</div>
+                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a></a>
                                             <div class="cancion-artista">${escapeHtml(c.interprete)}</div>
                                         </div>
-                                        <span class="cancion-formato">${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numFormato)}</span>
                                         ${c.linkExterno ? '<span title="Tiene link externo">🔗</span>' : ''}
                                         <button class="btn-quitar-cancion" onclick="quitarCancionDelAlbum(${c.id}, '${c.tipo}')" title="Quitar del álbum">✕</button>
                                     </div>
@@ -1409,7 +1430,7 @@
                             <div class="cancion-sel-tema">${escapeHtml(c.tema)}</div>
                             <div class="cancion-sel-meta">
                                 ${escapeHtml(c.interprete || 'Sin intérprete')} • 
-                                ${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numFormato)}
+                                ${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numMedio)}
                             </div>
                         </div>
                     </label>

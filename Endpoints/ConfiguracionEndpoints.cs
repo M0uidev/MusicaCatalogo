@@ -1,6 +1,7 @@
 using MusicaCatalogo.Data;
 using MusicaCatalogo.Data.Entidades;
 using MusicaCatalogo.Services;
+using MusicaCatalogo.Services.Repositorios;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 
@@ -18,7 +19,15 @@ public static class ConfiguracionEndpoints
 
     public static void MapearEndpoints(this WebApplication app, BaseDatos db, string rutaCSVs)
     {
+        // Repositorio legacy (mantener para funciones no migradas aún)
         var repo = new RepositorioMusica(db);
+        
+        // Nuevos repositorios organizados por dominio
+        var repoBusqueda = new RepositorioBusqueda(db);
+        var repoMedios = new RepositorioMedios(db);
+        var repoCanciones = new RepositorioCanciones(db);
+        var repoAlbumes = new RepositorioAlbumes(db);
+        var repoInterpretes = new RepositorioInterpretes(db);
 
         // ==========================================
         // BÚSQUEDA GLOBAL
@@ -26,7 +35,7 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/buscar", async (string? q, int? limite) =>
         {
-            var resultados = await repo.BuscarAsync(q ?? "", limite ?? 50);
+            var resultados = await repoBusqueda.BuscarAsync(q ?? "", limite ?? 50);
             return Results.Ok(resultados);
         })
         .WithName("Buscar")
@@ -35,7 +44,7 @@ public static class ConfiguracionEndpoints
         // Autocompletado de canciones (sin tildes)
         app.MapGet("/api/autocompletar", async (string? q, int? limite) =>
         {
-            var sugerencias = await repo.AutocompletarTemasAsync(q ?? "", limite ?? 15);
+            var sugerencias = await repoBusqueda.AutocompletarTemasAsync(q ?? "", limite ?? 15);
             return Results.Ok(sugerencias);
         })
         .WithName("Autocompletar")
@@ -45,29 +54,29 @@ public static class ConfiguracionEndpoints
         // FORMATOS (Cassettes y CDs)
         // ==========================================
 
-        app.MapGet("/api/formatos", async (string? tipo, int? limite) =>
+        app.MapGet("/api/medios", async (string? tipo, int? limite) =>
         {
-            var formatos = await repo.ListarFormatosAsync(tipo, limite ?? 200);
+            var formatos = await repoMedios.ListarMediosAsync(tipo, limite ?? 200);
             return Results.Ok(formatos);
         })
-        .WithName("ListarFormatos")
-        .WithTags("Formatos");
+        .WithName("ListarMedios")
+        .WithTags("Medios");
 
-        app.MapGet("/api/formatos/{numFormato}", async (string numFormato) =>
+        app.MapGet("/api/medios/{numMedio}", async (string numMedio) =>
         {
-            var formato = await repo.ObtenerFormatoAsync(numFormato);
+            var formato = await repoMedios.ObtenerMedioAsync(numMedio);
             return formato is null ? Results.NotFound() : Results.Ok(formato);
         })
-        .WithName("ObtenerFormato")
-        .WithTags("Formatos");
+        .WithName("ObtenerMedio")
+        .WithTags("Medios");
 
-        app.MapGet("/api/formatos/{numFormato}/temas", async (string numFormato) =>
+        app.MapGet("/api/medios/{numMedio}/temas", async (string numMedio) =>
         {
-            var temas = await repo.ObtenerTemasDeFormatoAsync(numFormato);
+            var temas = await repoMedios.ObtenerTemasDeMedioAsync(numMedio);
             return Results.Ok(temas);
         })
         .WithName("ObtenerTemasDeFormato")
-        .WithTags("Formatos");
+        .WithTags("Medios");
 
         // ==========================================
         // INTÉRPRETES
@@ -75,7 +84,7 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/interpretes", async (string? filtro, int? limite) =>
         {
-            var interpretes = await repo.ListarInterpretesAsync(filtro, limite ?? 100);
+            var interpretes = await repoInterpretes.ListarInterpretesAsync(filtro, limite ?? 100);
             return Results.Ok(interpretes);
         })
         .WithName("ListarInterpretes")
@@ -83,7 +92,7 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/interpretes/{nombre}", async (string nombre) =>
         {
-            var interprete = await repo.ObtenerInterpreteAsync(nombre);
+            var interprete = await repoInterpretes.ObtenerInterpreteAsync(nombre);
             return interprete is null ? Results.NotFound() : Results.Ok(interprete);
         })
         .WithName("ObtenerInterprete")
@@ -107,6 +116,8 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/diagnostico", async () =>
         {
+            // Diagnostico puede permanecer en RepositorioMusica (legacy) o moverse a Base/System
+            // Por ahora lo dejamos en legacy ya que no hemos creado RepositorioSistema
             var diag = await repo.ObtenerDiagnosticoAsync(rutaCSVs);
             return Results.Ok(diag);
         })
@@ -195,8 +206,21 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/opciones", async () =>
         {
-            var opciones = await repo.ObtenerOpcionesFormularioAsync();
-            return Results.Ok(opciones);
+            try
+            {
+                // Opciones ahora vienen de RepositorioBase (o mantenemos en musica por ahora si es complejo)
+                // Para simplificar, RepositorioBase debería tener métodos de lectura de tablas auxiliares
+                // Por ahora usamos repoMedios que hereda de Base y podría tener acceso
+                // O mejor aún, movemos ObtenerOpcionesFormularioAsync a RepositorioBase si es generico
+                // O lo dejamos en legacy repo si es muy especifico
+                var opciones = await repo.ObtenerOpcionesFormularioAsync();
+                return Results.Ok(opciones);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] /api/opciones: {ex.Message}");
+                return Results.Problem(ex.Message);
+            }
         })
         .WithName("ObtenerOpciones")
         .WithTags("CRUD");
@@ -205,25 +229,25 @@ public static class ConfiguracionEndpoints
         // CRUD - FORMATOS
         // ==========================================
 
-        app.MapPost("/api/formatos", async (FormatoRequest request) =>
+        app.MapPost("/api/medios", async (MedioRequest request) =>
         {
-            var resultado = await repo.CrearFormatoAsync(request);
+            var resultado = await repoMedios.CrearFormatoAsync(request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("CrearFormato")
         .WithTags("CRUD");
 
-        app.MapPut("/api/formatos/{numFormato}", async (string numFormato, FormatoRequest request) =>
+        app.MapPut("/api/medios/{numMedio}", async (string numMedio, MedioRequest request) =>
         {
-            var resultado = await repo.ActualizarFormatoAsync(numFormato, request);
+            var resultado = await repoMedios.ActualizarFormatoAsync(numMedio, request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("ActualizarFormato")
         .WithTags("CRUD");
 
-        app.MapDelete("/api/formatos/{numFormato}", async (string numFormato) =>
+        app.MapDelete("/api/medios/{numMedio}", async (string numMedio) =>
         {
-            var resultado = await repo.EliminarFormatoAsync(numFormato);
+            var resultado = await repoMedios.EliminarFormatoAsync(numMedio);
             return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
         })
         .WithName("EliminarFormato")
@@ -233,9 +257,9 @@ public static class ConfiguracionEndpoints
         // CRUD - CANCIONES
         // ==========================================
 
-        app.MapGet("/api/formatos/{numFormato}/canciones", async (string numFormato) =>
+        app.MapGet("/api/medios/{numMedio}/canciones", async (string numMedio) =>
         {
-            var temas = await repo.ObtenerTemasConIdAsync(numFormato);
+            var temas = await repoCanciones.ObtenerTemasConIdAsync(numMedio);
             return Results.Ok(temas);
         })
         .WithName("ObtenerCancionesConId")
@@ -243,7 +267,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPost("/api/canciones", async (CancionRequest request) =>
         {
-            var resultado = await repo.CrearCancionAsync(request);
+            var resultado = await repoCanciones.CrearCancionAsync(request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("CrearCancion")
@@ -251,7 +275,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPut("/api/canciones/{id}", async (int id, CancionRequest request) =>
         {
-            var resultado = await repo.ActualizarCancionAsync(id, request);
+            var resultado = await repoCanciones.ActualizarCancionAsync(id, request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("ActualizarCancion")
@@ -259,7 +283,7 @@ public static class ConfiguracionEndpoints
 
         app.MapDelete("/api/canciones/{id}", async (int id, string tipo) =>
         {
-            var resultado = await repo.EliminarCancionAsync(id, tipo);
+            var resultado = await repoCanciones.EliminarCancionAsync(id, tipo);
             return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
         })
         .WithName("EliminarCancion")
@@ -267,7 +291,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPost("/api/canciones/reordenar", async (ReordenarRequest request) =>
         {
-            var resultado = await repo.ReordenarCancionesAsync(request);
+            var resultado = await repoCanciones.ReordenarCancionesAsync(request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("ReordenarCanciones")
@@ -297,7 +321,7 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/albumes", async (string? filtro, int? limite) =>
         {
-            var albumes = await repo.ListarAlbumesAsync(filtro, limite ?? 100);
+            var albumes = await repoAlbumes.ListarAlbumesAsync(filtro, limite ?? 100);
             return Results.Ok(albumes);
         })
         .WithName("ListarAlbumes")
@@ -305,7 +329,7 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/albumes/{id:int}", async (int id) =>
         {
-            var album = await repo.ObtenerAlbumAsync(id);
+            var album = await repoAlbumes.ObtenerAlbumAsync(id);
             return album is null ? Results.NotFound() : Results.Ok(album);
         })
         .WithName("ObtenerAlbum")
@@ -313,7 +337,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPost("/api/albumes", async (AlbumRequest request) =>
         {
-            var resultado = await repo.CrearAlbumAsync(request);
+            var resultado = await repoAlbumes.CrearAlbumAsync(request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("CrearAlbum")
@@ -321,7 +345,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPut("/api/albumes/{id:int}", async (int id, AlbumRequest request) =>
         {
-            var resultado = await repo.ActualizarAlbumAsync(id, request);
+            var resultado = await repoAlbumes.ActualizarAlbumAsync(id, request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("ActualizarAlbum")
@@ -329,7 +353,7 @@ public static class ConfiguracionEndpoints
 
         app.MapDelete("/api/albumes/{id:int}", async (int id) =>
         {
-            var resultado = await repo.EliminarAlbumAsync(id);
+            var resultado = await repoAlbumes.EliminarAlbumAsync(id);
             return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
         })
         .WithName("EliminarAlbum")
@@ -338,7 +362,7 @@ public static class ConfiguracionEndpoints
         // Portada de álbum
         app.MapGet("/api/albumes/{id:int}/portada", async (int id) =>
         {
-            var portada = await repo.ObtenerPortadaAlbumAsync(id);
+            var portada = await repoAlbumes.ObtenerPortadaAlbumAsync(id);
             if (portada == null || portada.Length == 0)
                 return Results.NotFound();
             return Results.File(portada, "image/jpeg");
@@ -355,7 +379,7 @@ public static class ConfiguracionEndpoints
 
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
-            var resultado = await repo.GuardarPortadaAlbumAsync(id, ms.ToArray());
+            var resultado = await repoAlbumes.GuardarPortadaAlbumAsync(id, ms.ToArray());
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("SubirPortadaAlbum")
@@ -369,15 +393,25 @@ public static class ConfiguracionEndpoints
         // Obtener todas las canciones para la galería
         app.MapGet("/api/canciones/todas", async () =>
         {
-            var canciones = await repo.ObtenerTodasCancionesAsync();
-            return Results.Ok(canciones);
+            try
+            {
+                var canciones = await repoCanciones.ObtenerTodasCancionesAsync();
+                return Results.Ok(canciones);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] /api/canciones/todas: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                System.IO.File.WriteAllText("error_log.txt", $"{DateTime.Now}: {ex.Message}\n{ex.StackTrace}");
+                return Results.Problem($"Error: {ex.Message}");
+            }
         })
         .WithName("ObtenerTodasCanciones")
         .WithTags("Canciones");
 
         app.MapGet("/api/canciones/{id:int}", async (int id, string tipo) =>
         {
-            var cancion = await repo.ObtenerCancionAsync(id, tipo);
+            var cancion = await repoCanciones.ObtenerCancionAsync(id, tipo);
             return cancion is null ? Results.NotFound() : Results.Ok(cancion);
         })
         .WithName("ObtenerCancionDetalle")
@@ -385,7 +419,7 @@ public static class ConfiguracionEndpoints
 
         app.MapPut("/api/canciones/{id:int}/detalle", async (int id, string tipo, CancionUpdateRequest request) =>
         {
-            var resultado = await repo.ActualizarCancionExtendidaAsync(id, tipo, request);
+            var resultado = await repoCanciones.ActualizarCancionExtendidaAsync(id, tipo, request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("ActualizarCancionDetalle")
@@ -394,7 +428,7 @@ public static class ConfiguracionEndpoints
         // Portada de canción
         app.MapGet("/api/canciones/{id:int}/portada", async (int id, string tipo) =>
         {
-            var portada = await repo.ObtenerPortadaCancionAsync(id, tipo);
+            var portada = await repoCanciones.ObtenerPortadaCancionAsync(id, tipo);
             if (portada == null || portada.Length == 0)
                 return Results.NotFound();
             return Results.File(portada, "image/jpeg");
@@ -411,7 +445,7 @@ public static class ConfiguracionEndpoints
 
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
-            var resultado = await repo.GuardarPortadaCancionAsync(id, tipo, ms.ToArray());
+            var resultado = await repoCanciones.GuardarPortadaCancionAsync(id, tipo, ms.ToArray());
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("SubirPortadaCancion")
@@ -425,7 +459,7 @@ public static class ConfiguracionEndpoints
         // Obtener canciones disponibles para asignar (búsqueda en servidor)
         app.MapGet("/api/canciones/disponibles", async (string? filtro, int? excluirAlbumId, int? limite, bool? soloSinAlbum) =>
         {
-            var canciones = await repo.ObtenerCancionesDisponiblesAsync(filtro, excluirAlbumId, limite ?? 200, soloSinAlbum ?? false);
+            var canciones = await repoAlbumes.ObtenerCancionesDisponiblesAsync(filtro, excluirAlbumId, limite ?? 200, soloSinAlbum ?? false);
             return Results.Ok(canciones);
         })
         .WithName("ObtenerCancionesDisponibles")
@@ -434,7 +468,7 @@ public static class ConfiguracionEndpoints
         // Asignar canciones a un álbum
         app.MapPost("/api/albumes/{id:int}/canciones", async (int id, AsignarCancionesRequest request) =>
         {
-            var resultado = await repo.AsignarCancionesAlbumAsync(id, request);
+            var resultado = await repoAlbumes.AsignarCancionesAlbumAsync(id, request);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("AsignarCancionesAlbum")
@@ -443,7 +477,7 @@ public static class ConfiguracionEndpoints
         // Asignar una sola canción a un álbum (o quitarla si idAlbum es null)
         app.MapPost("/api/albumes/asignar-cancion", async (AsignarCancionSimpleRequest request) =>
         {
-            var resultado = await repo.AsignarCancionAAlbumAsync(request.IdCancion, request.Tipo, request.IdAlbum);
+            var resultado = await repoAlbumes.AsignarCancionAAlbumAsync(request.IdCancion, request.Tipo, request.IdAlbum);
             return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
         })
         .WithName("AsignarCancionSimple")
@@ -452,7 +486,7 @@ public static class ConfiguracionEndpoints
         // Quitar canción de un álbum
         app.MapDelete("/api/albumes/{albumId:int}/canciones/{cancionId:int}", async (int albumId, int cancionId, string tipo) =>
         {
-            var resultado = await repo.QuitarCancionDeAlbumAsync(cancionId, tipo);
+            var resultado = await repoAlbumes.QuitarCancionDeAlbumAsync(cancionId, tipo);
             return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
         })
         .WithName("QuitarCancionDeAlbum")
@@ -464,8 +498,18 @@ public static class ConfiguracionEndpoints
 
         app.MapGet("/api/notificaciones", async () =>
         {
-            var notificaciones = await repo.ObtenerNotificacionesAsync();
-            return Results.Ok(new { total = notificaciones.Count, items = notificaciones });
+            try
+            {
+                // Notificaciones se mantienen en legacy repo por ahora
+                var notificaciones = await repo.ObtenerNotificacionesAsync();
+                return Results.Ok(new { total = notificaciones.Count, items = notificaciones });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] /api/notificaciones: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Results.Problem($"Error: {ex.Message}");
+            }
         })
         .WithName("ObtenerNotificaciones")
         .WithTags("Sistema");
@@ -490,6 +534,33 @@ public static class ConfiguracionEndpoints
         .WithName("ObtenerEstadisticasDuplicados")
         .WithTags("Sistema");
 
+        // Obtener grupo de duplicados específico por ID
+        app.MapGet("/api/duplicados/{grupoId}", async (string grupoId) =>
+        {
+            var grupo = await repo.ObtenerGrupoDuplicadoPorIdAsync(grupoId);
+            return grupo is null ? Results.NotFound() : Results.Ok(grupo);
+        })
+        .WithName("ObtenerGrupoDuplicado")
+        .WithTags("Sistema");
+
+        // Marcar artista como original en un grupo de duplicados
+        app.MapPost("/api/duplicados/{grupoId}/artista-original", async (string grupoId, MarcarArtistaOriginalRequest request) =>
+        {
+            var resultado = await repo.MarcarArtistaOriginalAsync(grupoId, request.IdInterprete);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("MarcarArtistaOriginal")
+        .WithTags("Sistema");
+
+        // Buscar artistas que tienen una canción con el mismo nombre (para sugerir artista original)
+        app.MapGet("/api/canciones/artistas-para-cover", async (string tema, int? excluirIdInterprete) =>
+        {
+            var artistas = await repoInterpretes.BuscarArtistasParaCoverAsync(tema, excluirIdInterprete);
+            return Results.Ok(artistas);
+        })
+        .WithName("BuscarArtistasParaCover")
+        .WithTags("Canciones");
+
         // ==========================================
         // PERFIL UNIFICADO DE CANCIÓN
         // ==========================================
@@ -502,6 +573,17 @@ public static class ConfiguracionEndpoints
             return Results.Ok(perfil);
         })
         .WithName("ObtenerPerfilCancion")
+        .WithTags("Temas");
+
+        // Perfil multi-artista para canciones con múltiples versiones
+        app.MapGet("/api/cancion/perfil-multiartista", async (string grupo) =>
+        {
+            var perfil = await repo.ObtenerPerfilMultiArtistaAsync(grupo);
+            if (perfil == null)
+                return Results.NotFound(new { error = "Grupo no encontrado" });
+            return Results.Ok(perfil);
+        })
+        .WithName("ObtenerPerfilMultiArtista")
         .WithTags("Temas");
     }
 }

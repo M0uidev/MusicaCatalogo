@@ -1,40 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
 </head>
+
 <body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html" class="activo">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <section class="seccion">
             <h2>📊 Estadísticas del Catálogo</h2>
             <p class="seccion-descripcion">Resumen general de su colección de música</p>
-            
+
             <!-- Resumen Principal con Iconos -->
             <div class="resumen-grid" id="resumenPrincipal">
                 <div class="resumen-card cargando">Cargando...</div>
@@ -75,22 +58,26 @@
         <!-- Duplicados -->
         <section class="seccion">
             <h2>🔄 Canciones Duplicadas</h2>
-            <p class="seccion-descripcion">Canciones que aparecen en múltiples formatos</p>
+            <p class="seccion-descripcion">Canciones que aparecen en múltiples Medios</p>
             <div id="statsDuplicados" class="stats-grid">
                 <p class="cargando">Cargando...</p>
             </div>
             <div style="margin-top: 1rem;">
-                <a href="duplicados.html" class="btn-primario" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--color-primario); color: white; text-decoration: none; border-radius: var(--radio); font-weight: 500;">
+                <a href="duplicados.html" class="btn-primario"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--color-primario); color: white; text-decoration: none; border-radius: var(--radio); font-weight: 500;">
                     🔍 Ver todos los duplicados
                 </a>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
 
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -196,7 +183,7 @@
                             </div>
                             <div class="item-contenido">
                                 <div class="item-titulo">${escapeHtml(m.marca || 'Sin marca')}</div>
-                                <div class="item-info">${formatearNumero(m.total)} formatos</div>
+                                <div class="item-info">${formatearNumero(m.total)} Medios</div>
                             </div>
                         </div>
                     `).join('');
@@ -212,4 +199,5 @@
         }
     </script>
 </body>
+
 </html>

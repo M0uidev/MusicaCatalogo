@@ -12,7 +12,7 @@
         <nav>
             <a href="index.html">Inicio</a>
             <a href="buscar.html">Canciones</a>
-            <a href="formatos.html">Formatos</a>
+            <a href="medios.html">Medios</a>
             <a href="albumes.html">Álbumes</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html" class="activo">Estadísticas</a>
@@ -75,7 +75,7 @@
         <!-- Duplicados -->
         <section class="seccion">
             <h2>🔄 Canciones Duplicadas</h2>
-            <p class="seccion-descripcion">Canciones que aparecen en múltiples formatos</p>
+            <p class="seccion-descripcion">Canciones que aparecen en múltiples Medios</p>
             <div id="statsDuplicados" class="stats-grid">
                 <p class="cargando">Cargando...</p>
             </div>
@@ -196,7 +196,7 @@
                             </div>
                             <div class="item-contenido">
                                 <div class="item-titulo">${escapeHtml(m.marca || 'Sin marca')}</div>
-                                <div class="item-info">${formatearNumero(m.total)} formatos</div>
+                                <div class="item-info">${formatearNumero(m.total)} Medios</div>
                             </div>
                         </div>
                     `).join('');

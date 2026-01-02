@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canciones - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
     <style>
         .buscador-container {
             max-width: 500px;
             margin: 0 auto 2rem;
             position: relative;
         }
-        
+
         .buscador-container input {
             width: 100%;
             padding: 1rem 1.5rem 1rem 3rem;
@@ -20,13 +22,13 @@
             border-radius: var(--radio-grande);
             background: white;
         }
-        
+
         .buscador-container input:focus {
             outline: none;
             border-color: var(--color-primario);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
-        
+
         .buscador-container::before {
             content: '🔍';
             position: absolute;
@@ -86,12 +88,41 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            position: relative;
         }
 
         .cancion-card:hover {
             border-color: var(--color-primario);
             transform: translateY(-4px);
             box-shadow: var(--sombra-lg);
+        }
+
+        .cancion-card:hover .btn-editar-cancion {
+            opacity: 1;
+        }
+
+        .btn-editar-cancion {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 5;
+        }
+
+        .btn-editar-cancion:hover {
+            background: var(--color-primario);
+            transform: scale(1.1);
         }
 
         .cancion-portada {
@@ -142,7 +173,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .cancion-formato {
+        .cancion-Medio {
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
@@ -213,37 +244,234 @@
             opacity: 0.3;
             margin-bottom: 1rem;
         }
+
+        /* Badge de múltiples artistas */
+        .badge-multi-artista {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radio);
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 5;
+        }
+
+        /* Modal de versiones */
+        .modal-versiones {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-versiones.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-versiones-contenido {
+            background: white;
+            border-radius: var(--radio-lg);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-versiones-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--color-borde);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .modal-versiones-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .modal-versiones-portada {
+            width: 240px;
+            height: 240px;
+            border-radius: var(--radio);
+            object-fit: cover;
+            background: var(--color-fondo);
+            flex-shrink: 0;
+        }
+
+        .modal-versiones-portada-placeholder {
+            width: 240px;
+            height: 240px;
+            border-radius: var(--radio);
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .modal-versiones-portada-placeholder svg {
+            width: 50px;
+            height: 50px;
+            opacity: 0.4;
+            color: var(--color-texto-secundario);
+        }
+
+        .modal-versiones-titulo {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-versiones-titulo small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+            margin-top: 0.25rem;
+        }
+
+        .btn-cerrar-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--color-texto-secundario);
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-versiones-body {
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        /* Versión de artista */
+        .version-artista {
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .version-artista:last-child {
+            margin-bottom: 0;
+        }
+
+        .version-artista-header {
+            padding: 0.75rem 1rem;
+            background: var(--color-fondo);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .version-artista-nombre {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-original {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radio);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-cover {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radio);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .version-ubicaciones {
+            padding: 0.75rem 1rem;
+        }
+
+        .ubicacion-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-borde);
+        }
+
+        .ubicacion-item:last-child {
+            border-bottom: none;
+        }
+
+        .ubicacion-Medio {
+            font-size: 1.25rem;
+        }
+
+        .ubicacion-detalle {
+            flex: 1;
+        }
+
+        .ubicacion-detalle strong {
+            display: block;
+        }
+
+        .ubicacion-detalle small {
+            color: var(--color-texto-secundario);
+        }
+
+        .ubicacion-acciones {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-ubicacion {
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-ubicacion:hover {
+            border-color: var(--color-primario);
+            background: var(--color-fondo);
+        }
     </style>
 </head>
+
 <body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html" class="activo">Canciones</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <section class="seccion">
             <h2>🎵 Canciones</h2>
             <p class="seccion-descripcion">Explora tu colección de canciones</p>
-            
+
             <div class="buscador-container">
                 <input type="text" id="inputBusqueda" placeholder="Buscar por nombre o artista..." autocomplete="off">
             </div>
@@ -272,10 +500,34 @@
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
 
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <!-- Modal de versiones -->
+    <div class="modal-versiones" id="modalVersiones" onclick="cerrarModalVersiones(event)">
+        <div class="modal-versiones-contenido" onclick="event.stopPropagation()">
+            <div class="modal-versiones-header">
+                <div class="modal-versiones-info">
+                    <div id="modalPortada" class="modal-versiones-portada-placeholder">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                        </svg>
+                    </div>
+                    <div class="modal-versiones-titulo" id="modalVersionesTitulo">Canción</div>
+                </div>
+                <button class="btn-cerrar-modal" onclick="cerrarModalVersiones()">&times;</button>
+            </div>
+            <div class="modal-versiones-body" id="modalVersionesBody">
+                Cargando...
+            </div>
+        </div>
+    </div>
+
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         let todasLasCanciones = [];
@@ -289,76 +541,147 @@
 
         // Normalizar texto para agrupar
         function normalizar(texto) {
-            return (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            return (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
         }
 
-        // Cargar todas las canciones y agrupar por perfil único
+        // Cargar todas las canciones y agrupar SOLO por tema (para incluir covers)
         async function cargarCanciones() {
             try {
                 const resp = await fetch('/api/canciones/todas');
                 todasLasCanciones = await resp.json();
-                
-                // Agrupar por tema+artista normalizado para obtener perfiles únicos
+
+                // Agrupar SOLO por tema normalizado (sin artista)
                 const grupos = new Map();
-                
+
                 for (const c of todasLasCanciones) {
-                    const clave = `${normalizar(c.tema)}|${normalizar(c.interprete)}`;
-                    
-                    if (!grupos.has(clave)) {
-                        grupos.set(clave, {
+                    const claveTema = normalizar(c.tema);
+
+                    if (!grupos.has(claveTema)) {
+                        grupos.set(claveTema, {
                             tema: c.tema,
-                            interprete: c.interprete,
-                            idAlbum: c.idAlbum,
-                            albumNombre: c.albumNombre,
-                            instancias: [],
+                            artistas: new Map(), // Agrupar por artista dentro del tema
+                            idAlbum: null,
+                            albumNombre: null,
                             tieneCassette: false,
-                            tieneCd: false
+                            tieneCd: false,
+                            totalInstancias: 0,
+                            artistaOriginalMarcado: null // El artista marcado como original en la BD
                         });
                     }
-                    
-                    const perfil = grupos.get(clave);
-                    perfil.instancias.push(c);
-                    
+
+                    const perfil = grupos.get(claveTema);
+                    perfil.totalInstancias++;
+
+                    // Si esta canción tiene artistaOriginal, guardarlo
+                    if (c.artistaOriginal) {
+                        perfil.artistaOriginalMarcado = c.artistaOriginal;
+                    }
+
+                    // Agrupar instancias por artista
+                    const claveArtista = normalizar(c.interprete);
+                    if (!perfil.artistas.has(claveArtista)) {
+                        perfil.artistas.set(claveArtista, {
+                            nombre: c.interprete,
+                            instancias: [],
+                            esCover: c.esCover || false,
+                            artistaOriginal: c.artistaOriginal
+                        });
+                    }
+                    perfil.artistas.get(claveArtista).instancias.push(c);
+
+                    // Actualizar si es cover o no
+                    if (!c.esCover) {
+                        perfil.artistas.get(claveArtista).esCover = false;
+                    }
+
                     if (c.tipo === 'cassette') perfil.tieneCassette = true;
                     if (c.tipo === 'cd') perfil.tieneCd = true;
-                    
-                    // Preferir álbum de CD sobre cassette
-                    if (c.idAlbum && c.idAlbum > 0 && (!perfil.idAlbum || c.tipo === 'cd')) {
-                        perfil.idAlbum = c.idAlbum;
-                        perfil.albumNombre = c.albumNombre;
+
+                    // Preferir álbum de CD y de versión original
+                    if (c.idAlbum && c.idAlbum > 0 && (!c.esCover || !perfil.idAlbum)) {
+                        if (!perfil.idAlbum || c.tipo === 'cd' || !c.esCover) {
+                            perfil.idAlbum = c.idAlbum;
+                            perfil.albumNombre = c.albumNombre;
+                        }
                     }
                 }
-                
-                perfilesUnicos = Array.from(grupos.values());
+
+                // Convertir artistas Map a array y determinar artista principal
+                // IMPORTANTE: Si hay múltiples artistas, automáticamente marcar como covers
+                // a los que NO son el artista original
+                perfilesUnicos = Array.from(grupos.values()).map(p => {
+                    const artistasArray = Array.from(p.artistas.values());
+
+                    // Si hay múltiples artistas y hay uno marcado como original
+                    if (artistasArray.length > 1) {
+                        // Buscar el artista original (el que no es cover o el marcado)
+                        let artistaOriginalNombre = p.artistaOriginalMarcado;
+
+                        // Si no hay marcado, buscar el que explícitamente no es cover
+                        if (!artistaOriginalNombre) {
+                            const artistaNocover = artistasArray.find(a => !a.esCover);
+                            if (artistaNocover) {
+                                artistaOriginalNombre = artistaNocover.nombre;
+                            }
+                        }
+
+                        // Marcar automáticamente como covers a los que no son el original
+                        if (artistaOriginalNombre) {
+                            for (const artista of artistasArray) {
+                                // Si el nombre no coincide con el original, es cover
+                                if (normalizar(artista.nombre) !== normalizar(artistaOriginalNombre)) {
+                                    artista.esCover = true;
+                                    if (!artista.artistaOriginal) {
+                                        artista.artistaOriginal = artistaOriginalNombre;
+                                    }
+                                } else {
+                                    // Es el original
+                                    artista.esCover = false;
+                                }
+                            }
+                        }
+                    }
+
+                    // El artista principal es el que NO es cover, o el primero
+                    const artistaPrincipal = artistasArray.find(a => !a.esCover) || artistasArray[0];
+
+                    return {
+                        ...p,
+                        interprete: artistaPrincipal.nombre,
+                        artistas: artistasArray,
+                        totalArtistas: artistasArray.length
+                    };
+                });
+
                 perfilesUnicos.sort((a, b) => a.tema.localeCompare(b.tema));
-                
+
                 aplicarFiltros();
             } catch (error) {
                 console.error('Error cargando canciones:', error);
-                document.getElementById('cancionesGrid').innerHTML = 
+                document.getElementById('cancionesGrid').innerHTML =
                     '<div class="sin-resultados">Error al cargar las canciones</div>';
             }
         }
 
         function aplicarFiltros() {
             let resultado = [...perfilesUnicos];
-            
+
             // Filtro por álbum
             if (filtroTipo === 'con-album') {
                 resultado = resultado.filter(p => p.idAlbum && p.idAlbum > 0);
             } else if (filtroTipo === 'sin-album') {
                 resultado = resultado.filter(p => !p.idAlbum || p.idAlbum === 0);
             }
-            
+
             // Filtro por búsqueda
             if (filtroBusqueda.length >= 2) {
                 const busquedaNorm = normalizar(filtroBusqueda);
-                resultado = resultado.filter(p => 
+                resultado = resultado.filter(p =>
                     normalizar(p.tema).includes(busquedaNorm) ||
                     normalizar(p.interprete).includes(busquedaNorm)
                 );
             }
-            
+
             perfilesFiltrados = resultado;
             paginaActual = 1;
             renderizarCanciones();
@@ -368,23 +691,24 @@
             const grid = document.getElementById('cancionesGrid');
             const stats = document.getElementById('statsCanciones');
             const paginacion = document.getElementById('paginacion');
-            
+
             const total = perfilesFiltrados.length;
             const totalPaginas = Math.ceil(total / cancionesPorPagina);
             const inicio = (paginaActual - 1) * cancionesPorPagina;
             const fin = Math.min(inicio + cancionesPorPagina, total);
             const perfilesPagina = perfilesFiltrados.slice(inicio, fin);
-            
+
             // Stats - contar instancias totales
-            const totalInstancias = perfilesFiltrados.reduce((sum, p) => sum + p.instancias.length, 0);
-            const conMultiples = perfilesFiltrados.filter(p => p.instancias.length > 1).length;
-            
+            const totalInstancias = perfilesFiltrados.reduce((sum, p) => sum + p.totalInstancias, 0);
+            const conMultiples = perfilesFiltrados.filter(p => p.totalInstancias > 1).length;
+            const conMultiArtistas = perfilesFiltrados.filter(p => p.totalArtistas > 1).length;
+
             stats.innerHTML = `
                 <strong>${total}</strong> canciones únicas
                 ${totalInstancias > total ? `• ${totalInstancias} copias físicas` : ''}
-                ${conMultiples > 0 ? `• ${conMultiples} con múltiples copias` : ''}
+                ${conMultiArtistas > 0 ? `• ${conMultiArtistas} con múltiples versiones/artistas` : ''}
             `;
-            
+
             if (total === 0) {
                 grid.innerHTML = `
                     <div class="sin-resultados" style="grid-column: 1/-1;">
@@ -398,8 +722,8 @@
                 paginacion.style.display = 'none';
                 return;
             }
-            
-            grid.innerHTML = perfilesPagina.map(p => {
+
+            grid.innerHTML = perfilesPagina.map((p, idx) => {
                 const tienePortada = p.idAlbum && p.idAlbum > 0;
                 const portadaHtml = tienePortada
                     ? `<img src="/api/albumes/${p.idAlbum}/portada" class="cancion-portada" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg><span>Sin imagen</span></div>'">`
@@ -409,31 +733,47 @@
                            </svg>
                            <span>Sin imagen</span>
                        </div>`;
-                
-                // Badges de formato
-                const formatoBadges = [];
-                if (p.tieneCassette) formatoBadges.push('📼');
-                if (p.tieneCd) formatoBadges.push('💿');
-                const copias = p.instancias.length;
-                
-                // Generar URL del perfil con tema y artista
-                const perfilUrl = `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`;
-                
+
+                // Badges de Medio
+                const MedioBadges = [];
+                if (p.tieneCassette) MedioBadges.push('📼');
+                if (p.tieneCd) MedioBadges.push('💿');
+                const copias = p.totalInstancias;
+
+                // Badge de múltiples artistas
+                const badgeMultiArtista = p.totalArtistas > 1
+                    ? `<div class="badge-multi-artista">🎸 ${p.totalArtistas} versiones</div>`
+                    : '';
+
+                // URL de edición (primera instancia del artista principal)
+                const primeraInstancia = p.artistas[0].instancias[0];
+                const editarUrl = `cancion.html?id=${primeraInstancia.id}&tipo=${primeraInstancia.tipo}`;
+
+                // Índice global para el modal
+                const indicePerfil = inicio + idx;
+
                 return `
-                    <div class="cancion-card" onclick="window.location.href='${perfilUrl}'">
+                    <div class="cancion-card" onclick="abrirModalVersiones(${indicePerfil})">
+                        ${badgeMultiArtista}
+                        <button class="btn-editar-cancion" onclick="event.stopPropagation(); window.location.href='${editarUrl}'" title="Editar canción">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
                         ${portadaHtml}
                         <div class="cancion-info">
                             <div class="cancion-titulo" title="${escapeHtml(p.tema)}">${escapeHtml(p.tema)}</div>
                             <div class="cancion-artista" title="${escapeHtml(p.interprete)}">${escapeHtml(p.interprete)}</div>
                             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                                <div class="cancion-formato">${formatoBadges.join(' ')} ${copias > 1 ? `×${copias}` : ''}</div>
+                                <div class="cancion-Medio">${MedioBadges.join(' ')} ${copias > 1 ? `×${copias}` : ''}</div>
                                 ${p.albumNombre ? `<div class="cancion-album-badge">💿 ${escapeHtml(p.albumNombre)}</div>` : ''}
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
-            
+
             // Paginación
             if (totalPaginas > 1) {
                 paginacion.style.display = 'flex';
@@ -444,6 +784,95 @@
                 paginacion.style.display = 'none';
             }
         }
+
+        // Modal de versiones
+        function abrirModalVersiones(indicePerfil) {
+            const perfil = perfilesFiltrados[indicePerfil];
+            if (!perfil) return;
+
+            const modal = document.getElementById('modalVersiones');
+            const titulo = document.getElementById('modalVersionesTitulo');
+            const body = document.getElementById('modalVersionesBody');
+
+            titulo.innerHTML = `
+                🎵 ${escapeHtml(perfil.tema)}
+                <small>${perfil.totalInstancias} copia${perfil.totalInstancias > 1 ? 's' : ''} • ${perfil.totalArtistas} artista${perfil.totalArtistas > 1 ? 's' : ''}</small>
+            `;
+
+            // Actualizar portada del modal
+            const portadaContainer = document.getElementById('modalPortada');
+            if (perfil.idAlbum && perfil.idAlbum > 0) {
+                portadaContainer.innerHTML = `<img src="/api/albumes/${perfil.idAlbum}/portada" class="modal-versiones-portada" alt="" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`;
+            } else {
+                portadaContainer.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                `;
+                portadaContainer.className = 'modal-versiones-portada-placeholder';
+            }
+
+            // Ordenar: originales primero, luego covers
+            const artistasOrdenados = [...perfil.artistas].sort((a, b) => {
+                if (!a.esCover && b.esCover) return -1;
+                if (a.esCover && !b.esCover) return 1;
+                return a.nombre.localeCompare(b.nombre);
+            });
+
+            body.innerHTML = artistasOrdenados.map(artista => {
+                const badge = artista.esCover
+                    ? `<span class="badge-cover">🎸 Cover${artista.artistaOriginal ? ' de ' + escapeHtml(artista.artistaOriginal) : ''}</span>`
+                    : `<span class="badge-original">⭐ Original</span>`;
+
+                const ubicaciones = artista.instancias.map(inst => {
+                    const icono = inst.tipo === 'cassette' ? '📼' : '💿';
+                    const posicion = inst.tipo === 'cassette'
+                        ? `Lado ${inst.lado}, pos. ${inst.desde}${inst.hasta > inst.desde ? '-' + inst.hasta : ''}`
+                        : `Track ${inst.ubicacion}`;
+
+                    return `
+                        <div class="ubicacion-item">
+                            <span class="ubicacion-Medio">${icono}</span>
+                            <div class="ubicacion-detalle">
+                                <strong>${escapeHtml(inst.numMedio)}</strong>
+                                <small>${posicion}</small>
+                            </div>
+                            <div class="ubicacion-acciones">
+                                <a href="medio.html?num=${encodeURIComponent(inst.numMedio)}" class="btn-ubicacion">Ver Medio</a>
+                                <a href="cancion.html?id=${inst.id}&tipo=${inst.tipo}" class="btn-ubicacion">Editar</a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="version-artista">
+                        <div class="version-artista-header">
+                            <div class="version-artista-nombre">
+                                🎤 ${escapeHtml(artista.nombre)}
+                                ${badge}
+                            </div>
+                            <span>${artista.instancias.length} copia${artista.instancias.length > 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="version-ubicaciones">
+                            ${ubicaciones}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            modal.classList.add('visible');
+        }
+
+        function cerrarModalVersiones(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modalVersiones').classList.remove('visible');
+        }
+
+        // Cerrar con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') cerrarModalVersiones();
+        });
 
         function paginaAnterior() {
             if (paginaActual > 1) {
@@ -484,4 +913,5 @@
         cargarCanciones();
     </script>
 </body>
+
 </html>

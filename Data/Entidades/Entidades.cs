@@ -40,7 +40,7 @@ public record Album
 public record FormatoGrabado
 {
     public int Id { get; init; }
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public int IdFormato { get; init; }
     public int IdMarca { get; init; }
     public int IdDeck { get; init; }
@@ -56,7 +56,7 @@ public record FormatoGrabado
 public record FormatoGrabadoCd
 {
     public int Id { get; init; }
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public int IdFormato { get; init; }
     public int IdMarca { get; init; }
     public int IdDeck { get; init; }
@@ -71,7 +71,7 @@ public record FormatoGrabadoCd
 public record Tema
 {
     public int Id { get; init; }
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public int IdInterprete { get; init; }
     public required string NombreTema { get; init; }
     public required string Lado { get; init; }
@@ -80,18 +80,22 @@ public record Tema
     public int? IdAlbum { get; init; }
     public string? LinkExterno { get; init; }
     public byte[]? Portada { get; init; }
+    public bool EsCover { get; init; }
+    public string? ArtistaOriginal { get; init; }
 }
 
 public record TemaCd
 {
     public int Id { get; init; }
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public int IdInterprete { get; init; }
     public required string NombreTema { get; init; }
     public int Ubicacion { get; init; }
     public int? IdAlbum { get; init; }
     public string? LinkExterno { get; init; }
     public byte[]? Portada { get; init; }
+    public bool EsCover { get; init; }
+    public string? ArtistaOriginal { get; init; }
 }
 
 // ============================================
@@ -102,16 +106,16 @@ public record ResultadoBusqueda
 {
     public int Id { get; init; }
     public required string Tipo { get; init; } // "cassette" o "cd"
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public required string Tema { get; init; }
     public required string Interprete { get; init; }
     public string? Posicion { get; init; }
 }
 
-public record DetalleFormato
+public record DetalleMedio
 {
-    public required string NumFormato { get; init; }
-    public required string TipoFormato { get; init; }
+    public required string numMedio { get; init; }
+    public required string TipoMedio { get; init; }
     public required string Marca { get; init; }
     public required string Grabador { get; init; }
     public required string Fuente { get; init; }
@@ -125,7 +129,7 @@ public record DetalleFormato
     public int TotalTemas { get; init; }
 }
 
-public record TemaEnFormato
+public record TemaEnMedio
 {
     public int Id { get; init; }
     public required string Tema { get; init; }
@@ -140,6 +144,8 @@ public record TemaEnFormato
     public string? NombreAlbum { get; init; }
     public string? LinkExterno { get; init; }
     public bool TienePortada { get; init; }
+    public bool EsCover { get; init; }
+    public string? ArtistaOriginal { get; init; }
 }
 
 public record DetalleInterprete
@@ -155,7 +161,7 @@ public record DetalleInterprete
 public record TemaDeInterprete
 {
     public required string Tipo { get; init; }
-    public required string NumFormato { get; init; }
+    public required string numMedio { get; init; }
     public required string Tema { get; init; }
     public string? Posicion { get; init; }
 }
@@ -168,7 +174,7 @@ public record EstadisticasGenerales
     public int TotalCassettes { get; init; }
     public int TotalCds { get; init; }
     public List<InterpreteTop> TopInterpretes { get; init; } = new();
-    public List<ConteoFormato> ConteosPorFormato { get; init; } = new();
+    public List<ConteoMedio> ConteosPorMedio { get; init; } = new();
     public List<ConteoMarca> ConteosPorMarca { get; init; } = new();
 }
 
@@ -186,7 +192,7 @@ public class InterpreteResumen
     public long TotalTemas { get; set; }
 }
 
-public class ConteoFormato
+public class ConteoMedio
 {
     public string Formato { get; set; } = "";
     public long Total { get; set; }
@@ -217,7 +223,7 @@ public class SugerenciaTema
 {
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string Tipo { get; set; } = ""; // "cassette" o "cd"
     public string Ubicacion { get; set; } = "";
 }
@@ -227,10 +233,10 @@ public class SugerenciaTema
 // ============================================
 
 /// <summary>DTO para crear o editar un formato (cassette o CD)</summary>
-public record FormatoRequest
+public record MedioRequest
 {
-    public required string NumFormato { get; init; }
-    public required string TipoFormato { get; init; } // "cassette" o "cd"
+    public required string numMedio { get; init; }
+    public required string TipoMedio { get; init; } // "cassette" o "cd"
     // Acepta IDs o nombres - si se proporciona nombre, se busca/crea
     public int? IdMarca { get; init; }
     public int? IdDeck { get; init; }
@@ -254,8 +260,8 @@ public record FormatoRequest
 /// <summary>DTO para crear o editar una canción</summary>
 public record CancionRequest
 {
-    public required string NumFormato { get; init; }
-    public required string TipoFormato { get; init; } // "cassette" o "cd"
+    public required string numMedio { get; init; }
+    public required string TipoMedio { get; init; } // "cassette" o "cd"
     public required string Tema { get; init; }
     public string? NombreInterprete { get; init; } // Si no existe, se crea
     public int? IdInterprete { get; init; } // Si ya existe
@@ -265,13 +271,22 @@ public record CancionRequest
     public int? Hasta { get; init; }
     // Para CDs
     public int? Ubicacion { get; init; }
+    // Para covers
+    public bool EsCover { get; init; }
+    public string? ArtistaOriginal { get; init; }
+}
+
+/// <summary>Request para marcar artista como original</summary>
+public record MarcarArtistaOriginalRequest
+{
+    public required int IdInterprete { get; init; }
 }
 
 /// <summary>DTO para reordenar canciones</summary>
 public record ReordenarRequest
 {
-    public required string NumFormato { get; init; }
-    public required string TipoFormato { get; init; }
+    public required string numMedio { get; init; }
+    public required string TipoMedio { get; init; }
     public required List<int> IdsOrdenados { get; init; }
 }
 
@@ -296,7 +311,7 @@ public record OpcionesFormulario
     public List<OpcionSelect> Interpretes { get; init; } = new();
 }
 
-public record OpcionSelect(int Id, string Nombre);
+public record OpcionSelect(long Id, string Nombre);
 
 /// <summary>DTO extendido para temas con ID</summary>
 public class TemaConId
@@ -352,7 +367,7 @@ public class CancionEnAlbum
     public string Tipo { get; set; } = "";
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string? Posicion { get; set; }
     public string? LinkExterno { get; set; }
 }
@@ -375,7 +390,7 @@ public class CancionDetalle
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
     public int IdInterprete { get; set; }
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string? Lado { get; set; }
     public int? Desde { get; set; }
     public int? Hasta { get; set; }
@@ -388,6 +403,8 @@ public class CancionDetalle
     public string? LinkExterno { get; set; }
     public bool TienePortada { get; set; }
     public bool TienePortadaAlbum { get; set; }
+    public bool EsCover { get; set; }
+    public string? ArtistaOriginal { get; set; }
 }
 
 /// <summary>DTO para actualizar canción individual</summary>
@@ -399,6 +416,8 @@ public record CancionUpdateRequest
     public int? IdAlbum { get; init; }
     public string? NombreAlbum { get; init; }
     public string? LinkExterno { get; init; }
+    public bool EsCover { get; init; }
+    public string? ArtistaOriginal { get; init; }
     // Para cassettes
     public string? Lado { get; init; }
     public int? Desde { get; init; }
@@ -413,7 +432,7 @@ public class SugerenciaTemaConId
     public int Id { get; set; }
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string Tipo { get; set; } = "";
     public string Ubicacion { get; set; } = "";
     public int? IdAlbum { get; set; }
@@ -452,9 +471,15 @@ public class CancionGaleria
     public string Tipo { get; set; } = "";
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public int? IdAlbum { get; set; }
     public string? AlbumNombre { get; set; }
+    public int EsCover { get; set; }
+    public string? ArtistaOriginal { get; set; }
+    public string? Lado { get; set; }
+    public long? Desde { get; set; }
+    public long? Hasta { get; set; }
+    public long? Ubicacion { get; set; }
 }
 
 /// <summary>DTO para obtener canciones disponibles para asignar</summary>
@@ -464,7 +489,7 @@ public class CancionDisponible
     public string Tipo { get; set; } = "";
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string? Posicion { get; set; }
     public int? IdAlbumActual { get; set; }
     public string? NombreAlbumActual { get; set; }
@@ -478,13 +503,24 @@ public class CancionDisponible
 public class NotificacionDatos
 {
     public string Id { get; set; } = "";
-    public string Tipo { get; set; } = ""; // "cancion", "album", "formato", "interprete"
+    public string Tipo { get; set; } = ""; // "cancion", "album", "formato", "interprete", "duplicado"
     public string Severidad { get; set; } = "info"; // "info", "warning", "error"
     public string Mensaje { get; set; } = "";
     public string? EntidadId { get; set; }
     public string? EntidadTipo { get; set; }
     public string? CampoFaltante { get; set; }
     public string? UrlArreglar { get; set; }
+    public string? GrupoId { get; set; } // Para duplicados multi-artista
+    public List<OpcionArtistaOriginal>? OpcionesArtista { get; set; } // Opciones para seleccionar artista original
+}
+
+/// <summary>Opción de artista para seleccionar como original</summary>
+public class OpcionArtistaOriginal
+{
+    public int IdInterprete { get; set; }
+    public string Nombre { get; set; } = "";
+    public int CantidadCopias { get; set; }
+    public bool EsMasAntiguo { get; set; }
 }
 
 // ============================================
@@ -494,12 +530,13 @@ public class NotificacionDatos
 /// <summary>Grupo de canciones que son potencialmente la misma</summary>
 public class GrupoDuplicados
 {
-    public string Id { get; set; } = ""; // Hash del tema+interprete normalizado
+    public string Id { get; set; } = ""; // Hash del tema normalizado
     public string TemaNormalizado { get; set; } = "";
-    public string InterpreteNormalizado { get; set; } = "";
     public List<CancionDuplicada> Canciones { get; set; } = new();
     public int TotalInstancias => Canciones.Count;
+    public int TotalArtistas => Canciones.Select(c => c.Interprete.ToLowerInvariant()).Distinct().Count();
     public bool TieneMixFormatos => Canciones.Any(c => c.Tipo == "cassette") && Canciones.Any(c => c.Tipo == "cd");
+    public bool TieneCovers => Canciones.Any(c => c.EsCover);
 }
 
 /// <summary>Información de una canción dentro de un grupo de duplicados</summary>
@@ -509,12 +546,15 @@ public class CancionDuplicada
     public string Tipo { get; set; } = ""; // "cassette" o "cd"
     public string Tema { get; set; } = "";
     public string Interprete { get; set; } = "";
-    public string NumFormato { get; set; } = "";
+    public int IdInterprete { get; set; }
+    public string numMedio { get; set; } = "";
     public string? Posicion { get; set; }
     public int? IdAlbum { get; set; }
     public string? NombreAlbum { get; set; }
     public bool TienePortada { get; set; }
     public string? LinkExterno { get; set; }
+    public bool EsCover { get; set; }
+    public string? ArtistaOriginal { get; set; }
 }
 
 /// <summary>Estadísticas de duplicados</summary>
@@ -539,15 +579,50 @@ public class PerfilCancion
     public List<UbicacionCancion> Ubicaciones { get; set; } = new();
 }
 
+/// <summary>Perfil multi-artista de una canción (original + covers)</summary>
+public class PerfilCancionMultiArtista
+{
+    public string Tema { get; set; } = "";
+    public string GrupoId { get; set; } = "";
+    public int TotalVersiones { get; set; }
+    public int TotalArtistas { get; set; }
+    public int TotalCopias { get; set; }
+    public bool TieneArtistaOriginalDefinido { get; set; }
+    public List<VersionArtista> Versiones { get; set; } = new();
+}
+
+/// <summary>Versión de una canción por un artista específico</summary>
+public class VersionArtista
+{
+    public string Artista { get; set; } = "";
+    public int IdInterprete { get; set; }
+    public bool EsOriginal { get; set; }
+    public string? ArtistaOriginalRef { get; set; } // Si es cover, referencia al artista original
+    public int TotalCopias { get; set; }
+    public int? IdAlbumPrincipal { get; set; } // Álbum para mostrar portada
+    public string? LinkExterno { get; set; } // Link a YouTube/Spotify de esta versión
+    public List<UbicacionCancion> Ubicaciones { get; set; } = new();
+}
+
 /// <summary>Ubicación física de una canción (cassette o CD)</summary>
 public class UbicacionCancion
 {
     public int Id { get; set; }
     public string Tipo { get; set; } = ""; // "cassette" o "cd"
-    public string NumFormato { get; set; } = "";
+    public string numMedio { get; set; } = "";
     public string? Posicion { get; set; }
     public int? IdAlbum { get; set; }
     public string? NombreAlbum { get; set; }
     public bool TienePortada { get; set; }
     public string? LinkExterno { get; set; }
+    public bool EsCover { get; set; }
+    public string? ArtistaOriginal { get; set; }
+}
+
+/// <summary>Artista sugerido para marcar como original en covers</summary>
+public class ArtistaParaCover
+{
+    public int IdInterprete { get; set; }
+    public string Nombre { get; set; } = "";
+    public bool EsOriginal { get; set; } // Si ya está marcado como original en el sistema
 }

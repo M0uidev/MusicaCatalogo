@@ -4,12 +4,12 @@ Aplicación web para gestionar y consultar un catálogo de música grabada en ca
 
 ## 🎵 Características
 
-- **Búsqueda global**: Busca por nombre de tema, intérprete o número de formato
-- **Explorador de formatos**: Lista todos los cassettes y CDs con sus temas
-- **Detalle de formatos**: Muestra metadatos (marca, grabador, fecha, etc.) y lista de temas ordenada
+- **Búsqueda global**: Busca por nombre de tema, intérprete o número de Medio
+- **Explorador de Medios**: Lista todos los cassettes y CDs con sus temas
+- **Detalle de Medios**: Muestra metadatos (marca, grabador, fecha, etc.) y lista de temas ordenada
 - **Explorador de intérpretes**: Lista todos los artistas con conteo de temas
-- **Detalle de intérpretes**: Muestra todos los temas de un artista agrupados por formato
-- **Estadísticas**: Top intérpretes, conteos por formato, marcas más usadas
+- **Detalle de intérpretes**: Muestra todos los temas de un artista agrupados por Medio
+- **Estadísticas**: Top intérpretes, conteos por Medio, marcas más usadas
 - **Diagnóstico**: Estado de importación, conteo de registros, información de red
 - **Acceso móvil**: UI responsive, accesible desde cualquier dispositivo en la red local
 
@@ -18,9 +18,9 @@ Aplicación web para gestionar y consultar un catálogo de música grabada en ca
 - .NET 8 SDK
 - Archivos CSV en la carpeta Documentos del usuario:
   - `Ecualizador.csv`
-  - `Formato.csv`
-  - `Formato_grabado.csv`
-  - `formato_grabadocd.csv`
+  - `Medio.csv`
+  - `Medio_grabado.csv`
+  - `Medio_grabadocd.csv`
   - `Fuente.csv`
   - `Grabador.csv`
   - `Interpretes.csv`
@@ -66,8 +66,8 @@ publish/
 ├── MusicaCatalogo.exe
 ├── Web/
 │   ├── index.html
-│   ├── formatos.html
-│   ├── formato.html
+│   ├── medios.html
+│   ├── medio.html
 │   ├── interpretes.html
 │   ├── interprete.html
 │   ├── estadisticas.html
@@ -130,8 +130,8 @@ MusicaCatalogo/
 │   └── ConfiguracionEndpoints.cs  # API REST
 └── Web/
     ├── index.html            # Página principal (búsqueda)
-    ├── formatos.html         # Lista de formatos
-    ├── formato.html          # Detalle de formato
+    ├── medios.html         # Lista de Medios
+    ├── medio.html          # Detalle de Medio
     ├── interpretes.html      # Lista de intérpretes
     ├── interprete.html       # Detalle de intérprete
     ├── estadisticas.html     # Estadísticas
@@ -147,9 +147,9 @@ MusicaCatalogo/
 | Endpoint | Descripción |
 |----------|-------------|
 | `GET /api/buscar?q={texto}` | Búsqueda global |
-| `GET /api/formatos` | Lista de formatos |
-| `GET /api/formatos/{numFormato}` | Detalle de formato |
-| `GET /api/formatos/{numFormato}/temas` | Temas de un formato |
+| `GET /api/medios` | Lista de Medios |
+| `GET /api/medios/{numMedio}` | Detalle de Medio |
+| `GET /api/medios/{numMedio}/temas` | Temas de un Medio |
 | `GET /api/interpretes` | Lista de intérpretes |
 | `GET /api/interpretes/{id}` | Detalle de intérprete |
 | `GET /api/estadisticas` | Estadísticas generales |
@@ -161,9 +161,9 @@ MusicaCatalogo/
 
 La base de datos SQLite (`musica_catalogo.db`) se crea automáticamente en el directorio del ejecutable. Contiene:
 
-- **Tablas de referencia**: ecualizador, formato, fuente, grabador, marca, bias, modo, supresor
+- **Tablas de referencia**: ecualizador, Medio, fuente, grabador, marca, bias, modo, supresor
 - **Tabla maestra**: interpretes
-- **Tablas de grabaciones**: formato_grabado (cassettes), formato_grabado_cd (CDs)
+- **Tablas de grabaciones**: Medio_grabado (cassettes), Medio_grabado_cd (CDs)
 - **Tablas de temas**: temas (cassettes), temas_cd (CDs)
 
 La importación se ejecuta automáticamente si:

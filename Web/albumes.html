@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Álbumes - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
     <style>
         .album-grid {
             display: grid;
@@ -147,7 +149,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -164,7 +166,7 @@
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
 
         .modal-header {
@@ -359,7 +361,7 @@
             position: absolute;
             bottom: 0.5rem;
             right: 0.5rem;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             border: none;
             padding: 0.4rem 0.6rem;
@@ -416,12 +418,23 @@
             font-weight: 500;
         }
 
+        .cancion-nombre-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .cancion-nombre-link:hover {
+            color: var(--color-primario);
+            text-decoration: underline;
+        }
+
         .cancion-artista {
             color: var(--color-texto-secundario);
             font-size: 0.9rem;
         }
 
-        .cancion-formato {
+        .cancion-Medio {
             font-size: 0.85rem;
             color: var(--color-texto-claro);
         }
@@ -644,6 +657,7 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -833,30 +847,11 @@
         }
     </style>
 </head>
+
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="albumes.html" class="activo">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <div id="contenido">
@@ -864,9 +859,11 @@
         </div>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
 
     <!-- Modal nuevo álbum -->
     <div class="modal" id="modalNuevoAlbum">
@@ -885,12 +882,14 @@
                         <label>Artista</label>
                         <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaNuevo()">
                             <div class="artista-icono">🎤</div>
-                            <span class="artista-btn-nombre sin-artista" id="nuevoArtistaTexto">Seleccionar artista...</span>
+                            <span class="artista-btn-nombre sin-artista" id="nuevoArtistaTexto">Seleccionar
+                                artista...</span>
                             <span>▼</span>
                         </button>
                         <div class="artista-selector-dropdown" id="nuevoArtistaDropdown">
                             <div class="artista-selector-header">
-                                <input type="text" id="buscarArtistaNuevo" placeholder="Buscar artista..." oninput="filtrarArtistasNuevo()">
+                                <input type="text" id="buscarArtistaNuevo" placeholder="Buscar artista..."
+                                    oninput="filtrarArtistasNuevo()">
                             </div>
                             <div class="artista-selector-lista" id="listaArtistasNuevo"></div>
                             <div class="artista-nuevo-inline" id="artistaNuevoInlineNuevo" style="display: none;">
@@ -927,8 +926,8 @@
                 <button class="modal-cerrar" onclick="cerrarModalCanciones()">&times;</button>
             </div>
             <div class="modal-body">
-                <input type="text" class="buscar-canciones-modal" id="inputBuscarCancion" 
-                       placeholder="Buscar canción por nombre o artista..." oninput="filtrarCancionesDisponibles()">
+                <input type="text" class="buscar-canciones-modal" id="inputBuscarCancion"
+                    placeholder="Buscar canción por nombre o artista..." oninput="filtrarCancionesDisponibles()">
                 <div class="seleccion-contador">
                     <span id="contadorSeleccion">0 canciones seleccionadas</span>
                 </div>
@@ -938,7 +937,8 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-modal btn-cancelar" onclick="cerrarModalCanciones()">Cancelar</button>
-                <button class="btn-modal btn-guardar" onclick="asignarCancionesSeleccionadas()">Agregar seleccionadas</button>
+                <button class="btn-modal btn-guardar" onclick="asignarCancionesSeleccionadas()">Agregar
+                    seleccionadas</button>
             </div>
         </div>
     </div>
@@ -960,12 +960,14 @@
                         <label>Artista</label>
                         <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaEditar()">
                             <div class="artista-icono">🎤</div>
-                            <span class="artista-btn-nombre sin-artista" id="editarArtistaTexto">Seleccionar artista...</span>
+                            <span class="artista-btn-nombre sin-artista" id="editarArtistaTexto">Seleccionar
+                                artista...</span>
                             <span>▼</span>
                         </button>
                         <div class="artista-selector-dropdown" id="editarArtistaDropdown">
                             <div class="artista-selector-header">
-                                <input type="text" id="buscarArtistaEditar" placeholder="Buscar artista..." oninput="filtrarArtistasEditar()">
+                                <input type="text" id="buscarArtistaEditar" placeholder="Buscar artista..."
+                                    oninput="filtrarArtistasEditar()">
                             </div>
                             <div class="artista-selector-lista" id="listaArtistasEditar"></div>
                             <div class="artista-nuevo-inline" id="artistaNuevoInlineEditar" style="display: none;">
@@ -996,6 +998,7 @@
 
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         function mostrarToast(mensaje, tipo = 'info') {
@@ -1015,12 +1018,23 @@
         let ordenActual = 'nombre';
         let filtroTipo = 'todos'; // 'todos', 'albumes', 'singles'
 
+        // Obtener canciones únicas por tema+intérprete
+        function obtenerCancionesUnicas(canciones) {
+            const vistas = new Set();
+            return canciones.filter(c => {
+                const clave = `${c.tema.toLowerCase()}|${(c.interprete || '').toLowerCase()}`;
+                if (vistas.has(clave)) return false;
+                vistas.add(clave);
+                return true;
+            });
+        }
+
         const params = new URLSearchParams(window.location.search);
         const idAlbum = params.get('id');
 
         async function cargarAlbumes(filtro = '') {
             try {
-                const url = filtro 
+                const url = filtro
                     ? `/api/albumes?filtro=${encodeURIComponent(filtro)}&limite=200`
                     : '/api/albumes?limite=200';
                 const resp = await fetch(url);
@@ -1055,7 +1069,7 @@
             } else if (filtroTipo === 'singles') {
                 albumesFiltrados = albumesFiltrados.filter(a => a.esSingle);
             }
-            
+
             // Ordenar
             let albumesOrdenados = [...albumesFiltrados];
             switch (ordenActual) {
@@ -1117,10 +1131,10 @@
                         <div class="album-grid">
                             ${albumesOrdenados.map(a => `
                                 <a href="albumes.html?id=${a.id}" class="album-card">
-                                    ${a.tienePortada 
-                                        ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
-                                        : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
-                                    }
+                                    ${a.tienePortada
+                    ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
+                    : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
+                }
                                     <div class="album-info">
                                         <div class="album-nombre">
                                             ${escapeHtml(a.nombre)}${a.esSingle ? '<span class="badge-single">Single</span>' : ''}
@@ -1146,17 +1160,17 @@
 
         function renderizarDetalle() {
             const a = albumActual;
-            
+
             document.getElementById('contenido').innerHTML = `
                 <a href="albumes.html" class="btn-volver">← Volver a álbumes</a>
                 
                 <section class="seccion">
                     <div class="album-detalle-header">
                         <div class="album-detalle-portada">
-                            ${a.tienePortada 
-                                ? `<img src="/api/albumes/${a.id}/portada" alt="${escapeHtml(a.nombre)}">`
-                                : `<div class="placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
-                            }
+                            ${a.tienePortada
+                    ? `<img src="/api/albumes/${a.id}/portada" alt="${escapeHtml(a.nombre)}">`
+                    : `<div class="placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
+                }
                             <button class="btn-subir-portada" onclick="subirPortada()">📷 Cambiar</button>
                         </div>
                         <div class="album-detalle-info">
@@ -1191,14 +1205,13 @@
                             </div>
                         ` : `
                             <div class="lista-canciones">
-                                ${a.canciones.map((c, i) => `
+                                ${obtenerCancionesUnicas(a.canciones).map((c, i) => `
                                     <div class="cancion-item-editable">
                                         <span class="cancion-numero">${i + 1}</span>
                                         <div style="flex: 1">
-                                            <div class="cancion-nombre">${escapeHtml(c.tema)}</div>
+                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a></a>
                                             <div class="cancion-artista">${escapeHtml(c.interprete)}</div>
                                         </div>
-                                        <span class="cancion-formato">${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numFormato)}</span>
                                         ${c.linkExterno ? '<span title="Tiene link externo">🔗</span>' : ''}
                                         <button class="btn-quitar-cancion" onclick="quitarCancionDelAlbum(${c.id}, '${c.tipo}')" title="Quitar del álbum">✕</button>
                                     </div>
@@ -1227,10 +1240,10 @@
             document.getElementById('nuevoAnio').value = '';
             document.getElementById('nuevoEsSingle').checked = false;
             actualizarBotonArtistaNuevo('');
-            
+
             document.getElementById('modalNuevoAlbum').classList.add('activo');
             document.getElementById('nuevoNombre').focus();
-            
+
             // Cargar artistas
             cargarArtistasNuevo('');
         }
@@ -1340,7 +1353,7 @@
             document.getElementById('modalAgregarCanciones').classList.add('activo');
             document.getElementById('inputBuscarCancion').value = '';
             document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Cargando canciones...</p>';
-            
+
             // Cargar canciones iniciales (sin filtro)
             await buscarCancionesEnServidor('');
         }
@@ -1348,19 +1361,19 @@
         async function buscarCancionesEnServidor(filtro) {
             try {
                 document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Buscando...</p>';
-                
+
                 const params = new URLSearchParams();
                 if (filtro) params.append('filtro', filtro);
                 if (albumActual?.id) params.append('excluirAlbumId', albumActual.id);
                 params.append('limite', '200');
                 params.append('soloSinAlbum', 'true'); // Solo mostrar canciones sin álbum asignado
-                
+
                 const resp = await fetch(`/api/canciones/disponibles?${params}`);
                 cancionesDisponibles = await resp.json();
                 renderizarCancionesDisponibles();
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('listaCancionesDisponibles').innerHTML = 
+                document.getElementById('listaCancionesDisponibles').innerHTML =
                     '<p style="color: var(--color-peligro);">Error al cargar canciones</p>';
             }
         }
@@ -1374,7 +1387,7 @@
             // Debounce: esperar 300ms después de que el usuario deje de escribir
             clearTimeout(timeoutBusqueda);
             const filtro = document.getElementById('inputBuscarCancion').value.trim();
-            
+
             timeoutBusqueda = setTimeout(() => {
                 buscarCancionesEnServidor(filtro);
             }, 300);
@@ -1382,7 +1395,7 @@
 
         function renderizarCancionesDisponibles() {
             const lista = document.getElementById('listaCancionesDisponibles');
-            
+
             // Filtrar canciones que ya están en el álbum (por si acaso)
             const idsEnAlbum = new Set((albumActual?.canciones || []).map(c => `${c.tipo}-${c.id}`));
             let cancionesFiltradas = cancionesDisponibles.filter(c => {
@@ -1392,7 +1405,7 @@
 
             if (cancionesFiltradas.length === 0) {
                 const filtro = document.getElementById('inputBuscarCancion').value.trim();
-                lista.innerHTML = filtro 
+                lista.innerHTML = filtro
                     ? `<p class="sin-canciones">No se encontraron canciones con "${escapeHtml(filtro)}"</p>`
                     : '<p class="sin-canciones">No hay más canciones disponibles</p>';
                 actualizarContadorSeleccion();
@@ -1409,7 +1422,7 @@
                             <div class="cancion-sel-tema">${escapeHtml(c.tema)}</div>
                             <div class="cancion-sel-meta">
                                 ${escapeHtml(c.interprete || 'Sin intérprete')} • 
-                                ${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numFormato)}
+                                ${c.tipo === 'cassette' ? '📼' : '💿'} ${escapeHtml(c.numMedio)}
                             </div>
                         </div>
                     </label>
@@ -1436,7 +1449,7 @@
 
         function actualizarContadorSeleccion() {
             const count = cancionesSeleccionadas.size;
-            document.getElementById('contadorSeleccion').textContent = 
+            document.getElementById('contadorSeleccion').textContent =
                 `${count} canción${count !== 1 ? 'es' : ''} seleccionada${count !== 1 ? 's' : ''}`;
         }
 
@@ -1467,7 +1480,7 @@
 
                 const result = await resp.json();
                 console.log('Respuesta asignar:', result);
-                
+
                 // Verificar tanto 'exito' como 'Exito' por si acaso
                 if (result.exito || result.Exito) {
                     cerrarModalCanciones();
@@ -1508,19 +1521,19 @@
         // ============ Funciones para editar álbum ============
         function abrirModalEditarAlbum() {
             if (!albumActual) return;
-            
+
             document.getElementById('editarNombre').value = albumActual.nombre || '';
             document.getElementById('editarAnio').value = albumActual.anio || '';
             document.getElementById('editarEsSingle').checked = albumActual.esSingle || false;
-            
+
             // Configurar selector de artista
             const artista = albumActual.interprete || '';
             document.getElementById('editarArtista').value = artista;
             actualizarBotonArtistaEditar(artista);
-            
+
             document.getElementById('modalEditarAlbum').classList.add('activo');
             document.getElementById('editarNombre').focus();
-            
+
             // Cargar artistas
             cargarArtistasEditar();
         }
@@ -1578,7 +1591,7 @@
                 const params = new URLSearchParams();
                 if (filtro) params.append('filtro', filtro);
                 params.append('limite', '50');
-                
+
                 const resp = await fetch(`/api/interpretes?${params}`);
                 artistasDisponiblesNuevo = await resp.json();
                 renderizarArtistasNuevo(filtro);
@@ -1618,10 +1631,10 @@
         function toggleSelectorArtistaNuevo() {
             const dropdown = document.getElementById('nuevoArtistaDropdown');
             const isVisible = dropdown.classList.contains('visible');
-            
+
             // Cerrar otros dropdowns
             document.getElementById('editarArtistaDropdown')?.classList.remove('visible');
-            
+
             if (isVisible) {
                 dropdown.classList.remove('visible');
             } else {
@@ -1675,7 +1688,7 @@
                 const params = new URLSearchParams();
                 if (filtro) params.append('filtro', filtro);
                 params.append('limite', '50');
-                
+
                 const resp = await fetch(`/api/interpretes?${params}`);
                 artistasDisponiblesEditar = await resp.json();
                 renderizarArtistasEditar(filtro);
@@ -1714,10 +1727,10 @@
         function toggleSelectorArtistaEditar() {
             const dropdown = document.getElementById('editarArtistaDropdown');
             const isVisible = dropdown.classList.contains('visible');
-            
+
             // Cerrar otros dropdowns
             document.getElementById('nuevoArtistaDropdown')?.classList.remove('visible');
-            
+
             if (isVisible) {
                 dropdown.classList.remove('visible');
             } else {
@@ -1781,4 +1794,5 @@
         }
     </script>
 </body>
+
 </html>

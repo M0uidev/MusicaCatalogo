@@ -1,40 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle de Intérprete - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
 </head>
+
 <body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="formatos.html">Formatos</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="interpretes.html" class="activo">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header generado dinámicamente por components.js -->
+    <div id="header-component"></div>
 
     <main class="container">
         <a href="interpretes.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
             ← Volver a la lista
         </a>
-        
+
         <section id="detalleInterprete" class="seccion">
             <p class="cargando">Cargando información...</p>
         </section>
@@ -45,17 +28,20 @@
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
 
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
             // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)
             const nombre = params.get('nombre') || params.get('id');
-            
+
             if (!nombre) {
                 document.getElementById('detalleInterprete').innerHTML = '<p class="error">No se especificó un intérprete</p>';
                 return;
@@ -106,13 +92,13 @@
 
                 if (interprete.temas && interprete.temas.length > 0) {
                     seccionTemas.style.display = 'block';
-                    
-                    // Agrupar por formato
+
+                    // Agrupar por Medio
                     const cassettes = interprete.temas.filter(t => t.tipo === 'cassette');
                     const cds = interprete.temas.filter(t => t.tipo !== 'cassette');
-                    
+
                     let html = '';
-                    
+
                     if (cassettes.length > 0) {
                         html += `<h3 style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
                             <span style="width: 32px; height: 32px;">${ICONOS.cassette}</span>
@@ -120,7 +106,7 @@
                         </h3>`;
                         html += generarListaTemas(cassettes);
                     }
-                    
+
                     if (cds.length > 0) {
                         html += `<h3 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
                             <span style="width: 32px; height: 32px;">${ICONOS.cd}</span>
@@ -128,7 +114,7 @@
                         </h3>`;
                         html += generarListaTemas(cds);
                     }
-                    
+
                     listaTemas.innerHTML = html;
                 }
 
@@ -144,7 +130,7 @@
                     <thead>
                         <tr>
                             <th>Tema</th>
-                            <th>Formato</th>
+                            <th>Medio</th>
                             <th>Posición</th>
                         </tr>
                     </thead>
@@ -153,9 +139,9 @@
                             <tr>
                                 <td><strong>${escapeHtml(t.tema)}</strong></td>
                                 <td>
-                                    <a href="formato.html?num=${encodeURIComponent(t.numFormato)}" 
+                                    <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
                                        style="color: var(--color-primario); text-decoration: none;">
-                                        ${escapeHtml(t.numFormato)}
+                                        ${escapeHtml(t.numMedio)}
                                     </a>
                                 </td>
                                 <td>${t.posicion || '-'}</td>
@@ -167,4 +153,5 @@
         }
     </script>
 </body>
+
 </html>

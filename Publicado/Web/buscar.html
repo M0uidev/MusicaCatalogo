@@ -86,12 +86,41 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            position: relative;
         }
 
         .cancion-card:hover {
             border-color: var(--color-primario);
             transform: translateY(-4px);
             box-shadow: var(--sombra-lg);
+        }
+
+        .cancion-card:hover .btn-editar-cancion {
+            opacity: 1;
+        }
+
+        .btn-editar-cancion {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 5;
+        }
+
+        .btn-editar-cancion:hover {
+            background: var(--color-primario);
+            transform: scale(1.1);
         }
 
         .cancion-portada {
@@ -142,7 +171,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .cancion-formato {
+        .cancion-Medio {
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
@@ -222,7 +251,7 @@
             <a href="index.html">Inicio</a>
             <a href="buscar.html" class="activo">Canciones</a>
             <a href="albumes.html">Álbumes</a>
-            <a href="formatos.html">Formatos</a>
+            <a href="medios.html">Medios</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
             
@@ -410,23 +439,33 @@
                            <span>Sin imagen</span>
                        </div>`;
                 
-                // Badges de formato
-                const formatoBadges = [];
-                if (p.tieneCassette) formatoBadges.push('📼');
-                if (p.tieneCd) formatoBadges.push('💿');
+                // Badges de Medio
+                const MedioBadges = [];
+                if (p.tieneCassette) MedioBadges.push('📼');
+                if (p.tieneCd) MedioBadges.push('💿');
                 const copias = p.instancias.length;
                 
                 // Generar URL del perfil con tema y artista
                 const perfilUrl = `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`;
                 
+                // URL de edición (primera instancia)
+                const primeraInstancia = p.instancias[0];
+                const editarUrl = `cancion.html?id=${primeraInstancia.id}&tipo=${primeraInstancia.tipo}`;
+                
                 return `
                     <div class="cancion-card" onclick="window.location.href='${perfilUrl}'">
+                        <button class="btn-editar-cancion" onclick="event.stopPropagation(); window.location.href='${editarUrl}'" title="Editar canción">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
                         ${portadaHtml}
                         <div class="cancion-info">
                             <div class="cancion-titulo" title="${escapeHtml(p.tema)}">${escapeHtml(p.tema)}</div>
                             <div class="cancion-artista" title="${escapeHtml(p.interprete)}">${escapeHtml(p.interprete)}</div>
                             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                                <div class="cancion-formato">${formatoBadges.join(' ')} ${copias > 1 ? `×${copias}` : ''}</div>
+                                <div class="cancion-Medio">${MedioBadges.join(' ')} ${copias > 1 ? `×${copias}` : ''}</div>
                                 ${p.albumNombre ? `<div class="cancion-album-badge">💿 ${escapeHtml(p.albumNombre)}</div>` : ''}
                             </div>
                         </div>

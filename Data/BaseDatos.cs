@@ -282,5 +282,29 @@ public class BaseDatos
             await conn.ExecuteAsync("ALTER TABLE albumes ADD COLUMN es_single INTEGER DEFAULT 0");
             Console.WriteLine("[BaseDatos] Columna es_single agregada a albumes");
         }
+        
+        // Agregar columnas de cover a temas
+        if (!listaColumnasTemas.Contains("es_cover"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN es_cover INTEGER DEFAULT 0");
+            Console.WriteLine("[BaseDatos] Columna es_cover agregada a temas");
+        }
+        if (!listaColumnasTemas.Contains("artista_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN artista_original TEXT");
+            Console.WriteLine("[BaseDatos] Columna artista_original agregada a temas");
+        }
+        
+        // Agregar columnas de cover a temas_cd
+        if (!listaColumnasTemasCd.Contains("es_cover"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_cover INTEGER DEFAULT 0");
+            Console.WriteLine("[BaseDatos] Columna es_cover agregada a temas_cd");
+        }
+        if (!listaColumnasTemasCd.Contains("artista_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN artista_original TEXT");
+            Console.WriteLine("[BaseDatos] Columna artista_original agregada a temas_cd");
+        }
     }
 }
