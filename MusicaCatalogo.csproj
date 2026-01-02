@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MusicaCatalogo</RootNamespace>
+    <AssemblyName>MusicaCatalogo</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="Dapper" Version="2.1.24" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Data\catalogo.db" CopyToOutputDirectory="PreserveNewest" Condition="Exists('Data\catalogo.db')">
+      <Link>catalogo.db</Link>
+    </Content>
+  </ItemGroup>
+
+</Project>

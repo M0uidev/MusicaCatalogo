@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Música</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        .qr-section {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border-radius: var(--radio-grande);
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .qr-section h2 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .qr-section p {
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radio);
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .qr-url {
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radio);
+            font-family: monospace;
+            font-size: 1.1rem;
+            display: inline-block;
+            word-break: break-all;
+        }
+        
+        .qr-instructions {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            .qr-section {
+                padding: 1.5rem 1rem;
+            }
+            .qr-url {
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Catálogo de Música</h1>
+        <nav>
+            <a href="index.html" class="activo">Inicio</a>
+            <a href="buscar.html">Canciones</a>
+            <a href="formatos.html">Formatos</a>
+            <a href="interpretes.html">Intérpretes</a>
+            <a href="estadisticas.html">Estadísticas</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Resumen rápido -->
+        <section class="resumen-principal">
+            <h2>Resumen de la Colección</h2>
+            <div class="resumen-grid" id="resumenColeccion">
+                <div class="resumen-card cargando">Cargando...</div>
+            </div>
+        </section>
+
+        <!-- Acceso rápido -->
+        <section class="acceso-rapido">
+            <h2>🚀 Acceso Rápido</h2>
+            <div class="botones-acceso">
+                <a href="buscar.html" class="boton-grande">
+                    <span class="boton-icono">🔍</span>
+                    <span class="boton-texto">Buscar Canciones</span>
+                    <span class="boton-desc">Encuentra cualquier canción</span>
+                </a>
+                <a href="formatos.html" class="boton-grande">
+                    <span class="boton-icono">📼</span>
+                    <span class="boton-texto">Ver Cassettes y CDs</span>
+                    <span class="boton-desc">Explora toda la colección</span>
+                </a>
+                <a href="interpretes.html" class="boton-grande">
+                    <span class="boton-icono">🎤</span>
+                    <span class="boton-texto">Ver Intérpretes</span>
+                    <span class="boton-desc">Busca por artista o banda</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Sección QR siempre visible -->
+        <section class="qr-section">
+            <h2>📱 Acceso desde tu Celular</h2>
+            <p>Escanea el código QR con la cámara de tu teléfono</p>
+            <div class="qr-container">
+                <div id="codigoQR"></div>
+            </div>
+            <p class="qr-instructions">💡 Asegúrate de estar conectado a la misma red WiFi</p>
+        </section>
+    </main>
+
+    <div id="notificaciones"></div>
+
+    <footer>
+        <p>Catálogo de Música Personal © 2025</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Cargar resumen
+        async function cargarResumen() {
+            try {
+                const resp = await fetch('/api/estadisticas');
+                if (!resp.ok) throw new Error('Error cargando estadísticas');
+                const stats = await resp.json();
+                
+                document.getElementById('resumenColeccion').innerHTML = `
+                    <div class="resumen-card">
+                        <div class="resumen-icono">${ICONOS.iconoCassette}</div>
+                        <div class="resumen-info">
+                            <span class="resumen-numero">${formatearNumero(stats.totalCassettes)}</span>
+                            <span class="resumen-label">Cassettes</span>
+                        </div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-icono">${ICONOS.iconoCD}</div>
+                        <div class="resumen-info">
+                            <span class="resumen-numero">${formatearNumero(stats.totalCds)}</span>
+                            <span class="resumen-label">CDs</span>
+                        </div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-icono">${ICONOS.iconoMusica}</div>
+                        <div class="resumen-info">
+                            <span class="resumen-numero">${formatearNumero(stats.totalTemasCassette + stats.totalTemasCd)}</span>
+                            <span class="resumen-label">Canciones</span>
+                        </div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-icono">${ICONOS.iconoInterprete}</div>
+                        <div class="resumen-info">
+                            <span class="resumen-numero">${formatearNumero(stats.totalInterpretes)}</span>
+                            <span class="resumen-label">Intérpretes</span>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('resumenColeccion').innerHTML = htmlError('No se pudo cargar el resumen');
+            }
+        }
+
+        // Generar QR con URL de red local
+        async function generarQR() {
+            try {
+                // Obtener IPs del servidor
+                const resp = await fetch('/api/red');
+                const data = await resp.json();
+                
+                // Usar la primera IP de la red local (no localhost)
+                let url = window.location.origin;
+                if (data.ips && data.ips.length > 0) {
+                    // Preferir IP que empiece con 192.168
+                    const ipLocal = data.ips.find(ip => ip.startsWith('192.168')) || data.ips[0];
+                    url = `http://${ipLocal}:${data.puerto}`;
+                }
+                
+                new QRCode(document.getElementById('codigoQR'), {
+                    text: url,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#1e293b',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (err) {
+                // Fallback a la URL actual
+                const url = window.location.origin;
+                new QRCode(document.getElementById('codigoQR'), {
+                    text: url,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#1e293b',
+                    colorLight: '#ffffff'
+                });
+            }
+        }
+
+        // Inicializar
+        cargarResumen();
+        generarQR();
+    </script>
+</body>
+</html>

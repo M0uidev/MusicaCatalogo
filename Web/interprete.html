@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Intérprete - Catálogo de Música</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <header>
+        <h1>Catálogo de Música</h1>
+        <nav>
+            <a href="index.html">Inicio</a>
+            <a href="buscar.html">Canciones</a>
+            <a href="formatos.html">Formatos</a>
+            <a href="interpretes.html" class="activo">Intérpretes</a>
+            <a href="estadisticas.html">Estadísticas</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="interpretes.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
+            ← Volver a la lista
+        </a>
+        
+        <section id="detalleInterprete" class="seccion">
+            <p class="cargando">Cargando información...</p>
+        </section>
+
+        <section id="seccionTemas" class="seccion" style="display: none;">
+            <h2>🎵 Canciones de este intérprete</h2>
+            <div id="listaTemas"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Catálogo de Música Personal © 2025</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)
+            const nombre = params.get('nombre') || params.get('id');
+            
+            if (!nombre) {
+                document.getElementById('detalleInterprete').innerHTML = '<p class="error">No se especificó un intérprete</p>';
+                return;
+            }
+
+            await cargarInterprete(nombre);
+        });
+
+        async function cargarInterprete(nombre) {
+            try {
+                const resp = await fetch(`/api/interpretes/${encodeURIComponent(nombre)}`);
+
+                if (!resp.ok) {
+                    document.getElementById('detalleInterprete').innerHTML = '<p class="error">Intérprete no encontrado</p>';
+                    return;
+                }
+
+                const interprete = await resp.json();
+
+                document.getElementById('detalleInterprete').innerHTML = `
+                    <div class="detalle-header">
+                        <div class="detalle-icono">${ICONOS.iconoInterprete}</div>
+                        <div class="detalle-titulo">
+                            <h2>${escapeHtml(interprete.nombre)}</h2>
+                            <div class="item-info">${formatearNumero(interprete.totalTemas || 0)} canciones en la colección</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total de Canciones</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemas || 0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">En Cassettes</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemasCassette || 0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">En CDs</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemasCd || 0)}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Mostrar temas
+                const seccionTemas = document.getElementById('seccionTemas');
+                const listaTemas = document.getElementById('listaTemas');
+
+                if (interprete.temas && interprete.temas.length > 0) {
+                    seccionTemas.style.display = 'block';
+                    
+                    // Agrupar por formato
+                    const cassettes = interprete.temas.filter(t => t.tipo === 'cassette');
+                    const cds = interprete.temas.filter(t => t.tipo !== 'cassette');
+                    
+                    let html = '';
+                    
+                    if (cassettes.length > 0) {
+                        html += `<h3 style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 32px; height: 32px;">${ICONOS.cassette}</span>
+                            En Cassettes (${cassettes.length})
+                        </h3>`;
+                        html += generarListaTemas(cassettes);
+                    }
+                    
+                    if (cds.length > 0) {
+                        html += `<h3 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 32px; height: 32px;">${ICONOS.cd}</span>
+                            En CDs (${cds.length})
+                        </h3>`;
+                        html += generarListaTemas(cds);
+                    }
+                    
+                    listaTemas.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('detalleInterprete').innerHTML = '<p class="error">Error al cargar el intérprete</p>';
+            }
+        }
+
+        function generarListaTemas(temas) {
+            return `
+                <table class="tabla-temas">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Formato</th>
+                            <th>Posición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${temas.map(t => `
+                            <tr>
+                                <td><strong>${escapeHtml(t.tema)}</strong></td>
+                                <td>
+                                    <a href="formato.html?num=${encodeURIComponent(t.numFormato)}" 
+                                       style="color: var(--color-primario); text-decoration: none;">
+                                        ${escapeHtml(t.numFormato)}
+                                    </a>
+                                </td>
+                                <td>${t.posicion || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    </script>
+</body>
+</html>

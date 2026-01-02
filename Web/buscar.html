@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Canciones - Catálogo de Música</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        .buscador-grande {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .buscador-grande input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.3rem;
+            border: 3px solid var(--color-primario);
+            border-radius: var(--radio-grande);
+            background: white;
+        }
+        
+        .buscador-grande input:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+        
+        .sugerencias {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--color-borde);
+            border-top: none;
+            border-radius: 0 0 var(--radio) var(--radio);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: var(--sombra-grande);
+            display: none;
+        }
+        
+        .sugerencias.visible {
+            display: block;
+        }
+        
+        .sugerencia {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--color-borde);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .sugerencia:hover, .sugerencia.activa {
+            background: var(--color-fondo);
+        }
+        
+        .sugerencia:last-child {
+            border-bottom: none;
+        }
+        
+        .sugerencia-icono {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+        
+        .sugerencia-contenido {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .sugerencia-tema {
+            font-weight: 600;
+            color: var(--color-texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .sugerencia-detalles {
+            font-size: 0.9rem;
+            color: var(--color-texto-secundario);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .sugerencia-formato {
+            background: var(--color-fondo);
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radio);
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .resultado-card {
+            background: white;
+            border: 2px solid var(--color-borde);
+            border-radius: var(--radio);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+        
+        .resultado-card:hover {
+            border-color: var(--color-primario);
+            box-shadow: var(--sombra);
+        }
+        
+        .resultado-icono {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+        }
+        
+        .resultado-contenido {
+            flex: 1;
+        }
+        
+        .resultado-tema {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--color-texto);
+            margin-bottom: 0.5rem;
+        }
+        
+        .resultado-interprete {
+            font-size: 1.1rem;
+            color: var(--color-primario);
+            margin-bottom: 0.5rem;
+        }
+        
+        .resultado-ubicacion {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .resultado-formato-link {
+            background: var(--color-primario);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radio);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .resultado-formato-link:hover {
+            background: var(--color-primario-hover);
+        }
+        
+        .resultado-posicion {
+            color: var(--color-texto-secundario);
+            font-size: 1rem;
+        }
+        
+        .sin-resultados {
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-texto-secundario);
+        }
+        
+        .sin-resultados svg {
+            width: 80px;
+            height: 80px;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+        
+        .estadisticas-busqueda {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-busqueda {
+            background: var(--color-fondo);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radio);
+            font-size: 0.9rem;
+        }
+        
+        .resaltado {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        .lado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .lado-badge.lado-a {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .lado-badge.lado-b {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Catálogo de Música</h1>
+        <nav>
+            <a href="index.html">Inicio</a>
+            <a href="buscar.html" class="activo">Canciones</a>
+            <a href="formatos.html">Formatos</a>
+            <a href="interpretes.html">Intérpretes</a>
+            <a href="estadisticas.html">Estadísticas</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="seccion">
+            <h2>🔍 Buscar Canciones</h2>
+            <p class="seccion-descripcion">Encuentra cualquier canción y descubre dónde está grabada</p>
+            
+            <div class="buscador-grande">
+                <input type="text" id="inputBusqueda" placeholder="Escribe el nombre de la canción o artista..." autocomplete="off" autofocus>
+                <div class="sugerencias" id="sugerencias"></div>
+            </div>
+        </section>
+
+        <section class="seccion" id="seccionResultados" style="display: none;">
+            <div class="estadisticas-busqueda" id="statsBusqueda"></div>
+            <div id="resultados"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Catálogo de Música Personal © 2025</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        const input = document.getElementById('inputBusqueda');
+        const sugerenciasDiv = document.getElementById('sugerencias');
+        const resultadosDiv = document.getElementById('resultados');
+        const seccionResultados = document.getElementById('seccionResultados');
+        const statsBusqueda = document.getElementById('statsBusqueda');
+
+        let sugerenciasActuales = [];
+        let indiceActivo = -1;
+        let timeoutBusqueda = null;
+
+        // Normalizar texto (quitar tildes)
+        function normalizar(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
+        // Resaltar coincidencias
+        function resaltar(texto, busqueda) {
+            if (!busqueda) return escapeHtml(texto);
+            const textoNorm = normalizar(texto);
+            const busquedaNorm = normalizar(busqueda);
+            const index = textoNorm.indexOf(busquedaNorm);
+            if (index === -1) return escapeHtml(texto);
+            
+            const antes = texto.substring(0, index);
+            const coincide = texto.substring(index, index + busqueda.length);
+            const despues = texto.substring(index + busqueda.length);
+            return `${escapeHtml(antes)}<span class="resaltado">${escapeHtml(coincide)}</span>${escapeHtml(despues)}`;
+        }
+
+        // Formatear ubicación con lado A/B
+        function formatearUbicacion(ubicacion, tipo) {
+            if (tipo !== 'cassette' || !ubicacion) return ubicacion;
+            
+            // Formato esperado: "A:123-456" o "B:123-456"
+            const match = ubicacion.match(/^([AB]):(\d+)-(\d+)$/i);
+            if (match) {
+                const lado = match[1].toUpperCase();
+                const desde = match[2];
+                const hasta = match[3];
+                const claseL = lado === 'A' ? 'lado-a' : 'lado-b';
+                return `<span class="lado-badge ${claseL}">Lado ${lado}</span> posición ${desde}-${hasta}`;
+            }
+            return ubicacion;
+        }
+
+        // Buscar sugerencias
+        async function buscarSugerencias(consulta) {
+            if (consulta.length < 2) {
+                ocultarSugerencias();
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/autocompletar?q=${encodeURIComponent(consulta)}&limite=15`);
+                sugerenciasActuales = await resp.json();
+                mostrarSugerencias(consulta);
+            } catch (error) {
+                console.error('Error buscando sugerencias:', error);
+            }
+        }
+
+        function mostrarSugerencias(consulta) {
+            if (sugerenciasActuales.length === 0) {
+                sugerenciasDiv.innerHTML = `
+                    <div class="sugerencia" style="cursor: default; color: var(--color-texto-secundario);">
+                        No se encontraron resultados para "${escapeHtml(consulta)}"
+                    </div>`;
+                sugerenciasDiv.classList.add('visible');
+                return;
+            }
+
+            sugerenciasDiv.innerHTML = sugerenciasActuales.map((s, i) => {
+                const esCassette = /^[nc]\d/i.test(s.numFormato);
+                const icono = esCassette ? ICONOS.cassette : ICONOS.cd;
+                // Mostrar lado A/B en sugerencias
+                let ubicacionTexto = s.ubicacion;
+                if (esCassette && s.ubicacion) {
+                    const match = s.ubicacion.match(/^([AB]):/i);
+                    if (match) {
+                        ubicacionTexto = `Lado ${match[1].toUpperCase()}`;
+                    }
+                }
+                return `
+                    <div class="sugerencia" data-index="${i}">
+                        <div class="sugerencia-icono">${icono}</div>
+                        <div class="sugerencia-contenido">
+                            <div class="sugerencia-tema">${resaltar(s.tema, consulta)}</div>
+                            <div class="sugerencia-detalles">${resaltar(s.interprete, consulta)} • ${ubicacionTexto}</div>
+                        </div>
+                        <div class="sugerencia-formato">${escapeHtml(s.numFormato)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            sugerenciasDiv.classList.add('visible');
+            indiceActivo = -1;
+        }
+
+        function ocultarSugerencias() {
+            sugerenciasDiv.classList.remove('visible');
+            sugerenciasActuales = [];
+            indiceActivo = -1;
+        }
+
+        function seleccionarSugerencia(index) {
+            const items = sugerenciasDiv.querySelectorAll('.sugerencia[data-index]');
+            items.forEach(item => item.classList.remove('activa'));
+            
+            if (index >= 0 && index < items.length) {
+                items[index].classList.add('activa');
+                items[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Buscar y mostrar resultados completos
+        async function buscarResultados(consulta) {
+            if (consulta.length < 2) {
+                seccionResultados.style.display = 'none';
+                return;
+            }
+
+            seccionResultados.style.display = 'block';
+
+            try {
+                const resp = await fetch(`/api/autocompletar?q=${encodeURIComponent(consulta)}&limite=100`);
+                const resultados = await resp.json();
+
+                // Estadísticas
+                const cassettes = resultados.filter(r => r.tipo === 'cassette').length;
+                const cds = resultados.filter(r => r.tipo === 'cd').length;
+                
+                statsBusqueda.innerHTML = `
+                    <span class="stat-busqueda">🎵 ${resultados.length} canción${resultados.length !== 1 ? 'es' : ''}</span>
+                    ${cassettes > 0 ? `<span class="stat-busqueda">📼 ${cassettes} en cassette</span>` : ''}
+                    ${cds > 0 ? `<span class="stat-busqueda">💿 ${cds} en CD</span>` : ''}
+                `;
+
+                if (resultados.length === 0) {
+                    resultadosDiv.innerHTML = `
+                        <div class="sin-resultados">
+                            ${ICONOS.iconoMusica}
+                            <p>No se encontraron canciones con "${escapeHtml(consulta)}"</p>
+                            <p>Prueba con otro término</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                resultadosDiv.innerHTML = resultados.map(r => {
+                    const esCassette = r.tipo === 'cassette';
+                    const icono = esCassette ? obtenerIconoFormato(r.numFormato, null, true) : ICONOS.cd;
+                    
+                    return `
+                        <div class="resultado-card">
+                            <div class="resultado-icono">${icono}</div>
+                            <div class="resultado-contenido">
+                                <div class="resultado-tema">${resaltar(r.tema, consulta)}</div>
+                                <div class="resultado-interprete">🎤 ${resaltar(r.interprete, consulta)}</div>
+                                <div class="resultado-ubicacion">
+                                    <a href="formato.html?num=${encodeURIComponent(r.numFormato)}" class="resultado-formato-link">
+                                        ${esCassette ? '📼' : '💿'} ${escapeHtml(r.numFormato)}
+                                    </a>
+                                    <span class="resultado-posicion">📍 ${formatearUbicacion(r.ubicacion, r.tipo)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error buscando:', error);
+                resultadosDiv.innerHTML = '<p class="error">Error al buscar</p>';
+            }
+        }
+
+        // Event listeners
+        input.addEventListener('input', () => {
+            clearTimeout(timeoutBusqueda);
+            const consulta = input.value.trim();
+            
+            timeoutBusqueda = setTimeout(() => {
+                buscarSugerencias(consulta);
+            }, 200);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            const items = sugerenciasDiv.querySelectorAll('.sugerencia[data-index]');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                indiceActivo = Math.min(indiceActivo + 1, items.length - 1);
+                seleccionarSugerencia(indiceActivo);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                indiceActivo = Math.max(indiceActivo - 1, -1);
+                seleccionarSugerencia(indiceActivo);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (indiceActivo >= 0 && sugerenciasActuales[indiceActivo]) {
+                    const seleccionado = sugerenciasActuales[indiceActivo];
+                    window.location.href = `formato.html?num=${encodeURIComponent(seleccionado.numFormato)}`;
+                } else {
+                    ocultarSugerencias();
+                    buscarResultados(input.value.trim());
+                }
+            } else if (e.key === 'Escape') {
+                ocultarSugerencias();
+            }
+        });
+
+        sugerenciasDiv.addEventListener('click', (e) => {
+            const item = e.target.closest('.sugerencia[data-index]');
+            if (item) {
+                const index = parseInt(item.dataset.index);
+                const seleccionado = sugerenciasActuales[index];
+                if (seleccionado) {
+                    window.location.href = `formato.html?num=${encodeURIComponent(seleccionado.numFormato)}`;
+                }
+            }
+        });
+
+        // Cerrar sugerencias al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.buscador-grande')) {
+                ocultarSugerencias();
+            }
+        });
+
+        // Verificar si hay parámetro de búsqueda en URL
+        const params = new URLSearchParams(window.location.search);
+        const busquedaInicial = params.get('q');
+        if (busquedaInicial) {
+            input.value = busquedaInicial;
+            buscarResultados(busquedaInicial);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+obj/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database (user data - don't commit)
+# Data/catalogo.db is committed as the initial database
