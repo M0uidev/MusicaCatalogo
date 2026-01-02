@@ -2,6 +2,7 @@ using Dapper;
 using MusicaCatalogo.Data;
 using MusicaCatalogo.Data.Entidades;
 using Microsoft.Data.Sqlite;
+using System.Data;
 using System.Globalization;
 using System.Text;
 
@@ -48,13 +49,13 @@ public class RepositorioMusica
         var patron = $"%{consulta}%";
 
         var resultados = await conn.QueryAsync<ResultadoBusqueda>("""
-            SELECT 'cassette' AS Tipo, t.num_formato AS NumFormato, t.tema AS Tema, 
+            SELECT t.id AS Id, 'cassette' AS Tipo, t.num_formato AS NumFormato, t.tema AS Tema, 
                    i.nombre AS Interprete, (t.lado || ':' || t.desde || '-' || t.hasta) AS Posicion
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
             WHERE t.tema LIKE @patron OR i.nombre LIKE @patron OR t.num_formato LIKE @patron
             UNION ALL
-            SELECT 'cd' AS Tipo, t.num_formato AS NumFormato, t.tema AS Tema,
+            SELECT t.id AS Id, 'cd' AS Tipo, t.num_formato AS NumFormato, t.tema AS Tema,
                    i.nombre AS Interprete, CAST(t.ubicacion AS TEXT) AS Posicion
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
@@ -69,28 +70,30 @@ public class RepositorioMusica
     /// <summary>
     /// Autocompletado de canciones (búsqueda fuzzy sin tildes).
     /// </summary>
-    public async Task<List<SugerenciaTema>> AutocompletarTemasAsync(string consulta, int limite = 15)
+    public async Task<List<SugerenciaTemaConId>> AutocompletarTemasAsync(string consulta, int limite = 15)
     {
         if (string.IsNullOrWhiteSpace(consulta) || consulta.Length < 2)
-            return new List<SugerenciaTema>();
+            return new List<SugerenciaTemaConId>();
 
         using var conn = _db.ObtenerConexion();
         var consultaNorm = NormalizarTexto(consulta);
 
-        // Obtener todos los temas y filtrar en memoria para búsqueda sin tildes
-        var temasCassette = await conn.QueryAsync<(string Tema, string Interprete, string NumFormato, string Lado, int Desde, int Hasta)>("""
-            SELECT t.tema, i.nombre, t.num_formato, t.lado, t.desde, t.hasta
+        // Obtener todos los temas con info de álbum y filtrar en memoria para búsqueda sin tildes
+        var temasCassette = await conn.QueryAsync<(int Id, string Tema, string Interprete, string NumFormato, string Lado, int Desde, int Hasta, int? IdAlbum, string? AlbumNombre)>("""
+            SELECT t.id, t.tema, i.nombre, t.num_formato, t.lado, t.desde, t.hasta, t.id_album, a.nombre as album_nombre
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
             """);
 
-        var temasCd = await conn.QueryAsync<(string Tema, string Interprete, string NumFormato, int Ubicacion)>("""
-            SELECT t.tema, i.nombre, t.num_formato, t.ubicacion
+        var temasCd = await conn.QueryAsync<(int Id, string Tema, string Interprete, string NumFormato, int Ubicacion, int? IdAlbum, string? AlbumNombre)>("""
+            SELECT t.id, t.tema, i.nombre, t.num_formato, t.ubicacion, t.id_album, a.nombre as album_nombre
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
             """);
 
-        var resultados = new List<SugerenciaTema>();
+        var resultados = new List<SugerenciaTemaConId>();
 
         // Buscar en cassettes
         foreach (var t in temasCassette)
@@ -99,13 +102,16 @@ public class RepositorioMusica
             var interpNorm = NormalizarTexto(t.Interprete);
             if (temaNorm.Contains(consultaNorm) || interpNorm.Contains(consultaNorm))
             {
-                resultados.Add(new SugerenciaTema
+                resultados.Add(new SugerenciaTemaConId
                 {
+                    Id = t.Id,
                     Tema = t.Tema,
                     Interprete = t.Interprete,
                     NumFormato = t.NumFormato,
                     Tipo = "cassette",
-                    Ubicacion = $"{t.Lado}:{t.Desde}-{t.Hasta}"
+                    Ubicacion = $"{t.Lado}:{t.Desde}-{t.Hasta}",
+                    IdAlbum = t.IdAlbum,
+                    AlbumNombre = t.AlbumNombre
                 });
             }
         }
@@ -117,13 +123,16 @@ public class RepositorioMusica
             var interpNorm = NormalizarTexto(t.Interprete);
             if (temaNorm.Contains(consultaNorm) || interpNorm.Contains(consultaNorm))
             {
-                resultados.Add(new SugerenciaTema
+                resultados.Add(new SugerenciaTemaConId
                 {
+                    Id = t.Id,
                     Tema = t.Tema,
                     Interprete = t.Interprete,
                     NumFormato = t.NumFormato,
                     Tipo = "cd",
-                    Ubicacion = $"Track {t.Ubicacion}"
+                    Ubicacion = $"Track {t.Ubicacion}",
+                    IdAlbum = t.IdAlbum,
+                    AlbumNombre = t.AlbumNombre
                 });
             }
         }
@@ -198,10 +207,13 @@ public class RepositorioMusica
         if (esCassette)
         {
             var temas = await conn.QueryAsync<TemaEnFormato>("""
-                SELECT t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
-                       t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion
+                SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
+                       t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
+                       t.id_album AS IdAlbum, a.nombre AS NombreAlbum, t.link_externo AS LinkExterno,
+                       CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
                 WHERE t.num_formato = @numFormato
                 ORDER BY t.lado, t.desde
                 """, new { numFormato });
@@ -210,10 +222,13 @@ public class RepositorioMusica
 
         // Es CD
         var temasCd = await conn.QueryAsync<TemaEnFormato>("""
-            SELECT t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
-                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion
+            SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
+                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
+                   t.id_album AS IdAlbum, a.nombre AS NombreAlbum, t.link_externo AS LinkExterno,
+                   CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
             WHERE t.num_formato = @numFormato
             ORDER BY t.ubicacion
             """, new { numFormato });
@@ -701,9 +716,12 @@ public class RepositorioMusica
         {
             var temas = await conn.QueryAsync<TemaConId>("""
                 SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
-                       t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion
+                       t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
+                       t.id_album AS IdAlbum, a.nombre AS NombreAlbum, t.link_externo AS LinkExterno,
+                       CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
                 WHERE t.num_formato = @numFormato
                 ORDER BY t.lado, t.desde
                 """, new { numFormato });
@@ -713,9 +731,12 @@ public class RepositorioMusica
         // Es CD
         var temasCd = await conn.QueryAsync<TemaConId>("""
             SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
-                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion
+                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
+                   t.id_album AS IdAlbum, a.nombre AS NombreAlbum, t.link_externo AS LinkExterno,
+                   CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
             WHERE t.num_formato = @numFormato
             ORDER BY t.ubicacion
             """, new { numFormato });
@@ -978,5 +999,1130 @@ public class RepositorioMusica
         {
             return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
         }
+    }
+
+    // ============================================
+    // CRUD - ÁLBUMES
+    // ============================================
+
+    /// <summary>Verifica si la columna es_single existe en albumes.</summary>
+    private async Task<bool> ExisteColumnaEsSingle(IDbConnection conn)
+    {
+        var columnas = await conn.QueryAsync<string>("SELECT name FROM pragma_table_info('albumes')");
+        return columnas.Contains("es_single");
+    }
+
+    /// <summary>Lista todos los álbumes.</summary>
+    public async Task<List<AlbumResumen>> ListarAlbumesAsync(string? filtro = null, int limite = 100)
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        var tieneEsSingle = await ExisteColumnaEsSingle(conn);
+        var esSingleCol = tieneEsSingle ? "COALESCE(a.es_single, 0)" : "0";
+
+        var sql = $"""
+            SELECT a.id AS Id, a.nombre AS Nombre, i.nombre AS Interprete, a.id_interprete AS IdInterprete,
+                   a.anio AS Anio, CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                   (SELECT COUNT(*) FROM temas WHERE id_album = a.id) + 
+                   (SELECT COUNT(*) FROM temas_cd WHERE id_album = a.id) AS TotalCanciones,
+                   {esSingleCol} AS EsSingle
+            FROM albumes a
+            LEFT JOIN interpretes i ON a.id_interprete = i.id
+            """;
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            sql += " WHERE a.nombre LIKE @patron OR i.nombre LIKE @patron";
+        }
+
+        sql += " ORDER BY a.nombre LIMIT @limite";
+
+        var patron = $"%{filtro}%";
+        var resultado = await conn.QueryAsync<AlbumResumen>(sql, new { patron, limite });
+        return resultado.ToList();
+    }
+
+    /// <summary>Obtiene el detalle de un álbum con sus canciones.</summary>
+    public async Task<AlbumDetalle?> ObtenerAlbumAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        var tieneEsSingle = await ExisteColumnaEsSingle(conn);
+        var esSingleCol = tieneEsSingle ? "COALESCE(a.es_single, 0)" : "0";
+
+        var album = await conn.QueryFirstOrDefaultAsync<AlbumDetalle>($"""
+            SELECT a.id AS Id, a.nombre AS Nombre, i.nombre AS Interprete, a.id_interprete AS IdInterprete,
+                   a.anio AS Anio, CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                   {esSingleCol} AS EsSingle
+            FROM albumes a
+            LEFT JOIN interpretes i ON a.id_interprete = i.id
+            WHERE a.id = @id
+            """, new { id });
+
+        if (album == null)
+            return null;
+
+        // Obtener canciones del álbum
+        var cancionesCassette = await conn.QueryAsync<CancionEnAlbum>("""
+            SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, (t.lado || ':' || t.desde || '-' || t.hasta) AS Posicion,
+                   t.link_externo AS LinkExterno
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            WHERE t.id_album = @id
+            ORDER BY t.num_formato, t.lado, t.desde
+            """, new { id });
+
+        var cancionesCd = await conn.QueryAsync<CancionEnAlbum>("""
+            SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, CAST(t.ubicacion AS TEXT) AS Posicion,
+                   t.link_externo AS LinkExterno
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            WHERE t.id_album = @id
+            ORDER BY t.num_formato, t.ubicacion
+            """, new { id });
+
+        album.Canciones = cancionesCassette.Concat(cancionesCd).ToList();
+        return album;
+    }
+
+    /// <summary>Crea un nuevo álbum.</summary>
+    public async Task<CrudResponse> CrearAlbumAsync(AlbumRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Resolver intérprete si se proporciona nombre
+            int? idInterprete = request.IdInterprete;
+            if (!idInterprete.HasValue && !string.IsNullOrWhiteSpace(request.NombreInterprete))
+            {
+                var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = @nombre",
+                    new { nombre = request.NombreInterprete });
+
+                if (existente.HasValue)
+                {
+                    idInterprete = existente.Value;
+                }
+                else
+                {
+                    var maxId = await conn.QueryFirstOrDefaultAsync<int?>("SELECT MAX(id) FROM interpretes") ?? 0;
+                    idInterprete = maxId + 1;
+                    await conn.ExecuteAsync(
+                        "INSERT INTO interpretes (id, nombre) VALUES (@id, @nombre)",
+                        new { id = idInterprete, nombre = request.NombreInterprete });
+                }
+            }
+
+            // Verificar si existe la columna es_single
+            var tieneEsSingle = await ExisteColumnaEsSingle(conn);
+            
+            if (tieneEsSingle)
+            {
+                await conn.ExecuteAsync("""
+                    INSERT INTO albumes (nombre, id_interprete, anio, es_single, fecha_creacion)
+                    VALUES (@Nombre, @idInterprete, @Anio, @EsSingle, datetime('now'))
+                    """, new { request.Nombre, idInterprete, request.Anio, EsSingle = request.EsSingle ? 1 : 0 });
+            }
+            else
+            {
+                await conn.ExecuteAsync("""
+                    INSERT INTO albumes (nombre, id_interprete, anio, fecha_creacion)
+                    VALUES (@Nombre, @idInterprete, @Anio, datetime('now'))
+                    """, new { request.Nombre, idInterprete, request.Anio });
+            }
+
+            var idCreado = await conn.QueryFirstAsync<int>("SELECT last_insert_rowid()");
+            return new CrudResponse { Exito = true, Mensaje = "Álbum creado correctamente", IdCreado = idCreado };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Actualiza un álbum existente.</summary>
+    public async Task<CrudResponse> ActualizarAlbumAsync(int id, AlbumRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            int? idInterprete = request.IdInterprete;
+            if (!idInterprete.HasValue && !string.IsNullOrWhiteSpace(request.NombreInterprete))
+            {
+                var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = @nombre",
+                    new { nombre = request.NombreInterprete });
+
+                if (existente.HasValue)
+                {
+                    idInterprete = existente.Value;
+                }
+                else
+                {
+                    var maxId = await conn.QueryFirstOrDefaultAsync<int?>("SELECT MAX(id) FROM interpretes") ?? 0;
+                    idInterprete = maxId + 1;
+                    await conn.ExecuteAsync(
+                        "INSERT INTO interpretes (id, nombre) VALUES (@id, @nombre)",
+                        new { id = idInterprete, nombre = request.NombreInterprete });
+                }
+            }
+
+            // Verificar si existe la columna es_single
+            var tieneEsSingle = await ExisteColumnaEsSingle(conn);
+            int rows;
+            
+            if (tieneEsSingle)
+            {
+                rows = await conn.ExecuteAsync("""
+                    UPDATE albumes SET nombre = @Nombre, id_interprete = @idInterprete, anio = @Anio, es_single = @EsSingle
+                    WHERE id = @id
+                    """, new { id, request.Nombre, idInterprete, request.Anio, EsSingle = request.EsSingle ? 1 : 0 });
+            }
+            else
+            {
+                rows = await conn.ExecuteAsync("""
+                    UPDATE albumes SET nombre = @Nombre, id_interprete = @idInterprete, anio = @Anio
+                    WHERE id = @id
+                    """, new { id, request.Nombre, idInterprete, request.Anio });
+            }
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Álbum no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Álbum actualizado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Elimina un álbum (no elimina las canciones, solo desvincula).</summary>
+    public async Task<CrudResponse> EliminarAlbumAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Desvincular canciones del álbum
+            await conn.ExecuteAsync("UPDATE temas SET id_album = NULL WHERE id_album = @id", new { id });
+            await conn.ExecuteAsync("UPDATE temas_cd SET id_album = NULL WHERE id_album = @id", new { id });
+
+            var rows = await conn.ExecuteAsync("DELETE FROM albumes WHERE id = @id", new { id });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Álbum no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Álbum eliminado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Guarda la portada de un álbum.</summary>
+    public async Task<CrudResponse> GuardarPortadaAlbumAsync(int id, byte[] portada)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "UPDATE albumes SET portada = @portada WHERE id = @id",
+                new { id, portada });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Álbum no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Portada guardada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Obtiene la portada de un álbum.</summary>
+    public async Task<byte[]?> ObtenerPortadaAlbumAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+        return await conn.QueryFirstOrDefaultAsync<byte[]?>(
+            "SELECT portada FROM albumes WHERE id = @id", new { id });
+    }
+
+    // ============================================
+    // CANCIÓN INDIVIDUAL
+    // ============================================
+
+    /// <summary>Obtiene el detalle completo de una canción.</summary>
+    public async Task<CancionDetalle?> ObtenerCancionAsync(int id, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        // Verificar si existe la columna es_single
+        var columnas = await conn.QueryAsync<string>("SELECT name FROM pragma_table_info('albumes')");
+        var tieneEsSingle = columnas.Contains("es_single");
+        var esSingleCol = tieneEsSingle ? "COALESCE(a.es_single, 0)" : "0";
+
+        if (tipo.ToLower() == "cassette")
+        {
+            return await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
+                SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
+                       t.num_formato AS NumFormato, t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
+                       t.id_album AS IdAlbum, a.nombre AS NombreAlbum, ia.nombre AS ArtistaAlbum, a.anio AS AnioAlbum,
+                       {esSingleCol} AS EsAlbumSingle, t.link_externo AS LinkExterno,
+                       CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                       CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum
+                FROM temas t
+                JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
+                LEFT JOIN interpretes ia ON a.id_interprete = ia.id
+                WHERE t.id = @id
+                """, new { id });
+        }
+        else
+        {
+            return await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
+                SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
+                       t.num_formato AS NumFormato, NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
+                       t.id_album AS IdAlbum, a.nombre AS NombreAlbum, ia.nombre AS ArtistaAlbum, a.anio AS AnioAlbum,
+                       {esSingleCol} AS EsAlbumSingle, t.link_externo AS LinkExterno,
+                       CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                       CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum
+                FROM temas_cd t
+                JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
+                LEFT JOIN interpretes ia ON a.id_interprete = ia.id
+                WHERE t.id = @id
+                """, new { id });
+        }
+    }
+
+    /// <summary>Actualiza una canción con información extendida.</summary>
+    public async Task<CrudResponse> ActualizarCancionExtendidaAsync(int id, string tipo, CancionUpdateRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Resolver intérprete
+            int idInterprete;
+            if (request.IdInterprete.HasValue)
+            {
+                idInterprete = request.IdInterprete.Value;
+            }
+            else if (!string.IsNullOrWhiteSpace(request.NombreInterprete))
+            {
+                var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = @nombre",
+                    new { nombre = request.NombreInterprete });
+
+                if (existente.HasValue)
+                {
+                    idInterprete = existente.Value;
+                }
+                else
+                {
+                    var maxId = await conn.QueryFirstOrDefaultAsync<int?>("SELECT MAX(id) FROM interpretes") ?? 0;
+                    idInterprete = maxId + 1;
+                    await conn.ExecuteAsync(
+                        "INSERT INTO interpretes (id, nombre) VALUES (@id, @nombre)",
+                        new { id = idInterprete, nombre = request.NombreInterprete });
+                }
+            }
+            else
+            {
+                return new CrudResponse { Exito = false, Mensaje = "Debe especificar un intérprete" };
+            }
+
+            // Resolver álbum SOLO si se proporciona explícitamente
+            int? idAlbum = null;
+            bool actualizarAlbum = request.IdAlbum.HasValue || !string.IsNullOrWhiteSpace(request.NombreAlbum);
+            
+            if (actualizarAlbum)
+            {
+                idAlbum = request.IdAlbum;
+                if (!idAlbum.HasValue && !string.IsNullOrWhiteSpace(request.NombreAlbum))
+                {
+                    var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                        "SELECT id FROM albumes WHERE nombre = @nombre",
+                        new { nombre = request.NombreAlbum });
+
+                    if (existente.HasValue)
+                    {
+                        idAlbum = existente.Value;
+                    }
+                    else
+                    {
+                        await conn.ExecuteAsync("""
+                            INSERT INTO albumes (nombre, id_interprete, fecha_creacion)
+                            VALUES (@nombre, @idInterprete, datetime('now'))
+                            """, new { nombre = request.NombreAlbum, idInterprete });
+                        idAlbum = await conn.QueryFirstAsync<int>("SELECT last_insert_rowid()");
+                    }
+                }
+            }
+
+            int rows;
+            if (tipo.ToLower() == "cassette")
+            {
+                // Construir SQL dinámicamente para no tocar el álbum si no se especifica
+                var sql = actualizarAlbum
+                    ? """
+                      UPDATE temas SET tema = @Tema, id_interprete = @idInterprete, id_album = @idAlbum,
+                             link_externo = @LinkExterno, lado = @Lado, desde = @Desde, hasta = @Hasta
+                      WHERE id = @id
+                      """
+                    : """
+                      UPDATE temas SET tema = @Tema, id_interprete = @idInterprete,
+                             link_externo = @LinkExterno, lado = @Lado, desde = @Desde, hasta = @Hasta
+                      WHERE id = @id
+                      """;
+                      
+                rows = await conn.ExecuteAsync(sql, new
+                {
+                    id,
+                    request.Tema,
+                    idInterprete,
+                    idAlbum,
+                    request.LinkExterno,
+                    Lado = request.Lado ?? "A",
+                    Desde = request.Desde ?? 1,
+                    Hasta = request.Hasta ?? 1
+                });
+            }
+            else
+            {
+                var sql = actualizarAlbum
+                    ? """
+                      UPDATE temas_cd SET tema = @Tema, id_interprete = @idInterprete, id_album = @idAlbum,
+                             link_externo = @LinkExterno, ubicacion = @Ubicacion
+                      WHERE id = @id
+                      """
+                    : """
+                      UPDATE temas_cd SET tema = @Tema, id_interprete = @idInterprete,
+                             link_externo = @LinkExterno, ubicacion = @Ubicacion
+                      WHERE id = @id
+                      """;
+                      
+                rows = await conn.ExecuteAsync(sql, new
+                {
+                    id,
+                    request.Tema,
+                    idInterprete,
+                    idAlbum,
+                    request.LinkExterno,
+                    Ubicacion = request.Ubicacion ?? 1
+                });
+            }
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Canción actualizada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Guarda la portada de una canción.</summary>
+    public async Task<CrudResponse> GuardarPortadaCancionAsync(int id, string tipo, byte[] portada)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            var rows = await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET portada = @portada WHERE id = @id",
+                new { id, portada });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Portada guardada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Obtiene la portada de una canción (propia o heredada del álbum).</summary>
+    public async Task<byte[]?> ObtenerPortadaCancionAsync(int id, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+        
+        // Primero buscar portada propia
+        var portadaPropia = await conn.QueryFirstOrDefaultAsync<byte[]?>(
+            $"SELECT portada FROM {tabla} WHERE id = @id", new { id });
+        
+        if (portadaPropia != null)
+            return portadaPropia;
+
+        // Si no tiene, buscar portada del álbum
+        var idAlbum = await conn.QueryFirstOrDefaultAsync<int?>(
+            $"SELECT id_album FROM {tabla} WHERE id = @id", new { id });
+
+        if (idAlbum.HasValue)
+        {
+            return await conn.QueryFirstOrDefaultAsync<byte[]?>(
+                "SELECT portada FROM albumes WHERE id = @id", new { id = idAlbum.Value });
+        }
+
+        return null;
+    }
+
+    // ============================================
+    // ASIGNACIÓN DE CANCIONES A ÁLBUMES
+    // ============================================
+
+    /// <summary>Obtiene todas las canciones para mostrar en la galería.</summary>
+    public async Task<List<CancionGaleria>> ObtenerTodasCancionesAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        var sqlCassette = """
+            SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, t.id_album AS IdAlbum, a.nombre AS AlbumNombre
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """;
+
+        var sqlCd = """
+            SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, t.id_album AS IdAlbum, a.nombre AS AlbumNombre
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """;
+
+        var sql = $"{sqlCassette} UNION ALL {sqlCd} ORDER BY Tema";
+
+        var resultado = await conn.QueryAsync<CancionGaleria>(sql);
+        return resultado.ToList();
+    }
+
+    /// <summary>Obtiene canciones disponibles para asignar a un álbum (con filtro opcional).</summary>
+    public async Task<List<CancionDisponible>> ObtenerCancionesDisponiblesAsync(string? filtro = null, int? excluirAlbumId = null, int limite = 200, bool soloSinAlbum = false)
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        // Si no hay filtro, devolver las primeras N canciones ordenadas por tema
+        // Si hay filtro, buscar por tema o intérprete
+        var patron = string.IsNullOrWhiteSpace(filtro) ? "%" : $"%{filtro}%";
+        var tieneFiltro = !string.IsNullOrWhiteSpace(filtro);
+
+        var sqlCassette = """
+            SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, (t.lado || ':' || t.desde || '-' || t.hasta) AS Posicion,
+                   t.id_album AS IdAlbumActual, a.nombre AS NombreAlbumActual
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE (t.tema LIKE @patron OR i.nombre LIKE @patron OR t.num_formato LIKE @patron)
+            """;
+
+        var sqlCd = """
+            SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
+                   t.num_formato AS NumFormato, CAST(t.ubicacion AS TEXT) AS Posicion,
+                   t.id_album AS IdAlbumActual, a.nombre AS NombreAlbumActual
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE (t.tema LIKE @patron OR i.nombre LIKE @patron OR t.num_formato LIKE @patron)
+            """;
+
+        // Si soloSinAlbum es true, excluir todas las canciones que ya tienen álbum
+        if (soloSinAlbum)
+        {
+            sqlCassette += " AND t.id_album IS NULL";
+            sqlCd += " AND t.id_album IS NULL";
+        }
+        else if (excluirAlbumId.HasValue)
+        {
+            // Solo excluir las canciones del álbum específico (comportamiento anterior)
+            sqlCassette += " AND (t.id_album IS NULL OR t.id_album != @excluirAlbumId)";
+            sqlCd += " AND (t.id_album IS NULL OR t.id_album != @excluirAlbumId)";
+        }
+
+        var sql = $"{sqlCassette} UNION ALL {sqlCd} ORDER BY Tema LIMIT @limite";
+
+        var resultado = await conn.QueryAsync<CancionDisponible>(sql, new { patron, excluirAlbumId, limite });
+        return resultado.ToList();
+    }
+
+    /// <summary>Asigna múltiples canciones a un álbum.</summary>
+    public async Task<CrudResponse> AsignarCancionesAlbumAsync(int albumId, AsignarCancionesRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Verificar que el álbum existe
+            var albumExiste = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT id FROM albumes WHERE id = @albumId", new { albumId });
+            
+            if (!albumExiste.HasValue)
+                return new CrudResponse { Exito = false, Mensaje = "Álbum no encontrado" };
+
+            int asignadas = 0;
+            var noEncontradas = new List<string>();
+            
+            foreach (var cancion in request.Canciones)
+            {
+                var tabla = cancion.Tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+                
+                // Verificar que la canción existe antes de asignarla
+                var cancionExiste = await conn.QueryFirstOrDefaultAsync<int?>(
+                    $"SELECT id FROM {tabla} WHERE id = @id", new { id = cancion.Id });
+                
+                if (!cancionExiste.HasValue)
+                {
+                    noEncontradas.Add($"ID {cancion.Id} ({cancion.Tipo})");
+                    continue;
+                }
+                
+                var rows = await conn.ExecuteAsync(
+                    $"UPDATE {tabla} SET id_album = @albumId WHERE id = @id",
+                    new { albumId, id = cancion.Id });
+                asignadas += rows;
+            }
+
+            if (noEncontradas.Count > 0 && asignadas == 0)
+            {
+                return new CrudResponse 
+                { 
+                    Exito = false, 
+                    Mensaje = $"Canción(es) no encontrada(s): {string.Join(", ", noEncontradas)}. Es posible que hayan sido eliminadas." 
+                };
+            }
+            
+            var mensaje = $"{asignadas} canción(es) asignada(s) al álbum";
+            if (noEncontradas.Count > 0)
+            {
+                mensaje += $". No se encontraron: {string.Join(", ", noEncontradas)}";
+            }
+
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = mensaje 
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Asigna una sola canción a un álbum (o la quita si idAlbum es null).</summary>
+    public async Task<CrudResponse> AsignarCancionAAlbumAsync(int cancionId, string tipo, int? idAlbum)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            var rows = await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET id_album = @idAlbum WHERE id = @cancionId",
+                new { cancionId, idAlbum });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            var mensaje = idAlbum.HasValue 
+                ? "Canción asignada al álbum correctamente" 
+                : "Canción removida del álbum";
+
+            return new CrudResponse { Exito = true, Mensaje = mensaje };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Quita una canción de su álbum actual.</summary>
+    public async Task<CrudResponse> QuitarCancionDeAlbumAsync(int cancionId, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            var rows = await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET id_album = NULL WHERE id = @cancionId",
+                new { cancionId });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Canción removida del álbum" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    // ============================================
+    // NOTIFICACIONES DE DATA HYGIENE
+    // ============================================
+
+    /// <summary>Obtiene notificaciones sobre datos incompletos o con problemas.</summary>
+    public async Task<List<NotificacionDatos>> ObtenerNotificacionesAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        var notificaciones = new List<NotificacionDatos>();
+        int contador = 0;
+
+        // 1. Canciones sin intérprete válido (cassettes)
+        var sinInterpreteCassette = await conn.QueryAsync<(int Id, string Tema, string NumFormato)>("""
+            SELECT t.id, t.tema, t.num_formato 
+            FROM temas t 
+            LEFT JOIN interpretes i ON t.id_interprete = i.id 
+            WHERE i.id IS NULL
+            """);
+        foreach (var c in sinInterpreteCassette)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "error",
+                Mensaje = $"Canción '{c.Tema}' sin intérprete asignado",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cassette",
+                CampoFaltante = "interprete",
+                UrlArreglar = $"formato.html?num={c.NumFormato}&cancion={c.Id}&tipo=cassette"
+            });
+        }
+
+        // 2. Canciones sin intérprete válido (CDs)
+        var sinInterpreteCd = await conn.QueryAsync<(int Id, string Tema, string NumFormato)>("""
+            SELECT t.id, t.tema, t.num_formato 
+            FROM temas_cd t 
+            LEFT JOIN interpretes i ON t.id_interprete = i.id 
+            WHERE i.id IS NULL
+            """);
+        foreach (var c in sinInterpreteCd)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "error",
+                Mensaje = $"Canción '{c.Tema}' sin intérprete asignado",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cd",
+                CampoFaltante = "interprete",
+                UrlArreglar = $"formato.html?num={c.NumFormato}&cancion={c.Id}&tipo=cd"
+            });
+        }
+
+        // 3. Canciones con nombre vacío
+        var nombreVacioCassette = await conn.QueryAsync<(int Id, string NumFormato)>("""
+            SELECT id, num_formato FROM temas WHERE tema IS NULL OR TRIM(tema) = ''
+            """);
+        foreach (var c in nombreVacioCassette)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "error",
+                Mensaje = $"Canción sin nombre en formato {c.NumFormato}",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cassette",
+                CampoFaltante = "nombre",
+                UrlArreglar = $"formato.html?num={c.NumFormato}&cancion={c.Id}&tipo=cassette"
+            });
+        }
+
+        var nombreVacioCd = await conn.QueryAsync<(int Id, string NumFormato)>("""
+            SELECT id, num_formato FROM temas_cd WHERE tema IS NULL OR TRIM(tema) = ''
+            """);
+        foreach (var c in nombreVacioCd)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "error",
+                Mensaje = $"Canción sin nombre en formato {c.NumFormato}",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cd",
+                CampoFaltante = "nombre",
+                UrlArreglar = $"formato.html?num={c.NumFormato}&cancion={c.Id}&tipo=cd"
+            });
+        }
+
+        // 4. Álbumes sin portada
+        var albumesSinPortada = await conn.QueryAsync<(int Id, string Nombre)>("""
+            SELECT id, nombre FROM albumes WHERE portada IS NULL
+            """);
+        foreach (var a in albumesSinPortada)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "warning",
+                Mensaje = $"Álbum '{a.Nombre}' sin portada",
+                EntidadId = a.Id.ToString(),
+                EntidadTipo = "album",
+                CampoFaltante = "portada",
+                UrlArreglar = $"albumes.html?id={a.Id}"
+            });
+        }
+
+        // 5. Álbumes sin canciones
+        var albumesVacios = await conn.QueryAsync<(int Id, string Nombre)>("""
+            SELECT a.id, a.nombre FROM albumes a
+            WHERE NOT EXISTS (SELECT 1 FROM temas WHERE id_album = a.id)
+            AND NOT EXISTS (SELECT 1 FROM temas_cd WHERE id_album = a.id)
+            """);
+        foreach (var a in albumesVacios)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "info",
+                Mensaje = $"Álbum '{a.Nombre}' sin canciones asignadas",
+                EntidadId = a.Id.ToString(),
+                EntidadTipo = "album",
+                CampoFaltante = "canciones",
+                UrlArreglar = $"albumes.html?id={a.Id}"
+            });
+        }
+
+        // 6. Formatos (cassettes) sin marca
+        var formatosSinMarca = await conn.QueryAsync<(int Id, string NumFormato)>("""
+            SELECT fg.id, fg.num_formato 
+            FROM formato_grabado fg
+            LEFT JOIN marcas m ON fg.id_marca = m.id
+            WHERE m.id IS NULL OR m.nombre IS NULL OR TRIM(m.nombre) = ''
+            """);
+        foreach (var f in formatosSinMarca)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "formato",
+                Severidad = "warning",
+                Mensaje = $"Formato {f.NumFormato} sin marca definida",
+                EntidadId = f.NumFormato,
+                EntidadTipo = "cassette",
+                CampoFaltante = "marca",
+                UrlArreglar = $"formato.html?num={f.NumFormato}"
+            });
+        }
+
+        // 7. Intérpretes sin nombre
+        var interpretesSinNombre = await conn.QueryAsync<int>("""
+            SELECT id FROM interpretes WHERE nombre IS NULL OR TRIM(nombre) = ''
+            """);
+        foreach (var id in interpretesSinNombre)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "interprete",
+                Severidad = "error",
+                Mensaje = $"Intérprete (ID: {id}) sin nombre",
+                EntidadId = id.ToString(),
+                EntidadTipo = "interprete",
+                CampoFaltante = "nombre",
+                UrlArreglar = $"interprete.html?id={id}"
+            });
+        }
+
+        return notificaciones;
+    }
+
+    // ============================================
+    // DETECCIÓN DE CANCIONES DUPLICADAS
+    // ============================================
+
+    /// <summary>
+    /// Obtiene grupos de canciones duplicadas (misma canción en diferentes formatos o repetida)
+    /// </summary>
+    public async Task<List<GrupoDuplicados>> ObtenerDuplicadosAsync(string? filtroTipo = null)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        // Obtener todas las canciones de cassettes
+        var temasCassette = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cassette' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.num_formato AS NumFormato,
+                t.lado || ': ' || t.desde || '-' || t.hasta AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """);
+
+        // Obtener todas las canciones de CDs
+        var temasCd = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cd' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.num_formato AS NumFormato,
+                'Track ' || t.ubicacion AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """);
+
+        // Convertir a CancionDuplicada manualmente para manejar tipos correctamente
+        var todasCanciones = new List<CancionDuplicada>();
+        
+        foreach (var t in temasCassette)
+        {
+            todasCanciones.Add(new CancionDuplicada
+            {
+                Id = (int)(long)t.Id,
+                Tipo = (string)t.Tipo,
+                Tema = (string)(t.Tema ?? ""),
+                Interprete = (string)(t.Interprete ?? ""),
+                NumFormato = (string)(t.NumFormato ?? ""),
+                Posicion = (string?)t.Posicion,
+                IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                NombreAlbum = (string?)t.NombreAlbum,
+                TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                LinkExterno = (string?)t.LinkExterno
+            });
+        }
+        
+        foreach (var t in temasCd)
+        {
+            todasCanciones.Add(new CancionDuplicada
+            {
+                Id = (int)(long)t.Id,
+                Tipo = (string)t.Tipo,
+                Tema = (string)(t.Tema ?? ""),
+                Interprete = (string)(t.Interprete ?? ""),
+                NumFormato = (string)(t.NumFormato ?? ""),
+                Posicion = (string?)t.Posicion,
+                IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                NombreAlbum = (string?)t.NombreAlbum,
+                TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                LinkExterno = (string?)t.LinkExterno
+            });
+        }
+
+        // Agrupar por tema+intérprete normalizado
+        var grupos = todasCanciones
+            .Where(c => !string.IsNullOrWhiteSpace(c.Tema) && !string.IsNullOrWhiteSpace(c.Interprete))
+            .GroupBy(c => $"{NormalizarTexto(c.Tema)}|{NormalizarTexto(c.Interprete)}")
+            .Where(g => g.Count() > 1) // Solo grupos con más de una canción
+            .Select(g => new GrupoDuplicados
+            {
+                Id = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(g.Key)).Replace("/", "_").Replace("+", "-"),
+                TemaNormalizado = g.First().Tema,
+                InterpreteNormalizado = g.First().Interprete,
+                Canciones = g.ToList()
+            })
+            .OrderByDescending(g => g.TotalInstancias)
+            .ThenBy(g => g.TemaNormalizado)
+            .ToList();
+
+        // Aplicar filtro si se especificó
+        if (!string.IsNullOrEmpty(filtroTipo))
+        {
+            grupos = filtroTipo.ToLower() switch
+            {
+                "mixtos" => grupos.Where(g => g.TieneMixFormatos).ToList(),
+                "cassette" => grupos.Where(g => g.Canciones.All(c => c.Tipo == "cassette")).ToList(),
+                "cd" => grupos.Where(g => g.Canciones.All(c => c.Tipo == "cd")).ToList(),
+                _ => grupos
+            };
+        }
+
+        return grupos;
+    }
+
+    /// <summary>
+    /// Obtiene estadísticas de duplicados
+    /// </summary>
+    public async Task<EstadisticasDuplicados> ObtenerEstadisticasDuplicadosAsync()
+    {
+        var grupos = await ObtenerDuplicadosAsync();
+
+        return new EstadisticasDuplicados
+        {
+            TotalGrupos = grupos.Count,
+            TotalCancionesDuplicadas = grupos.Sum(g => g.TotalInstancias),
+            GruposMixtos = grupos.Count(g => g.TieneMixFormatos),
+            GruposSoloCassette = grupos.Count(g => g.Canciones.All(c => c.Tipo == "cassette")),
+            GruposSoloCd = grupos.Count(g => g.Canciones.All(c => c.Tipo == "cd"))
+        };
+    }
+
+    /// <summary>
+    /// Obtiene el perfil unificado de una canción con todas sus ubicaciones físicas
+    /// </summary>
+    public async Task<PerfilCancion?> ObtenerPerfilCancionAsync(string? tema, string? artista, string? grupoId)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        // Si tenemos grupoId, decodificarlo para obtener tema|artista normalizado
+        string? temaNorm = null;
+        string? artistaNorm = null;
+        
+        if (!string.IsNullOrEmpty(grupoId))
+        {
+            try
+            {
+                var decoded = System.Text.Encoding.UTF8.GetString(
+                    Convert.FromBase64String(grupoId.Replace("_", "/").Replace("-", "+")));
+                var partes = decoded.Split('|');
+                if (partes.Length == 2)
+                {
+                    temaNorm = partes[0];
+                    artistaNorm = partes[1];
+                }
+            }
+            catch { }
+        }
+        
+        // Si no tenemos datos del grupo, usar tema y artista directos
+        if (string.IsNullOrEmpty(temaNorm) && !string.IsNullOrEmpty(tema))
+            temaNorm = NormalizarTexto(tema);
+        if (string.IsNullOrEmpty(artistaNorm) && !string.IsNullOrEmpty(artista))
+            artistaNorm = NormalizarTexto(artista);
+
+        if (string.IsNullOrEmpty(temaNorm) || string.IsNullOrEmpty(artistaNorm))
+            return null;
+
+        // Obtener todas las canciones que coincidan
+        var temasCassette = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cassette' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.num_formato AS NumFormato,
+                t.lado || ': ' || t.desde || '-' || t.hasta AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """);
+
+        var temasCd = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cd' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.num_formato AS NumFormato,
+                'Track ' || t.ubicacion AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            """);
+
+        var ubicaciones = new List<UbicacionCancion>();
+        string? temaOriginal = null;
+        string? artistaOriginal = null;
+
+        // Procesar cassettes
+        foreach (var t in temasCassette)
+        {
+            var tNorm = NormalizarTexto((string)(t.Tema ?? ""));
+            var iNorm = NormalizarTexto((string)(t.Interprete ?? ""));
+            
+            if (tNorm == temaNorm && iNorm == artistaNorm)
+            {
+                if (temaOriginal == null)
+                {
+                    temaOriginal = (string)(t.Tema ?? "");
+                    artistaOriginal = (string)(t.Interprete ?? "");
+                }
+                
+                ubicaciones.Add(new UbicacionCancion
+                {
+                    Id = (int)(long)t.Id,
+                    Tipo = "cassette",
+                    NumFormato = (string)(t.NumFormato ?? ""),
+                    Posicion = (string?)t.Posicion,
+                    IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                    NombreAlbum = (string?)t.NombreAlbum,
+                    TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                    LinkExterno = (string?)t.LinkExterno
+                });
+            }
+        }
+
+        // Procesar CDs
+        foreach (var t in temasCd)
+        {
+            var tNorm = NormalizarTexto((string)(t.Tema ?? ""));
+            var iNorm = NormalizarTexto((string)(t.Interprete ?? ""));
+            
+            if (tNorm == temaNorm && iNorm == artistaNorm)
+            {
+                if (temaOriginal == null)
+                {
+                    temaOriginal = (string)(t.Tema ?? "");
+                    artistaOriginal = (string)(t.Interprete ?? "");
+                }
+                
+                ubicaciones.Add(new UbicacionCancion
+                {
+                    Id = (int)(long)t.Id,
+                    Tipo = "cd",
+                    NumFormato = (string)(t.NumFormato ?? ""),
+                    Posicion = (string?)t.Posicion,
+                    IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                    NombreAlbum = (string?)t.NombreAlbum,
+                    TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                    LinkExterno = (string?)t.LinkExterno
+                });
+            }
+        }
+
+        if (ubicaciones.Count == 0)
+            return null;
+
+        return new PerfilCancion
+        {
+            Tema = temaOriginal!,
+            Artista = artistaOriginal!,
+            Ubicaciones = ubicaciones.OrderBy(u => u.Tipo).ThenBy(u => u.NumFormato).ToList()
+        };
     }
 }

@@ -66,6 +66,17 @@
         .tabla-canciones tr:last-child td { border-bottom: none; }
         .tabla-canciones tr:hover td { background: var(--color-fondo); }
         
+        /* Animación para destacar canción desde búsqueda */
+        .cancion-destacada td {
+            animation: destacar 2s ease-out;
+        }
+        
+        @keyframes destacar {
+            0% { background: #fef08a; box-shadow: inset 0 0 0 2px #eab308; }
+            50% { background: #fef9c3; box-shadow: inset 0 0 0 2px #facc15; }
+            100% { background: transparent; box-shadow: none; }
+        }
+        
         .numero-posicion {
             width: 50px;
             text-align: center;
@@ -73,7 +84,30 @@
             font-weight: 500;
         }
         
-        .cancion-nombre { font-weight: 600; }
+        .cancion-nombre { 
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .badge-album {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            background: var(--color-acento-claro);
+            border-radius: 4px;
+        }
+        
+        .link-externo {
+            font-size: 0.85rem;
+            text-decoration: none;
+            opacity: 0.7;
+        }
+        
+        .link-externo:hover {
+            opacity: 1;
+        }
         
         .cancion-interprete a {
             color: var(--color-primario);
@@ -185,6 +219,11 @@
             overflow-y: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
+
+        /* Modal de canción más ancho para mostrar tarjetas de álbum */
+        #modalCancion .modal-contenido {
+            max-width: 700px;
+        }
         
         .modal-header {
             display: flex;
@@ -285,6 +324,14 @@
         
         .btn-guardar:hover { background: #047857; }
         
+        .btn-secundario {
+            background: #e5e7eb;
+            color: var(--color-texto);
+            padding: 0.5rem 0.75rem;
+        }
+        
+        .btn-secundario:hover { background: #d1d5db; }
+        
         .btn-peligro {
             background: #dc2626;
             color: white;
@@ -347,6 +394,183 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* Selector visual de álbumes */
+        .selector-album-container {
+            margin-bottom: 1rem;
+        }
+
+        .selector-album-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .selector-album-header label {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .buscar-album-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .buscar-album-input:focus {
+            outline: none;
+            border-color: var(--color-primario);
+        }
+
+        .album-grid-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 0.25rem;
+        }
+
+        .album-mini-card {
+            background: var(--color-fondo-card, #fff);
+            border: 2px solid var(--color-borde);
+            border-radius: var(--radio);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .album-mini-card:hover {
+            border-color: var(--color-primario);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .album-mini-card.seleccionado {
+            border-color: var(--color-acento, #10b981);
+            background: rgba(16, 185, 129, 0.05);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .album-mini-card.sin-album {
+            border-style: dashed;
+        }
+
+        .album-mini-card.nuevo-album {
+            border-style: dashed;
+            border-color: var(--color-primario);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .album-mini-card.nuevo-album:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .album-mini-portada {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: var(--color-fondo);
+        }
+
+        .album-mini-placeholder {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-size: 2rem;
+            color: #94a3b8;
+        }
+
+        .album-mini-info {
+            padding: 0.5rem;
+        }
+
+        .album-mini-nombre {
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .album-mini-artista {
+            font-size: 0.7rem;
+            color: var(--color-texto-secundario);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .album-seleccionado-preview {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--color-acento, #10b981);
+            border-radius: var(--radio);
+            margin-bottom: 0.75rem;
+        }
+
+        .album-seleccionado-preview img {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .album-seleccionado-preview .placeholder-mini {
+            width: 50px;
+            height: 50px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .album-seleccionado-info {
+            flex: 1;
+        }
+
+        .album-seleccionado-nombre {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .album-seleccionado-artista {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .btn-cambiar-album {
+            padding: 0.4rem 0.75rem;
+            background: #f1f5f9;
+            border: none;
+            border-radius: var(--radio);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-cambiar-album:hover {
+            background: #e2e8f0;
+        }
+
+        .album-grid-vacio {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-texto-secundario);
+            grid-column: 1 / -1;
+        }
     </style>
 </head>
 <body>
@@ -356,8 +580,20 @@
             <a href="index.html">Inicio</a>
             <a href="buscar.html">Canciones</a>
             <a href="formatos.html" class="activo">Formatos</a>
+            <a href="albumes.html">Álbumes</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
+            
+            <div class="notif-container">
+                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
+                    🔔
+                    <span id="notifBadge" class="notif-badge"></span>
+                </button>
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header"><span>Problemas Pendientes</span></div>
+                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                </div>
+            </div>
         </nav>
     </header>
 
@@ -500,6 +736,41 @@
                         <div id="listaInterpretes" class="autocomplete-lista"></div>
                     </div>
                     
+                    <!-- Selector de Álbum Visual -->
+                    <div class="selector-album-container">
+                        <div class="selector-album-header">
+                            <label>Álbum</label>
+                        </div>
+                        
+                        <!-- Preview del álbum seleccionado -->
+                        <div id="albumSeleccionadoPreview" style="display: none;">
+                            <div class="album-seleccionado-preview">
+                                <div id="albumPreviewImagen"></div>
+                                <div class="album-seleccionado-info">
+                                    <div class="album-seleccionado-nombre" id="albumPreviewNombre"></div>
+                                    <div class="album-seleccionado-artista" id="albumPreviewArtista"></div>
+                                </div>
+                                <button type="button" class="btn-cambiar-album" onclick="mostrarSelectorAlbum()">Cambiar</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Grid de selección de álbumes -->
+                        <div id="albumSelectorGrid">
+                            <input type="text" class="buscar-album-input" id="buscarAlbumInput" 
+                                   placeholder="🔍 Buscar álbum..." oninput="filtrarAlbumesSelector()">
+                            <div class="album-grid-selector" id="albumGridSelector">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="albumCancion" value="">
+                    </div>
+                    
+                    <!-- Link Externo -->
+                    <div class="form-grupo">
+                        <label>Link Externo (YouTube, Spotify, etc.)</label>
+                        <input type="url" id="linkExternoCancion" placeholder="https://...">
+                    </div>
+                    
                     <div class="campos-cassette-cancion" id="camposCassetteCancion">
                         <div class="form-fila-3">
                             <div class="form-grupo">
@@ -535,6 +806,35 @@
         </div>
     </div>
 
+    <!-- Modal Crear Álbum Rápido -->
+    <div id="modalCrearAlbum" class="modal">
+        <div class="modal-contenido" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>Crear Álbum</h2>
+                <button class="modal-cerrar" onclick="cerrarModal('modalCrearAlbum')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearAlbum">
+                    <div class="form-grupo">
+                        <label>Nombre del Álbum *</label>
+                        <input type="text" id="nombreAlbumNuevo" required>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Año</label>
+                        <input type="text" id="anioAlbumNuevo" placeholder="Ej: 1985">
+                    </div>
+                    <p class="texto-ayuda" style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem;">
+                        💡 Podrás agregar portada y más detalles desde la sección Álbumes
+                    </p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancelar" onclick="cerrarModal('modalCrearAlbum')">Cancelar</button>
+                <button class="btn-modal btn-guardar" onclick="crearAlbumRapido()">Crear</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Confirmar Eliminación -->
     <div id="modalConfirmar" class="modal">
         <div class="modal-contenido" style="max-width: 400px;">
@@ -563,10 +863,13 @@
         let tipoFormatoActual = 'cassette';
         let opciones = null;
         let interpretesLista = [];
+        let albumesLista = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
             const numFormato = params.get('num');
+            const cancionId = params.get('cancion'); // ID de canción a destacar
+            const tipoCancion = params.get('tipo'); // Tipo: cassette o cd
             
             if (!numFormato) {
                 document.getElementById('detalleFormato').innerHTML = '<p class="error">No se especificó un formato</p>';
@@ -580,7 +883,43 @@
             // Configurar autocompletes
             configurarAutocomplete();
             configurarAutocompletesFormato();
+            
+            // Si se especificó una canción, buscarla y destacarla
+            if (cancionId) {
+                destacarCancion(parseInt(cancionId));
+            }
         });
+        
+        function destacarCancion(cancionId) {
+            // Buscar la fila con el ID de canción
+            const filas = document.querySelectorAll('tr[data-cancion]');
+            for (const fila of filas) {
+                try {
+                    const dataEnc = fila.getAttribute('data-cancion');
+                    const dataJson = decodeURIComponent(atob(dataEnc));
+                    const data = JSON.parse(dataJson);
+                    
+                    if (data.id === cancionId) {
+                        // Agregar clase de destacado
+                        fila.classList.add('cancion-destacada');
+                        
+                        // Scroll suave hacia la fila
+                        setTimeout(() => {
+                            fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                        
+                        // Remover el destacado después de la animación
+                        setTimeout(() => {
+                            fila.classList.remove('cancion-destacada');
+                        }, 4000);
+                        
+                        break;
+                    }
+                } catch (e) {
+                    console.error('Error al parsear data-cancion:', e);
+                }
+            }
+        }
 
         function esCassette(numFormato) {
             return /^[nc]\d/i.test(numFormato || '');
@@ -588,12 +927,166 @@
 
         async function cargarOpciones() {
             try {
-                const resp = await fetch('/api/opciones');
-                opciones = await resp.json();
+                const [opcionesResp, albumesResp] = await Promise.all([
+                    fetch('/api/opciones'),
+                    fetch('/api/albumes')
+                ]);
+                opciones = await opcionesResp.json();
+                albumesLista = await albumesResp.json();
                 interpretesLista = opciones.interpretes || [];
+                
+                // Cargar selector de álbumes
+                cargarSelectorAlbumes();
             } catch (error) {
                 console.error('Error cargando opciones:', error);
             }
+        }
+        
+        // ========== SELECTOR VISUAL DE ÁLBUMES ==========
+        let albumSeleccionadoId = null;
+        
+        function cargarSelectorAlbumes() {
+            renderizarGridAlbumes();
+        }
+        
+        function renderizarGridAlbumes(filtro = '') {
+            const grid = document.getElementById('albumGridSelector');
+            if (!grid) {
+                console.error('No se encontró albumGridSelector');
+                return;
+            }
+            
+            if (!albumesLista || !Array.isArray(albumesLista)) {
+                console.error('albumesLista no está disponible:', albumesLista);
+                grid.innerHTML = '<div class="album-grid-vacio">Cargando álbumes...</div>';
+                return;
+            }
+            
+            const filtroLower = (filtro || '').toLowerCase().trim();
+            const hayFiltro = filtroLower.length > 0;
+            
+            const albumesFiltrados = hayFiltro 
+                ? albumesLista.filter(a => 
+                    (a.nombre && a.nombre.toLowerCase().includes(filtroLower)) ||
+                    (a.interprete && a.interprete.toLowerCase().includes(filtroLower)))
+                : albumesLista;
+            
+            let html = '';
+            
+            // Opciones especiales solo si NO hay filtro activo
+            if (!hayFiltro) {
+                // Opción "Sin álbum"
+                html += `
+                    <div class="album-mini-card sin-album ${albumSeleccionadoId === null || albumSeleccionadoId === '' ? 'seleccionado' : ''}" 
+                         onclick="seleccionarAlbum(null)">
+                        <div class="album-mini-placeholder">🚫</div>
+                        <div class="album-mini-info">
+                            <div class="album-mini-nombre">Sin álbum</div>
+                            <div class="album-mini-artista">No asignar</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Opción "Crear nuevo"
+                html += `
+                    <div class="album-mini-card nuevo-album" onclick="abrirModalCrearAlbum()">
+                        <div class="album-mini-placeholder">➕</div>
+                        <div class="album-mini-info">
+                            <div class="album-mini-nombre">Crear nuevo</div>
+                            <div class="album-mini-artista">Nuevo álbum</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Álbumes existentes
+            if (albumesFiltrados.length === 0) {
+                if (hayFiltro) {
+                    html += `
+                        <div class="album-grid-vacio">
+                            No se encontraron álbumes con "${escapeHtml(filtro)}"
+                            <br><br>
+                            <button type="button" class="btn-modal btn-secundario" onclick="abrirModalCrearAlbum()">
+                                ➕ Crear álbum nuevo
+                            </button>
+                        </div>
+                    `;
+                } else if (albumesLista.length === 0) {
+                    html += `<div class="album-grid-vacio">No hay álbumes creados aún</div>`;
+                }
+            } else {
+                albumesFiltrados.forEach(album => {
+                    const isSelected = albumSeleccionadoId == album.id;
+                    const portadaHtml = album.tienePortada 
+                        ? `<img src="/api/albumes/${album.id}/portada" class="album-mini-portada" alt="">`
+                        : `<div class="album-mini-placeholder">💿</div>`;
+                    
+                    html += `
+                        <div class="album-mini-card ${isSelected ? 'seleccionado' : ''}" 
+                             onclick="seleccionarAlbum(${album.id})">
+                            ${portadaHtml}
+                            <div class="album-mini-info">
+                                <div class="album-mini-nombre">${escapeHtml(album.nombre)}</div>
+                                <div class="album-mini-artista">${escapeHtml(album.interprete || 'Sin artista')}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            grid.innerHTML = html;
+        }
+        
+        function seleccionarAlbum(id) {
+            albumSeleccionadoId = id;
+            document.getElementById('albumCancion').value = id || '';
+            
+            if (id === null || id === '') {
+                // Sin álbum seleccionado
+                document.getElementById('albumSeleccionadoPreview').style.display = 'none';
+                document.getElementById('albumSelectorGrid').style.display = 'block';
+            } else {
+                // Mostrar preview del álbum seleccionado
+                const album = albumesLista.find(a => a.id == id);
+                if (album) {
+                    mostrarPreviewAlbum(album);
+                }
+            }
+            
+            renderizarGridAlbumes(document.getElementById('buscarAlbumInput')?.value || '');
+        }
+        
+        function mostrarPreviewAlbum(album) {
+            const preview = document.getElementById('albumSeleccionadoPreview');
+            const imgContainer = document.getElementById('albumPreviewImagen');
+            
+            if (album.tienePortada) {
+                imgContainer.innerHTML = `<img src="/api/albumes/${album.id}/portada" alt="">`;
+            } else {
+                imgContainer.innerHTML = `<div class="placeholder-mini">💿</div>`;
+            }
+            
+            document.getElementById('albumPreviewNombre').textContent = album.nombre;
+            document.getElementById('albumPreviewArtista').textContent = album.interprete || 'Sin artista';
+            
+            preview.style.display = 'block';
+            document.getElementById('albumSelectorGrid').style.display = 'none';
+        }
+        
+        function mostrarSelectorAlbum() {
+            document.getElementById('albumSeleccionadoPreview').style.display = 'none';
+            document.getElementById('albumSelectorGrid').style.display = 'block';
+            document.getElementById('buscarAlbumInput').value = '';
+            renderizarGridAlbumes();
+            // Focus en el input de búsqueda
+            setTimeout(() => document.getElementById('buscarAlbumInput').focus(), 100);
+        }
+        
+        function filtrarAlbumesSelector() {
+            const input = document.getElementById('buscarAlbumInput');
+            if (!input) return;
+            const filtro = input.value.trim();
+            renderizarGridAlbumes(filtro);
         }
         
         // Sistema genérico de autocompletado
@@ -818,9 +1311,13 @@
                     </thead>
                     <tbody>
                         ${canciones.map((c, i) => `
-                            <tr data-cancion="${btoa(encodeURIComponent(JSON.stringify({id: c.id, tema: c.tema, interprete: c.interprete, idInterprete: c.idInterprete || 0, lado: c.lado || 'A', desde: c.desde || 1, hasta: c.hasta || 1, ubicacion: c.ubicacion || 1})))}">
+                            <tr data-cancion="${btoa(encodeURIComponent(JSON.stringify({id: c.id, tema: c.tema, interprete: c.interprete, idInterprete: c.idInterprete || 0, lado: c.lado || 'A', desde: c.desde || 1, hasta: c.hasta || 1, ubicacion: c.ubicacion || 1, idAlbum: c.idAlbum || null, linkExterno: c.linkExterno || ''})))}">
                                 <td class="numero-posicion">${esCassette ? c.desde : c.ubicacion}</td>
-                                <td class="cancion-nombre">${escapeHtml(c.tema)}</td>
+                                <td class="cancion-nombre">
+                                    ${escapeHtml(c.tema)}
+                                    ${c.idAlbum ? `<span class="badge badge-album" title="Álbum: ${escapeHtml(c.nombreAlbum || '')}">💿</span>` : ''}
+                                    ${c.linkExterno ? `<a href="${escapeHtml(c.linkExterno)}" target="_blank" class="link-externo" title="Ver enlace externo">🔗</a>` : ''}
+                                </td>
                                 <td class="cancion-interprete">
                                     <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}">
                                         ${escapeHtml(c.interprete)}
@@ -840,7 +1337,7 @@
         function editarCancionDesdeRow(btn) {
             const row = btn.closest('tr');
             const data = JSON.parse(decodeURIComponent(atob(row.dataset.cancion)));
-            editarCancion(data.id, data.tema, data.interprete, data.idInterprete, data.lado, data.desde, data.hasta, data.ubicacion);
+            editarCancion(data);
         }
         
         function eliminarCancionDesdeRow(btn) {
@@ -852,22 +1349,36 @@
         // ========== MODALES ==========
 
         function cerrarModal(id) {
-            document.getElementById(id).classList.remove('activo');
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.remove('activo');
+            } else {
+                console.error('Modal no encontrado:', id);
+            }
         }
 
         function abrirModal(id) {
-            document.getElementById(id).classList.add('activo');
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.add('activo');
+                console.log('Modal abierto:', id);
+            } else {
+                console.error('Modal no encontrado:', id);
+            }
         }
 
         function toggleCamposCassette() {
             const tipo = document.getElementById('tipoFormatoEdit').value;
             const campos = document.getElementById('camposCassette');
-            campos.classList.toggle('visible', tipo === 'cassette');
+            if (campos) {
+                campos.classList.toggle('visible', tipo === 'cassette');
+            }
         }
 
         // ========== FORMATO CRUD ==========
 
         function abrirModalEditarFormato() {
+            console.log('abrirModalEditarFormato llamado');
             document.getElementById('tituloModalFormato').textContent = 'Editar Formato';
             document.getElementById('numFormatoEdit').value = formatoActual.numFormato;
             document.getElementById('numFormatoEdit').readOnly = true;
@@ -991,6 +1502,19 @@
             document.getElementById('formCancion').reset();
             document.getElementById('cancionId').value = '';
             document.getElementById('idInterpreteCancion').value = '';
+            document.getElementById('albumCancion').value = '';
+            document.getElementById('linkExternoCancion').value = '';
+            
+            // Inicializar selector visual de álbumes (sin álbum seleccionado)
+            albumSeleccionadoId = null;
+            document.getElementById('albumSeleccionadoPreview').style.display = 'none';
+            document.getElementById('albumSelectorGrid').style.display = 'block';
+            document.getElementById('buscarAlbumInput').value = '';
+            renderizarGridAlbumes();
+            
+            // Mostrar/ocultar campos según tipo
+            document.getElementById('camposCassetteCancion').style.display = tipoFormatoActual === 'cassette' ? 'block' : 'none';
+            document.getElementById('camposCdCancion').style.display = tipoFormatoActual === 'cd' ? 'block' : 'none';
             
             // Establecer valores por defecto
             if (tipoFormatoActual === 'cassette') {
@@ -1000,21 +1524,45 @@
             abrirModal('modalCancion');
         }
 
-        function editarCancion(id, tema, interprete, idInterprete, lado, desde, hasta, ubicacion) {
+        function editarCancion(data) {
             document.getElementById('tituloModalCancion').textContent = 'Editar Canción';
-            document.getElementById('cancionId').value = id;
-            document.getElementById('nombreCancion').value = tema;
-            document.getElementById('interpreteCancion').value = interprete;
-            document.getElementById('idInterpreteCancion').value = idInterprete || '';
+            document.getElementById('cancionId').value = data.id;
+            document.getElementById('nombreCancion').value = data.tema;
+            document.getElementById('interpreteCancion').value = data.interprete;
+            document.getElementById('idInterpreteCancion').value = data.idInterprete || '';
+            document.getElementById('albumCancion').value = data.idAlbum || '';
+            document.getElementById('linkExternoCancion').value = data.linkExterno || '';
+            
+            // Inicializar selector visual de álbumes
+            albumSeleccionadoId = data.idAlbum || null;
+            document.getElementById('buscarAlbumInput').value = '';
+            
+            if (albumSeleccionadoId) {
+                const album = albumesLista.find(a => a.id == albumSeleccionadoId);
+                if (album) {
+                    mostrarPreviewAlbum(album);
+                } else {
+                    document.getElementById('albumSeleccionadoPreview').style.display = 'none';
+                    document.getElementById('albumSelectorGrid').style.display = 'block';
+                    renderizarGridAlbumes();
+                }
+            } else {
+                document.getElementById('albumSeleccionadoPreview').style.display = 'none';
+                document.getElementById('albumSelectorGrid').style.display = 'block';
+                renderizarGridAlbumes();
+            }
+            
+            // Mostrar/ocultar campos según tipo
+            document.getElementById('camposCassetteCancion').style.display = tipoFormatoActual === 'cassette' ? 'block' : 'none';
+            document.getElementById('camposCdCancion').style.display = tipoFormatoActual === 'cd' ? 'block' : 'none';
             
             if (tipoFormatoActual === 'cassette') {
-                // Normalizar lado a mayúsculas y valor por defecto
-                const ladoNormalizado = (lado || 'A').toString().toUpperCase();
+                const ladoNormalizado = (data.lado || 'A').toString().toUpperCase();
                 document.getElementById('ladoCancion').value = (ladoNormalizado === 'A' || ladoNormalizado === 'B') ? ladoNormalizado : 'A';
-                document.getElementById('desdeCancion').value = desde || 1;
-                document.getElementById('hastaCancion').value = hasta || 1;
+                document.getElementById('desdeCancion').value = data.desde || 1;
+                document.getElementById('hastaCancion').value = data.hasta || 1;
             } else {
-                document.getElementById('ubicacionCancion').value = ubicacion || 1;
+                document.getElementById('ubicacionCancion').value = data.ubicacion || 1;
             }
             
             abrirModal('modalCancion');
@@ -1025,6 +1573,8 @@
             const idInterprete = document.getElementById('idInterpreteCancion').value;
             const nombreCancion = document.getElementById('nombreCancion').value.trim();
             const nombreInterprete = document.getElementById('interpreteCancion').value.trim();
+            const idAlbum = document.getElementById('albumCancion').value;
+            const linkExterno = document.getElementById('linkExternoCancion').value.trim();
             
             // Validaciones
             if (!nombreCancion) {
@@ -1046,6 +1596,14 @@
             if (idInterprete) {
                 data.idInterprete = parseInt(idInterprete);
             }
+            
+            // Álbum y link externo
+            if (idAlbum) {
+                data.idAlbum = parseInt(idAlbum);
+            }
+            if (linkExterno) {
+                data.linkExterno = linkExterno;
+            }
 
             if (tipoFormatoActual === 'cassette') {
                 const lado = document.getElementById('ladoCancion').value;
@@ -1061,7 +1619,8 @@
             }
 
             try {
-                const url = id ? `/api/canciones/${id}` : '/api/canciones';
+                // Para edición, usar endpoint específico que soporta álbum y link
+                const url = id ? `/api/canciones/${id}/detalle?tipo=${tipoFormatoActual}` : '/api/canciones';
                 const method = id ? 'PUT' : 'POST';
                 
                 const resp = await fetch(url, {
@@ -1076,6 +1635,50 @@
                     cerrarModal('modalCancion');
                     mostrarToast(id ? 'Canción actualizada' : 'Canción agregada', 'exito');
                     await cargarFormato(formatoActual.numFormato);
+                } else {
+                    mostrarToast(result.mensaje, 'error');
+                }
+            } catch (error) {
+                mostrarToast('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // ========== CREAR ÁLBUM RÁPIDO ==========
+        
+        function abrirModalCrearAlbum() {
+            document.getElementById('formCrearAlbum').reset();
+            // Pre-llenar con el intérprete actual si existe
+            abrirModal('modalCrearAlbum');
+        }
+        
+        async function crearAlbumRapido() {
+            const nombre = document.getElementById('nombreAlbumNuevo').value.trim();
+            const anio = document.getElementById('anioAlbumNuevo').value.trim();
+            
+            if (!nombre) {
+                mostrarToast('El nombre del álbum es obligatorio', 'error');
+                return;
+            }
+            
+            try {
+                const resp = await fetch('/api/albumes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, anio: anio || null })
+                });
+                
+                const result = await resp.json();
+                
+                if (result.exito) {
+                    // Recargar lista de álbumes
+                    const albumesResp = await fetch('/api/albumes');
+                    albumesLista = await albumesResp.json();
+                    
+                    // Seleccionar automáticamente el nuevo álbum con el selector visual
+                    seleccionarAlbum(result.idCreado);
+                    
+                    cerrarModal('modalCrearAlbum');
+                    mostrarToast('Álbum creado y seleccionado', 'exito');
                 } else {
                     mostrarToast(result.mensaje, 'error');
                 }

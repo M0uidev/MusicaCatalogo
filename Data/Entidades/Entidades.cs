@@ -20,6 +20,20 @@ public record Supresor(int IdDolby, string Nombre);
 public record Interprete(int Id, string Nombre, int? Foto);
 
 // ============================================
+// ÁLBUMES
+// ============================================
+
+public record Album
+{
+    public int Id { get; init; }
+    public required string Nombre { get; init; }
+    public int? IdInterprete { get; init; }
+    public string? Anio { get; init; }
+    public byte[]? Portada { get; init; }
+    public DateTime? FechaCreacion { get; init; }
+}
+
+// ============================================
 // TABLAS DE GRABACIONES
 // ============================================
 
@@ -63,6 +77,9 @@ public record Tema
     public required string Lado { get; init; }
     public int Desde { get; init; }
     public int Hasta { get; init; }
+    public int? IdAlbum { get; init; }
+    public string? LinkExterno { get; init; }
+    public byte[]? Portada { get; init; }
 }
 
 public record TemaCd
@@ -72,6 +89,9 @@ public record TemaCd
     public int IdInterprete { get; init; }
     public required string NombreTema { get; init; }
     public int Ubicacion { get; init; }
+    public int? IdAlbum { get; init; }
+    public string? LinkExterno { get; init; }
+    public byte[]? Portada { get; init; }
 }
 
 // ============================================
@@ -80,6 +100,7 @@ public record TemaCd
 
 public record ResultadoBusqueda
 {
+    public int Id { get; init; }
     public required string Tipo { get; init; } // "cassette" o "cd"
     public required string NumFormato { get; init; }
     public required string Tema { get; init; }
@@ -106,6 +127,7 @@ public record DetalleFormato
 
 public record TemaEnFormato
 {
+    public int Id { get; init; }
     public required string Tema { get; init; }
     public required string Interprete { get; init; }
     public int IdInterprete { get; init; }
@@ -114,6 +136,10 @@ public record TemaEnFormato
     public int? Hasta { get; init; }
     public int? Ubicacion { get; init; }
     public int? Duracion => Hasta.HasValue && Desde.HasValue ? Hasta - Desde : null;
+    public int? IdAlbum { get; init; }
+    public string? NombreAlbum { get; init; }
+    public string? LinkExterno { get; init; }
+    public bool TienePortada { get; init; }
 }
 
 public record DetalleInterprete
@@ -283,4 +309,245 @@ public class TemaConId
     public int? Desde { get; set; }
     public int? Hasta { get; set; }
     public int? Ubicacion { get; set; }
+    public int? IdAlbum { get; set; }
+    public string? NombreAlbum { get; set; }
+    public string? LinkExterno { get; set; }
+    public bool TienePortada { get; set; }
+}
+
+// ============================================
+// DTOs PARA ÁLBUMES
+// ============================================
+
+/// <summary>DTO para listar álbumes</summary>
+public class AlbumResumen
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string? Interprete { get; set; }
+    public int? IdInterprete { get; set; }
+    public string? Anio { get; set; }
+    public bool TienePortada { get; set; }
+    public int TotalCanciones { get; set; }
+    public bool EsSingle { get; set; }
+}
+
+/// <summary>DTO para detalle de álbum</summary>
+public class AlbumDetalle
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string? Interprete { get; set; }
+    public int? IdInterprete { get; set; }
+    public string? Anio { get; set; }
+    public bool TienePortada { get; set; }
+    public bool EsSingle { get; set; }
+    public List<CancionEnAlbum> Canciones { get; set; } = new();
+}
+
+/// <summary>DTO para canciones dentro de un álbum</summary>
+public class CancionEnAlbum
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = "";
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public string? Posicion { get; set; }
+    public string? LinkExterno { get; set; }
+}
+
+/// <summary>DTO para crear/editar álbum</summary>
+public record AlbumRequest
+{
+    public required string Nombre { get; init; }
+    public int? IdInterprete { get; init; }
+    public string? NombreInterprete { get; init; }
+    public string? Anio { get; init; }
+    public bool EsSingle { get; init; }
+}
+
+/// <summary>DTO para detalle individual de canción</summary>
+public class CancionDetalle
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = ""; // "cassette" o "cd"
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public int IdInterprete { get; set; }
+    public string NumFormato { get; set; } = "";
+    public string? Lado { get; set; }
+    public int? Desde { get; set; }
+    public int? Hasta { get; set; }
+    public int? Ubicacion { get; set; }
+    public int? IdAlbum { get; set; }
+    public string? NombreAlbum { get; set; }
+    public string? ArtistaAlbum { get; set; }
+    public string? AnioAlbum { get; set; }
+    public bool EsAlbumSingle { get; set; }
+    public string? LinkExterno { get; set; }
+    public bool TienePortada { get; set; }
+    public bool TienePortadaAlbum { get; set; }
+}
+
+/// <summary>DTO para actualizar canción individual</summary>
+public record CancionUpdateRequest
+{
+    public required string Tema { get; init; }
+    public int? IdInterprete { get; init; }
+    public string? NombreInterprete { get; init; }
+    public int? IdAlbum { get; init; }
+    public string? NombreAlbum { get; init; }
+    public string? LinkExterno { get; init; }
+    // Para cassettes
+    public string? Lado { get; init; }
+    public int? Desde { get; init; }
+    public int? Hasta { get; init; }
+    // Para CDs
+    public int? Ubicacion { get; init; }
+}
+
+/// <summary>DTO para sugerencias de autocompletado con ID</summary>
+public class SugerenciaTemaConId
+{
+    public int Id { get; set; }
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public string Tipo { get; set; } = "";
+    public string Ubicacion { get; set; } = "";
+    public int? IdAlbum { get; set; }
+    public string? AlbumNombre { get; set; }
+}
+
+// ============================================
+// DTOs PARA ASIGNACIÓN DE ÁLBUMES
+// ============================================
+
+/// <summary>DTO para asignar canciones a un álbum</summary>
+public record AsignarCancionesRequest
+{
+    public required List<CancionRef> Canciones { get; init; }
+}
+
+/// <summary>DTO para asignar una sola canción a un álbum</summary>
+public record AsignarCancionSimpleRequest
+{
+    public int IdCancion { get; init; }
+    public required string Tipo { get; init; } // "cassette" o "cd"
+    public int? IdAlbum { get; init; } // null para quitar del álbum
+}
+
+/// <summary>Referencia a una canción (ID + tipo)</summary>
+public record CancionRef
+{
+    public int Id { get; init; }
+    public required string Tipo { get; init; } // "cassette" o "cd"
+}
+
+/// <summary>DTO para mostrar canciones en la galería</summary>
+public class CancionGaleria
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = "";
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public int? IdAlbum { get; set; }
+    public string? AlbumNombre { get; set; }
+}
+
+/// <summary>DTO para obtener canciones disponibles para asignar</summary>
+public class CancionDisponible
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = "";
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public string? Posicion { get; set; }
+    public int? IdAlbumActual { get; set; }
+    public string? NombreAlbumActual { get; set; }
+}
+
+// ============================================
+// DTOs PARA NOTIFICACIONES (DATA HYGIENE)
+// ============================================
+
+/// <summary>Notificación de problema en los datos</summary>
+public class NotificacionDatos
+{
+    public string Id { get; set; } = "";
+    public string Tipo { get; set; } = ""; // "cancion", "album", "formato", "interprete"
+    public string Severidad { get; set; } = "info"; // "info", "warning", "error"
+    public string Mensaje { get; set; } = "";
+    public string? EntidadId { get; set; }
+    public string? EntidadTipo { get; set; }
+    public string? CampoFaltante { get; set; }
+    public string? UrlArreglar { get; set; }
+}
+
+// ============================================
+// DTOs PARA CANCIONES DUPLICADAS
+// ============================================
+
+/// <summary>Grupo de canciones que son potencialmente la misma</summary>
+public class GrupoDuplicados
+{
+    public string Id { get; set; } = ""; // Hash del tema+interprete normalizado
+    public string TemaNormalizado { get; set; } = "";
+    public string InterpreteNormalizado { get; set; } = "";
+    public List<CancionDuplicada> Canciones { get; set; } = new();
+    public int TotalInstancias => Canciones.Count;
+    public bool TieneMixFormatos => Canciones.Any(c => c.Tipo == "cassette") && Canciones.Any(c => c.Tipo == "cd");
+}
+
+/// <summary>Información de una canción dentro de un grupo de duplicados</summary>
+public class CancionDuplicada
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = ""; // "cassette" o "cd"
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public string? Posicion { get; set; }
+    public int? IdAlbum { get; set; }
+    public string? NombreAlbum { get; set; }
+    public bool TienePortada { get; set; }
+    public string? LinkExterno { get; set; }
+}
+
+/// <summary>Estadísticas de duplicados</summary>
+public class EstadisticasDuplicados
+{
+    public int TotalGrupos { get; set; }
+    public int TotalCancionesDuplicadas { get; set; }
+    public int GruposMixtos { get; set; } // CD + Cassette
+    public int GruposSoloCassette { get; set; }
+    public int GruposSoloCd { get; set; }
+}
+
+// ============================================
+// DTOs PARA PERFIL DE CANCIÓN UNIFICADO
+// ============================================
+
+/// <summary>Perfil unificado de una canción con todas sus ubicaciones físicas</summary>
+public class PerfilCancion
+{
+    public string Tema { get; set; } = "";
+    public string Artista { get; set; } = "";
+    public List<UbicacionCancion> Ubicaciones { get; set; } = new();
+}
+
+/// <summary>Ubicación física de una canción (cassette o CD)</summary>
+public class UbicacionCancion
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = ""; // "cassette" o "cd"
+    public string NumFormato { get; set; } = "";
+    public string? Posicion { get; set; }
+    public int? IdAlbum { get; set; }
+    public string? NombreAlbum { get; set; }
+    public bool TienePortada { get; set; }
+    public string? LinkExterno { get; set; }
 }

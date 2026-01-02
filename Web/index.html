@@ -67,9 +67,21 @@
         <nav>
             <a href="index.html" class="activo">Inicio</a>
             <a href="buscar.html">Canciones</a>
+            <a href="albumes.html">Álbumes</a>
             <a href="formatos.html">Formatos</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
+            
+            <div class="notif-container">
+                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
+                    🔔
+                    <span id="notifBadge" class="notif-badge"></span>
+                </button>
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header"><span>Problemas Pendientes</span></div>
+                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                </div>
+            </div>
         </nav>
     </header>
 

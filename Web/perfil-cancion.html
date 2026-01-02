@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Canción - Catálogo de Música</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        .perfil-cancion {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .perfil-header {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+            background: var(--color-fondo-card);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .perfil-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        .perfil-portada {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: var(--radio-lg);
+            background: var(--color-fondo);
+            border: 2px solid var(--color-borde);
+        }
+
+        .perfil-portada-placeholder {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--color-fondo) 0%, var(--color-primario-claro) 100%);
+            border-radius: var(--radio-lg);
+            border: 2px dashed var(--color-borde);
+            color: var(--color-texto-secundario);
+        }
+
+        .perfil-portada-placeholder svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.5;
+        }
+
+        .perfil-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .perfil-info h1 {
+            font-size: 2rem;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .perfil-artista {
+            font-size: 1.25rem;
+            color: var(--color-primario);
+            margin-bottom: 1rem;
+        }
+
+        .perfil-artista a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .perfil-artista a:hover {
+            text-decoration: underline;
+        }
+
+        .perfil-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .perfil-stat {
+            text-align: center;
+        }
+
+        .perfil-stat .numero {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primario);
+        }
+
+        .perfil-stat .label {
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .perfil-link-externo {
+            margin-top: 1.5rem;
+        }
+
+        .perfil-link-externo a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-primario);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radio);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .perfil-link-externo a:hover {
+            background: var(--color-primario-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Sección de ubicaciones físicas */
+        .seccion-ubicaciones {
+            margin-top: 2rem;
+        }
+
+        .seccion-titulo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .seccion-titulo h2 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        .seccion-titulo .contador {
+            background: var(--color-primario);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radio);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .ubicaciones-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .ubicacion-card {
+            display: flex;
+            background: var(--color-fondo-card);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio-lg);
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .ubicacion-card:hover {
+            border-color: var(--color-primario);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .ubicacion-portada-container {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .ubicacion-portada {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ubicacion-portada-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--color-fondo) 0%, var(--color-primario-claro) 100%);
+            font-size: 2rem;
+        }
+
+        .ubicacion-tipo-badge {
+            position: absolute;
+            bottom: 0.4rem;
+            left: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .ubicacion-tipo-badge.cassette {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .ubicacion-tipo-badge.cd {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .ubicacion-info {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .ubicacion-formato {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .ubicacion-album {
+            font-size: 0.9rem;
+            color: var(--color-texto-secundario);
+            margin-bottom: 0.5rem;
+        }
+
+        .ubicacion-detalles {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .ubicacion-detalle {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .ubicacion-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .ubicacion-card:hover .ubicacion-arrow {
+            color: var(--color-primario);
+        }
+
+        /* Estado vacío */
+        .sin-ubicaciones {
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .sin-ubicaciones svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Loading */
+        .cargando {
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-borde);
+            border-top-color: var(--color-primario);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Acciones */
+        .perfil-acciones {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-accion {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radio);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-accion.secundario {
+            background: var(--color-fondo);
+            border: 1px solid var(--color-borde);
+            color: var(--color-texto);
+        }
+
+        .btn-accion.secundario:hover {
+            border-color: var(--color-primario);
+            color: var(--color-primario);
+        }
+
+        .btn-accion svg {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Catálogo de Música</h1>
+        <nav>
+            <a href="index.html">Inicio</a>
+            <a href="buscar.html">Canciones</a>
+            <a href="albumes.html">Álbumes</a>
+            <a href="formatos.html">Formatos</a>
+            <a href="interpretes.html">Intérpretes</a>
+            <a href="estadisticas.html">Estadísticas</a>
+            
+            <div class="notif-container">
+                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
+                    🔔
+                    <span id="notifBadge" class="notif-badge"></span>
+                </button>
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header"><span>Problemas Pendientes</span></div>
+                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <nav class="breadcrumb">
+            <a href="index.html">Inicio</a>
+            <span class="separador">›</span>
+            <a href="buscar.html">Canciones</a>
+            <span class="separador">›</span>
+            <span class="actual" id="breadcrumbActual">Perfil de Canción</span>
+        </nav>
+
+        <div id="contenido" class="perfil-cancion">
+            <div class="cargando">
+                <div class="spinner"></div>
+                <p>Cargando perfil de canción...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Catálogo de Música Personal © 2025</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Obtener parámetros de URL
+        const params = new URLSearchParams(window.location.search);
+        const tema = params.get('tema');
+        const artista = params.get('artista');
+        const grupoId = params.get('grupo'); // ID del grupo de duplicados
+
+        let datosCancion = null;
+
+        async function cargarPerfil() {
+            try {
+                // Buscar todas las instancias de esta canción
+                const response = await fetch(`/api/cancion/perfil?tema=${encodeURIComponent(tema || '')}&artista=${encodeURIComponent(artista || '')}&grupo=${encodeURIComponent(grupoId || '')}`);
+                
+                if (!response.ok) {
+                    throw new Error('No se pudo cargar el perfil');
+                }
+
+                datosCancion = await response.json();
+                renderizarPerfil();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contenido').innerHTML = `
+                    <div class="sin-ubicaciones">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <h3>Error al cargar</h3>
+                        <p>${error.message}</p>
+                        <a href="buscar.html" class="btn-accion secundario" style="margin-top: 1rem; display: inline-flex;">
+                            Volver a canciones
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarPerfil() {
+            if (!datosCancion || datosCancion.ubicaciones.length === 0) {
+                document.getElementById('contenido').innerHTML = `
+                    <div class="sin-ubicaciones">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                        <h3>Canción no encontrada</h3>
+                        <p>No se encontraron instancias de esta canción</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Encontrar álbum asociado (preferir CD, luego cassette)
+            const ubicacionConAlbum = datosCancion.ubicaciones.find(u => u.idAlbum && u.tipo === 'cd') 
+                || datosCancion.ubicaciones.find(u => u.idAlbum);
+            
+            // Encontrar el mejor link externo
+            const ubicacionConLink = datosCancion.ubicaciones.find(u => u.linkExterno);
+
+            // Contar por tipo
+            const cassettes = datosCancion.ubicaciones.filter(u => u.tipo === 'cassette').length;
+            const cds = datosCancion.ubicaciones.filter(u => u.tipo === 'cd').length;
+
+            document.title = `${datosCancion.tema} - ${datosCancion.artista} | Catálogo de Música`;
+            
+            // Actualizar breadcrumb
+            document.getElementById('breadcrumbActual').textContent = datosCancion.tema;
+
+            // Portada del álbum
+            const portadaHtml = ubicacionConAlbum 
+                ? `<img src="/api/albumes/${ubicacionConAlbum.idAlbum}/portada" 
+                       class="perfil-portada" 
+                       onerror="this.parentElement.innerHTML = generarPlaceholderPortada()">`
+                : generarPlaceholderPortada();
+
+            let html = `
+                <div class="perfil-header">
+                    <div class="perfil-portada-container">
+                        ${portadaHtml}
+                    </div>
+                    <div class="perfil-info">
+                        <h1>${escapeHtml(datosCancion.tema)}</h1>
+                        <div class="perfil-artista">
+                            <a href="buscar.html?q=${encodeURIComponent(datosCancion.artista)}">${escapeHtml(datosCancion.artista)}</a>
+                        </div>
+                        ${ubicacionConAlbum ? `<div style="color: var(--color-texto-secundario); font-size: 0.9rem; margin-bottom: 0.5rem;">💿 ${escapeHtml(ubicacionConAlbum.nombreAlbum)}</div>` : ''}
+                        
+                        <div class="perfil-stats">
+                            <div class="perfil-stat">
+                                <div class="numero">${datosCancion.ubicaciones.length}</div>
+                                <div class="label">copias físicas</div>
+                            </div>
+                            ${cassettes > 0 ? `
+                            <div class="perfil-stat">
+                                <div class="numero" style="color: #f59e0b;">${cassettes}</div>
+                                <div class="label">en cassette</div>
+                            </div>
+                            ` : ''}
+                            ${cds > 0 ? `
+                            <div class="perfil-stat">
+                                <div class="numero" style="color: #3b82f6;">${cds}</div>
+                                <div class="label">en CD</div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${ubicacionConLink ? `
+                        <div class="perfil-link-externo">
+                            <a href="${ubicacionConLink.linkExterno}" target="_blank">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                                Escuchar online
+                            </a>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="seccion-ubicaciones">
+                    <div class="seccion-titulo">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        <h2>Ubicaciones físicas</h2>
+                        <span class="contador">${datosCancion.ubicaciones.length}</span>
+                    </div>
+
+                    <div class="ubicaciones-grid">
+                        ${datosCancion.ubicaciones.map(u => renderizarUbicacion(u)).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('contenido').innerHTML = html;
+        }
+
+        function renderizarUbicacion(ubicacion) {
+            const urlDestino = ubicacion.tipo === 'cassette' 
+                ? `formato.html?num=${encodeURIComponent(ubicacion.numFormato)}`
+                : `formato.html?num=${encodeURIComponent(ubicacion.numFormato)}&tipo=cd`;
+
+            const icono = ubicacion.tipo === 'cassette' ? '📼' : '💿';
+            const tipoLabel = ubicacion.tipo === 'cassette' ? 'Cassette' : 'CD';
+
+            return `
+                <a href="${urlDestino}" class="ubicacion-card">
+                    <div class="ubicacion-portada-container">
+                        ${ubicacion.tienePortada 
+                            ? `<img src="/api/${ubicacion.tipo === 'cd' ? 'temas-cd' : 'temas'}/${ubicacion.id}/portada" 
+                                   class="ubicacion-portada" 
+                                   onerror="this.outerHTML = '<div class=ubicacion-portada-placeholder>${icono}</div>'">`
+                            : `<div class="ubicacion-portada-placeholder">${icono}</div>`
+                        }
+                        <span class="ubicacion-tipo-badge ${ubicacion.tipo}">${tipoLabel}</span>
+                    </div>
+                    <div class="ubicacion-info">
+                        <div class="ubicacion-formato">${tipoLabel} ${escapeHtml(ubicacion.numFormato)}</div>
+                        ${ubicacion.nombreAlbum 
+                            ? `<div class="ubicacion-album">${escapeHtml(ubicacion.nombreAlbum)}</div>` 
+                            : ''}
+                        <div class="ubicacion-detalles">
+                            ${ubicacion.posicion ? `
+                            <span class="ubicacion-detalle">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="8" y1="6" x2="21" y2="6"/>
+                                    <line x1="8" y1="12" x2="21" y2="12"/>
+                                    <line x1="8" y1="18" x2="21" y2="18"/>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                                </svg>
+                                Posición: ${escapeHtml(ubicacion.posicion)}
+                            </span>
+                            ` : ''}
+                            ${ubicacion.linkExterno ? `
+                            <span class="ubicacion-detalle">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                                </svg>
+                                Con link
+                            </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="ubicacion-arrow">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </div>
+                </a>
+            `;
+        }
+
+        function generarPlaceholderPortada() {
+            return `
+                <div class="perfil-portada-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Iniciar
+        if (!tema && !artista && !grupoId) {
+            document.getElementById('contenido').innerHTML = `
+                <div class="sin-ubicaciones">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <h3>Parámetros faltantes</h3>
+                    <p>Se requiere tema y artista o ID de grupo</p>
+                    <a href="buscar.html" class="btn-accion secundario" style="margin-top: 1rem; display: inline-flex;">
+                        Ver canciones
+                    </a>
+                </div>
+            `;
+        } else {
+            cargarPerfil();
+        }
+    </script>
+</body>
+</html>

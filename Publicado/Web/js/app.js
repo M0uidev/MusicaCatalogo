@@ -81,6 +81,14 @@ const ICONOS = {
         <rect x="26" y="24" width="12" height="8" fill="#d1d5db"/>
     </svg>`,
 
+    // Icono de música/single - Nota musical
+    musica: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="26" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+        <path d="M40 16 L40 40" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="34" cy="42" r="8" fill="#22c55e"/>
+        <path d="M40 16 L48 14 L48 20 L40 22" fill="#22c55e"/>
+    </svg>`,
+
     // Iconos de fuente de grabación
     fuenteFM: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="8" y="16" width="48" height="32" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
@@ -316,3 +324,92 @@ function generarLeyendaTiposCinta() {
         </div>
     `;
 }
+
+// ============================================
+// SISTEMA DE NOTIFICACIONES
+// ============================================
+
+let notificacionesCache = null;
+
+async function cargarNotificaciones() {
+    try {
+        const resp = await fetch('/api/notificaciones');
+        const data = await resp.json();
+        notificacionesCache = data;
+        actualizarBadgeNotificaciones(data.total);
+        return data;
+    } catch (error) {
+        console.error('Error cargando notificaciones:', error);
+        return { total: 0, items: [] };
+    }
+}
+
+function actualizarBadgeNotificaciones(count) {
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+}
+
+function toggleNotificaciones() {
+    const dropdown = document.getElementById('notifDropdown');
+    if (dropdown) {
+        const isVisible = dropdown.classList.toggle('visible');
+        if (isVisible && notificacionesCache) {
+            renderizarNotificaciones(notificacionesCache);
+        }
+    }
+}
+
+function renderizarNotificaciones(data) {
+    const lista = document.getElementById('notifList');
+    if (!lista) return;
+    
+    if (data.total === 0) {
+        lista.innerHTML = `
+            <div class="notif-empty">
+                <div class="notif-empty-icon">✅</div>
+                <div>¡Todo en orden!</div>
+                <div style="font-size: 0.85rem;">No hay problemas pendientes</div>
+            </div>
+        `;
+        return;
+    }
+    
+    lista.innerHTML = data.items.map(notif => {
+        const iconClass = notif.severidad === 'error' ? 'error' : 
+                         notif.severidad === 'warning' ? 'warning' : 'info';
+        const icon = notif.severidad === 'error' ? '❌' : 
+                    notif.severidad === 'warning' ? '⚠️' : 'ℹ️';
+        
+        return `
+            <div class="notif-item">
+                <div class="notif-icon ${iconClass}">${icon}</div>
+                <div class="notif-content">
+                    <div class="notif-message">${escapeHtml(notif.mensaje)}</div>
+                    ${notif.urlArreglar ? `
+                        <a href="${notif.urlArreglar}" class="notif-action">
+                            🔧 Arreglar →
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Cerrar dropdown al hacer clic fuera
+document.addEventListener('click', (e) => {
+    const container = document.querySelector('.notif-container');
+    const dropdown = document.getElementById('notifDropdown');
+    if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.remove('visible');
+    }
+});
+
+// Cargar notificaciones al inicio
+document.addEventListener('DOMContentLoaded', () => {
+    cargarNotificaciones();
+});
+

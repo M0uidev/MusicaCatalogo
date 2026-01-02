@@ -290,5 +290,218 @@ public static class ConfiguracionEndpoints
         })
         .WithName("CrearInterprete")
         .WithTags("CRUD");
+
+        // ==========================================
+        // ÁLBUMES
+        // ==========================================
+
+        app.MapGet("/api/albumes", async (string? filtro, int? limite) =>
+        {
+            var albumes = await repo.ListarAlbumesAsync(filtro, limite ?? 100);
+            return Results.Ok(albumes);
+        })
+        .WithName("ListarAlbumes")
+        .WithTags("Álbumes");
+
+        app.MapGet("/api/albumes/{id:int}", async (int id) =>
+        {
+            var album = await repo.ObtenerAlbumAsync(id);
+            return album is null ? Results.NotFound() : Results.Ok(album);
+        })
+        .WithName("ObtenerAlbum")
+        .WithTags("Álbumes");
+
+        app.MapPost("/api/albumes", async (AlbumRequest request) =>
+        {
+            var resultado = await repo.CrearAlbumAsync(request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("CrearAlbum")
+        .WithTags("Álbumes");
+
+        app.MapPut("/api/albumes/{id:int}", async (int id, AlbumRequest request) =>
+        {
+            var resultado = await repo.ActualizarAlbumAsync(id, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("ActualizarAlbum")
+        .WithTags("Álbumes");
+
+        app.MapDelete("/api/albumes/{id:int}", async (int id) =>
+        {
+            var resultado = await repo.EliminarAlbumAsync(id);
+            return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
+        })
+        .WithName("EliminarAlbum")
+        .WithTags("Álbumes");
+
+        // Portada de álbum
+        app.MapGet("/api/albumes/{id:int}/portada", async (int id) =>
+        {
+            var portada = await repo.ObtenerPortadaAlbumAsync(id);
+            if (portada == null || portada.Length == 0)
+                return Results.NotFound();
+            return Results.File(portada, "image/jpeg");
+        })
+        .WithName("ObtenerPortadaAlbum")
+        .WithTags("Álbumes");
+
+        app.MapPost("/api/albumes/{id:int}/portada", async (int id, HttpContext context) =>
+        {
+            var form = await context.Request.ReadFormAsync();
+            var file = form.Files.FirstOrDefault();
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Archivo requerido" });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var resultado = await repo.GuardarPortadaAlbumAsync(id, ms.ToArray());
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SubirPortadaAlbum")
+        .WithTags("Álbumes")
+        .DisableAntiforgery();
+
+        // ==========================================
+        // CANCIÓN INDIVIDUAL
+        // ==========================================
+
+        // Obtener todas las canciones para la galería
+        app.MapGet("/api/canciones/todas", async () =>
+        {
+            var canciones = await repo.ObtenerTodasCancionesAsync();
+            return Results.Ok(canciones);
+        })
+        .WithName("ObtenerTodasCanciones")
+        .WithTags("Canciones");
+
+        app.MapGet("/api/canciones/{id:int}", async (int id, string tipo) =>
+        {
+            var cancion = await repo.ObtenerCancionAsync(id, tipo);
+            return cancion is null ? Results.NotFound() : Results.Ok(cancion);
+        })
+        .WithName("ObtenerCancionDetalle")
+        .WithTags("Canciones");
+
+        app.MapPut("/api/canciones/{id:int}/detalle", async (int id, string tipo, CancionUpdateRequest request) =>
+        {
+            var resultado = await repo.ActualizarCancionExtendidaAsync(id, tipo, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("ActualizarCancionDetalle")
+        .WithTags("Canciones");
+
+        // Portada de canción
+        app.MapGet("/api/canciones/{id:int}/portada", async (int id, string tipo) =>
+        {
+            var portada = await repo.ObtenerPortadaCancionAsync(id, tipo);
+            if (portada == null || portada.Length == 0)
+                return Results.NotFound();
+            return Results.File(portada, "image/jpeg");
+        })
+        .WithName("ObtenerPortadaCancion")
+        .WithTags("Canciones");
+
+        app.MapPost("/api/canciones/{id:int}/portada", async (int id, string tipo, HttpContext context) =>
+        {
+            var form = await context.Request.ReadFormAsync();
+            var file = form.Files.FirstOrDefault();
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Archivo requerido" });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var resultado = await repo.GuardarPortadaCancionAsync(id, tipo, ms.ToArray());
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SubirPortadaCancion")
+        .WithTags("Canciones")
+        .DisableAntiforgery();
+
+        // ==========================================
+        // ASIGNACIÓN DE CANCIONES A ÁLBUMES
+        // ==========================================
+
+        // Obtener canciones disponibles para asignar (búsqueda en servidor)
+        app.MapGet("/api/canciones/disponibles", async (string? filtro, int? excluirAlbumId, int? limite, bool? soloSinAlbum) =>
+        {
+            var canciones = await repo.ObtenerCancionesDisponiblesAsync(filtro, excluirAlbumId, limite ?? 200, soloSinAlbum ?? false);
+            return Results.Ok(canciones);
+        })
+        .WithName("ObtenerCancionesDisponibles")
+        .WithTags("Álbumes");
+
+        // Asignar canciones a un álbum
+        app.MapPost("/api/albumes/{id:int}/canciones", async (int id, AsignarCancionesRequest request) =>
+        {
+            var resultado = await repo.AsignarCancionesAlbumAsync(id, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("AsignarCancionesAlbum")
+        .WithTags("Álbumes");
+
+        // Asignar una sola canción a un álbum (o quitarla si idAlbum es null)
+        app.MapPost("/api/albumes/asignar-cancion", async (AsignarCancionSimpleRequest request) =>
+        {
+            var resultado = await repo.AsignarCancionAAlbumAsync(request.IdCancion, request.Tipo, request.IdAlbum);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("AsignarCancionSimple")
+        .WithTags("Álbumes");
+
+        // Quitar canción de un álbum
+        app.MapDelete("/api/albumes/{albumId:int}/canciones/{cancionId:int}", async (int albumId, int cancionId, string tipo) =>
+        {
+            var resultado = await repo.QuitarCancionDeAlbumAsync(cancionId, tipo);
+            return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
+        })
+        .WithName("QuitarCancionDeAlbum")
+        .WithTags("Álbumes");
+
+        // ==========================================
+        // NOTIFICACIONES (DATA HYGIENE)
+        // ==========================================
+
+        app.MapGet("/api/notificaciones", async () =>
+        {
+            var notificaciones = await repo.ObtenerNotificacionesAsync();
+            return Results.Ok(new { total = notificaciones.Count, items = notificaciones });
+        })
+        .WithName("ObtenerNotificaciones")
+        .WithTags("Sistema");
+
+        // ==========================================
+        // CANCIONES DUPLICADAS
+        // ==========================================
+
+        app.MapGet("/api/duplicados", async (string? tipo) =>
+        {
+            var duplicados = await repo.ObtenerDuplicadosAsync(tipo);
+            return Results.Ok(duplicados);
+        })
+        .WithName("ObtenerDuplicados")
+        .WithTags("Sistema");
+
+        app.MapGet("/api/duplicados/estadisticas", async () =>
+        {
+            var stats = await repo.ObtenerEstadisticasDuplicadosAsync();
+            return Results.Ok(stats);
+        })
+        .WithName("ObtenerEstadisticasDuplicados")
+        .WithTags("Sistema");
+
+        // ==========================================
+        // PERFIL UNIFICADO DE CANCIÓN
+        // ==========================================
+
+        app.MapGet("/api/cancion/perfil", async (string? tema, string? artista, string? grupo) =>
+        {
+            var perfil = await repo.ObtenerPerfilCancionAsync(tema, artista, grupo);
+            if (perfil == null)
+                return Results.NotFound(new { error = "Canción no encontrada" });
+            return Results.Ok(perfil);
+        })
+        .WithName("ObtenerPerfilCancion")
+        .WithTags("Temas");
     }
 }
