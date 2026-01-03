@@ -963,9 +963,12 @@
     </div>
 
     <script>
+        console.log('🔍 DEBUG cancion.html - URL completa:', window.location.href);
+        console.log('🔍 DEBUG cancion.html - search:', window.location.search);
         const params = new URLSearchParams(window.location.search);
         const idCancion = params.get('id');
         const tipoCancion = params.get('tipo') || 'cassette';
+        console.log('🔍 DEBUG cancion.html - idCancion:', idCancion, 'tipoCancion:', tipoCancion);
         let cancionActual = null;
         let modoEdicion = false;
 

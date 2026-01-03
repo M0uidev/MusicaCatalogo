@@ -235,7 +235,9 @@ app.Use(async (context, next) =>
     // Redirigir peticiones HTML normales (no AJAX, excepto app.html) al shell SPA
     if (!isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) && path != "/app.html")
     {
-        context.Response.Redirect($"/app.html#{path}");
+        // Incluir query string en la redirección
+        var fullPath = path + context.Request.QueryString;
+        context.Response.Redirect($"/app.html#{fullPath}");
         return;
     }
     

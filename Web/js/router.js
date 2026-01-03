@@ -15,11 +15,16 @@
         init() {
             // Interceptar clicks en links con data-spa-link
             document.addEventListener('click', (e) => {
-                const link = e.target.closest('a[data-spa-link]');
+                console.log('🔍 DEBUG click evento - target:', e.target);
+                const link = e.target.closest('[data-spa-link]');
+                console.log('🔍 DEBUG click evento - link encontrado:', link);
                 if (link && link.href) {
                     e.preventDefault();
                     const url = new URL(link.href);
-                    this.navigateTo(url.pathname + url.search);
+                    const fullPath = url.pathname + url.search;
+                    console.log('🔍 DEBUG click interceptado - href:', link.href);
+                    console.log('🔍 DEBUG click interceptado - fullPath:', fullPath);
+                    this.navigateTo(fullPath);
                 }
             });
 
@@ -56,6 +61,9 @@
          * Carga el contenido de una página
          */
         async loadPage(path, pushState = true) {
+            console.log('🔍 DEBUG router.loadPage - path recibido:', path);
+            console.log('🔍 DEBUG router.loadPage - pushState:', pushState);
+            
             const mainContainer = document.getElementById('app-main');
             if (!mainContainer) {
                 console.error('Contenedor #app-main no encontrado');
