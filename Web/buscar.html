@@ -283,11 +283,12 @@
             background: white;
             border-radius: var(--radio-lg);
             max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
+            width: 85%;
+            max-height: 61vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            transform: scale(1.3);
         }
 
         .modal-versiones-header {
@@ -725,8 +726,8 @@
 
             grid.innerHTML = perfilesPagina.map((p, idx) => {
                 const tienePortada = p.idAlbum && p.idAlbum > 0;
-                const portadaHtml = tienePortada
-                    ? `<img src="/api/albumes/${p.idAlbum}/portada" class="cancion-portada" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg><span>Sin imagen</span></div>'">`
+                const portadaHtml = (p.idAlbum && p.idAlbum > 0) || (p.artistas[0].instancias[0].esCover)
+                    ? `<img src="${'/api/canciones/' + p.artistas[0].instancias[0].id + '/portada?tipo=' + p.artistas[0].instancias[0].tipo}" class="cancion-portada" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg><span>Sin imagen</span></div>'">`
                     : `<div class="cancion-placeholder">
                            <svg viewBox="0 0 24 24" fill="currentColor">
                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
@@ -745,9 +746,12 @@
                     ? `<div class="badge-multi-artista">🎸 ${p.totalArtistas} versiones</div>`
                     : '';
 
-                // URL de edición (primera instancia del artista principal)
+                // URL de edición
                 const primeraInstancia = p.artistas[0].instancias[0];
-                const editarUrl = `cancion.html?id=${primeraInstancia.id}&tipo=${primeraInstancia.tipo}`;
+                const esMultiVersion = p.totalArtistas > 1 || p.totalInstancias > 1;
+                const editarUrl = esMultiVersion
+                    ? `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`
+                    : `cancion.html?id=${primeraInstancia.id}&tipo=${primeraInstancia.tipo}`;
 
                 // Índice global para el modal
                 const indicePerfil = inicio + idx;
@@ -786,7 +790,7 @@
         }
 
         // Modal de versiones
-        function abrirModalVersiones(indicePerfil) {
+        async function abrirModalVersiones(indicePerfil) {
             const perfil = perfilesFiltrados[indicePerfil];
             if (!perfil) return;
 
@@ -798,6 +802,9 @@
                 🎵 ${escapeHtml(perfil.tema)}
                 <small>${perfil.totalInstancias} copia${perfil.totalInstancias > 1 ? 's' : ''} • ${perfil.totalArtistas} artista${perfil.totalArtistas > 1 ? 's' : ''}</small>
             `;
+
+            // Detectar y auto-configurar covers/originales
+            await detectarYConfigurarOriginal(perfil);
 
             // Actualizar portada del modal
             const portadaContainer = document.getElementById('modalPortada');
@@ -821,7 +828,7 @@
 
             body.innerHTML = artistasOrdenados.map(artista => {
                 const badge = artista.esCover
-                    ? `<span class="badge-cover">🎸 Cover${artista.artistaOriginal ? ' de ' + escapeHtml(artista.artistaOriginal) : ''}</span>`
+                    ? `<span class="badge-cover">🎸 Cover</span>`
                     : `<span class="badge-original">⭐ Original</span>`;
 
                 const ubicaciones = artista.instancias.map(inst => {
@@ -862,6 +869,122 @@
             }).join('');
 
             modal.classList.add('visible');
+        }
+
+        // Detectar y configurar automáticamente original/covers
+        async function detectarYConfigurarOriginal(perfil) {
+            // Obtener todas las instancias de todas las versiones
+            const todasInstancias = [];
+            for (const artista of perfil.artistas) {
+                todasInstancias.push(...artista.instancias);
+            }
+
+            // Verificar si al menos una tiene álbum
+            const instanciasConAlbum = todasInstancias.filter(inst => inst.idAlbum && inst.idAlbum > 0);
+
+            if (instanciasConAlbum.length === 0) {
+                return; // No hay álbumes, no hacer nada
+            }
+
+            // Verificar si alguna está marcada como original (esOriginal = true o esCover = false)
+            const hayOriginal = todasInstancias.some(inst =>
+                inst.esOriginal === true ||
+                inst.EsOriginal === true ||
+                (inst.esCover === false && inst.EsCover === false && !inst.artistaOriginal)
+            );
+
+            if (hayOriginal) {
+                return; // Ya hay una original, no hacer nada
+            }
+
+            // Si llegamos aquí: hay álbum pero no hay original
+            // La que tiene álbum se convierte en original
+            // Preferir la que tiene imagen (tienePortada o tienePortadaAlbum)
+            const instanciaConAlbum = instanciasConAlbum.find(inst =>
+                inst.tienePortada || inst.tienePortadaAlbum
+            ) || instanciasConAlbum[0]; // Si ninguna tiene imagen, tomar la primera con álbum
+
+            const artistaConAlbum = perfil.artistas.find(a =>
+                a.instancias.some(inst => inst.id === instanciaConAlbum.id)
+            );
+
+            if (!artistaConAlbum) return;
+
+            const idAlbumOriginal = instanciaConAlbum.idAlbum;
+            const nombreArtistaOriginal = artistaConAlbum.nombre;
+
+            // Actualizar todas las instancias
+            const actualizaciones = [];
+
+            for (const artista of perfil.artistas) {
+                const esElOriginal = normalizar(artista.nombre) === normalizar(nombreArtistaOriginal);
+
+                for (const inst of artista.instancias) {
+                    const artistaNombre = artista.nombre;
+
+                    if (esElOriginal) {
+                        // Marcar como original
+                        actualizaciones.push({
+                            id: inst.id,
+                            tipo: inst.tipo,
+                            esOriginal: true,
+                            esCover: false,
+                            artistaOriginal: null,
+                            idAlbum: idAlbumOriginal,
+                            nombreInterprete: artistaNombre
+                        });
+                    } else {
+                        // Marcar como cover y asignar álbum
+                        actualizaciones.push({
+                            id: inst.id,
+                            tipo: inst.tipo,
+                            esOriginal: false,
+                            esCover: true,
+                            artistaOriginal: nombreArtistaOriginal,
+                            idAlbum: idAlbumOriginal,
+                            nombreInterprete: artistaNombre
+                        });
+                    }
+                }
+            }
+
+            // Ejecutar actualizaciones
+            try {
+                for (const actualizacion of actualizaciones) {
+                    const resp = await fetch(`/api/canciones/${actualizacion.id}/detalle?tipo=${actualizacion.tipo}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tema: perfil.tema,
+                            nombreInterprete: actualizacion.nombreInterprete,
+                            esOriginal: actualizacion.esOriginal,
+                            esCover: actualizacion.esCover,
+                            artistaOriginal: actualizacion.artistaOriginal,
+                            idAlbum: actualizacion.idAlbum
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        console.error(`Error actualizando canción ${actualizacion.id}:`, await resp.text());
+                    }
+                }
+
+                // Recargar los datos
+                await cargarCanciones();
+
+                // Actualizar el perfil local recargando desde perfilesFiltrados
+                const perfilActualizado = perfilesFiltrados.find(p =>
+                    normalizar(p.tema) === normalizar(perfil.tema)
+                );
+                if (perfilActualizado) {
+                    // Actualizar el perfil actual con los nuevos datos
+                    perfil.artistas = perfilActualizado.artistas;
+                    perfil.idAlbum = perfilActualizado.idAlbum;
+                    perfil.albumNombre = perfilActualizado.albumNombre;
+                }
+            } catch (error) {
+                console.error('Error actualizando covers/originales:', error);
+            }
         }
 
         function cerrarModalVersiones(event) {

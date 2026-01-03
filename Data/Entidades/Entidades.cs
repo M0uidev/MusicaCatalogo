@@ -81,6 +81,7 @@ public record Tema
     public string? LinkExterno { get; init; }
     public byte[]? Portada { get; init; }
     public bool EsCover { get; init; }
+    public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
 }
 
@@ -95,6 +96,7 @@ public record TemaCd
     public string? LinkExterno { get; init; }
     public byte[]? Portada { get; init; }
     public bool EsCover { get; init; }
+    public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
 }
 
@@ -145,6 +147,7 @@ public record TemaEnMedio
     public string? LinkExterno { get; init; }
     public bool TienePortada { get; init; }
     public bool EsCover { get; init; }
+    public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
 }
 
@@ -273,6 +276,7 @@ public record CancionRequest
     public int? Ubicacion { get; init; }
     // Para covers
     public bool EsCover { get; init; }
+    public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
 }
 
@@ -403,7 +407,9 @@ public class CancionDetalle
     public string? LinkExterno { get; set; }
     public bool TienePortada { get; set; }
     public bool TienePortadaAlbum { get; set; }
+
     public bool EsCover { get; set; }
+    public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
 }
 
@@ -417,6 +423,7 @@ public record CancionUpdateRequest
     public string? NombreAlbum { get; init; }
     public string? LinkExterno { get; init; }
     public bool EsCover { get; init; }
+    public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
     // Para cassettes
     public string? Lado { get; init; }
@@ -475,6 +482,7 @@ public class CancionGaleria
     public int? IdAlbum { get; set; }
     public string? AlbumNombre { get; set; }
     public int EsCover { get; set; }
+    public int EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
     public string? Lado { get; set; }
     public long? Desde { get; set; }
@@ -554,6 +562,7 @@ public class CancionDuplicada
     public bool TienePortada { get; set; }
     public string? LinkExterno { get; set; }
     public bool EsCover { get; set; }
+    public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
 }
 
@@ -616,6 +625,7 @@ public class UbicacionCancion
     public bool TienePortada { get; set; }
     public string? LinkExterno { get; set; }
     public bool EsCover { get; set; }
+    public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
 }
 
