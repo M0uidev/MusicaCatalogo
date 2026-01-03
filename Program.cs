@@ -223,8 +223,33 @@ var app = builder.Build();
 // CONFIGURAR MIDDLEWARE
 // ============================================
 
-// Servir archivos estáticos desde la carpeta Web
+// Ruta para archivos estáticos (ya declarada globalmente)
 var rutaWeb = Path.Combine(rutaEjecutable, "Web");
+
+// Middleware para detectar requests AJAX y servir vistas parciales
+app.Use(async (context, next) =>
+{
+    var isAjaxRequest = context.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+    var path = context.Request.Path.Value ?? "";
+    
+    // Si es request AJAX y pide un .html, intentar servir versión parcial
+    if (isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+    {
+        var partialPath = path.Replace(".html", "-partial.html");
+        var rutaCompleta = Path.Combine(rutaWeb, partialPath.TrimStart('/'));
+        
+        // Si existe la versión parcial, servirla
+        if (File.Exists(rutaCompleta))
+        {
+            context.Request.Path = partialPath;
+        }
+        // Si no, servir el HTML completo (el router del cliente extraerá el contenido)
+    }
+    
+    await next();
+});
+
+// Servir archivos estáticos desde la carpeta Web
 if (Directory.Exists(rutaWeb))
 {
     app.UseStaticFiles(new StaticFileOptions
@@ -233,8 +258,8 @@ if (Directory.Exists(rutaWeb))
         RequestPath = ""
     });
 
-    // Redirigir raíz a index.html
-    app.MapGet("/", () => Results.Redirect("/index.html"));
+    // Redirigir raíz a app.html (el nuevo shell SPA)
+    app.MapGet("/", () => Results.Redirect("/app.html"));
 }
 else
 {

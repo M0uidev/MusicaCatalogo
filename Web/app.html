@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Música</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        /* Estilos para el contenedor SPA */
+        #app-main {
+            min-height: calc(100vh - 200px);
+            padding-bottom: 120px; /* Espacio para el reproductor */
+        }
+        
+        /* Transición suave al cambiar contenido */
+        #app-main {
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header persistente -->
+    <header>
+        <h1>Catálogo de Música</h1>
+        <nav>
+            <a href="/index.html" data-spa-link>Inicio</a>
+            <a href="/buscar.html" data-spa-link>Canciones</a>
+            <a href="/albumes.html" data-spa-link>Álbumes</a>
+            <a href="/medios.html" data-spa-link>Medios</a>
+            <a href="/interpretes.html" data-spa-link>Intérpretes</a>
+            <a href="/estadisticas.html" data-spa-link>Estadísticas</a>
+            
+            <div class="notif-container">
+                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
+                    🔔
+                    <span id="notifBadge" class="notif-badge"></span>
+                </button>
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header"><span>Problemas Pendientes</span></div>
+                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contenedor dinámico - aquí se cargan las vistas -->
+    <main id="app-main" class="container">
+        <!-- Contenido inicial (será reemplazado) -->
+        <div style="text-align: center; padding: 4rem 2rem;">
+            <h2>🎵 Cargando...</h2>
+            <p>Inicializando aplicación</p>
+        </div>
+    </main>
+
+    <!-- Footer persistente -->
+    <footer>
+        <p>Catálogo de Música Personal © 2025</p>
+    </footer>
+
+    <!-- Scripts globales (se cargan una sola vez) -->
+    <script src="js/components.js"></script>
+    <script src="js/audioPlayerGlobal.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/pageInitializers.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Inicialización SPA -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar router SPA
+            if (window.SPARouter) {
+                window.SPARouter.init();
+            }
+        });
+    </script>
+</body>
+</html>
