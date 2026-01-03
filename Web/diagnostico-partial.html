@@ -1,0 +1,193 @@
+<main class="principal">
+        <div class="contenedor">
+            <section>
+                <h2>🔧 Diagnóstico del Sistema</h2>
+                <p>Información sobre la importación y estado de la base de datos.</p>
+
+                <div id="infoGeneral">
+                    <p class="cargando">Cargando información...</p>
+                </div>
+            </section>
+
+            <section>
+                <h3>📁 Archivos CSV</h3>
+                <div id="archivosCSV">
+                    <p class="cargando">Cargando...</p>
+                </div>
+            </section>
+
+            <section>
+                <h3>📊 Conteo de Registros</h3>
+                <div id="conteosTablas">
+                    <p class="cargando">Cargando...</p>
+                </div>
+            </section>
+
+            <section>
+                <h3>⚙️ Acciones</h3>
+                <button id="btnReimportar" class="btn btn-primario">🔄 Forzar Reimportación</button>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-texto-secundario);">
+                    Esto volverá a importar todos los archivos CSV a la base de datos.
+                </p>
+                <div id="resultadoReimportacion" style="margin-top: 1rem;"></div>
+            </section>
+
+            <section>
+                <h3>📱 Información de Red</h3>
+                <div id="infoRed">
+                    <p class="cargando">Cargando...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+<script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([
+                cargarDiagnostico(),
+                cargarInfoRed()
+            ]);
+
+            document.getElementById('btnReimportar').addEventListener('click', reimportar);
+        });
+
+        async function cargarDiagnostico() {
+            try {
+                const diag = await api.obtenerDiagnostico();
+
+                // Info general
+                document.getElementById('infoGeneral').innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-numero">${diag.baseDatosExiste ? '✅' : '❌'}</div>
+                            <div class="stat-label">Base de Datos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-numero">${diag.ultimaImportacion ? '✅' : '⏳'}</div>
+                            <div class="stat-label">Importación</div>
+                        </div>
+                    </div>
+                    ${diag.ultimaImportacion ? `
+                        <p style="margin-top: 1rem;">
+                            <strong>Última importación:</strong> ${new Date(diag.ultimaImportacion).toLocaleString('es-ES')}
+                        </p>
+                    ` : ''}
+                `;
+
+                // Archivos CSV
+                document.getElementById('archivosCSV').innerHTML = `
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Archivo</th>
+                                <th>Estado</th>
+                                <th>Tamaño</th>
+                                <th>Última Modificación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${diag.archivosCSV.map(a => `
+                                <tr>
+                                    <td>${escapeHtml(a.nombre)}</td>
+                                    <td>${a.existe ? '✅ Existe' : '❌ No encontrado'}</td>
+                                    <td>${a.tamanoBytes ? formatearTamano(a.tamanoBytes) : '-'}</td>
+                                    <td>${a.ultimaModificacion ? new Date(a.ultimaModificacion).toLocaleString('es-ES') : '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Conteos de tablas
+                if (diag.conteosTablas && Object.keys(diag.conteosTablas).length > 0) {
+                    document.getElementById('conteosTablas').innerHTML = `
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Tabla</th>
+                                    <th>Registros</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(diag.conteosTablas).map(([tabla, count]) => `
+                                    <tr>
+                                        <td>${escapeHtml(tabla)}</td>
+                                        <td>${formatearNumero(count)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    document.getElementById('conteosTablas').innerHTML = '<p>No hay datos de tablas disponibles.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error cargando diagnóstico:', error);
+                document.getElementById('infoGeneral').innerHTML = htmlError('Error al cargar el diagnóstico.');
+            }
+        }
+
+        async function cargarInfoRed() {
+            try {
+                const info = await api.obtenerInfoRed();
+                document.getElementById('infoRed').innerHTML = `
+                    <p><strong>Puerto:</strong> ${info.puerto}</p>
+                    <p><strong>Direcciones IP locales:</strong></p>
+                    <ul style="list-style: none; margin-top: 0.5rem;">
+                        ${info.ips.map(ip => `
+                            <li style="padding: 0.25rem 0;">
+                                <code style="background: var(--color-fondo); padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                    http://${ip}:${info.puerto}
+                                </code>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('Error cargando info de red:', error);
+            }
+        }
+
+        async function reimportar() {
+            const btn = document.getElementById('btnReimportar');
+            const resultado = document.getElementById('resultadoReimportacion');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Reimportando...';
+            resultado.innerHTML = '<p class="cargando">Procesando archivos CSV...</p>';
+
+            try {
+                const resp = await api.reimportar();
+                resultado.innerHTML = `
+                    <div style="background: #dcfce7; padding: 1rem; border-radius: var(--radio-borde);">
+                        <p>✅ ${escapeHtml(resp.mensaje)}</p>
+                        ${resp.advertencias && resp.advertencias.length > 0 ? `
+                            <p style="margin-top: 0.5rem;"><strong>Advertencias:</strong></p>
+                            <ul style="margin-top: 0.25rem; padding-left: 1.5rem;">
+                                ${resp.advertencias.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `;
+                // Recargar diagnóstico
+                await cargarDiagnostico();
+            } catch (error) {
+                console.error('Error en reimportación:', error);
+                resultado.innerHTML = `
+                    <div style="background: #fee2e2; padding: 1rem; border-radius: var(--radio-borde);">
+                        <p>❌ Error durante la reimportación: ${escapeHtml(error.message)}</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Forzar Reimportación';
+            }
+        }
+
+        function formatearTamano(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+    </script>

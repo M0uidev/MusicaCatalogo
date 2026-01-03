@@ -1,0 +1,21 @@
+<main class="container">
+        <a href="medios.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
+            ← Volver a la lista
+        </a>
+
+        <section id="detalleMedio" class="seccion">
+            <p class="cargando">Cargando información...</p>
+        </section>
+
+        <section id="seccionCanciones" class="seccion" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>🎵 Canciones en este Medio</h2>
+                <button class="btn-header btn-agregar-cancion" onclick="abrirModalCancion()">
+                    ➕ Agregar Canción
+                </button>
+            </div>
+            <div id="listaCanciones"></div>
+        </section>
+    </main>
+
+

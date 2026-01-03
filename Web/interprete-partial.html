@@ -1,0 +1,136 @@
+<main class="container">
+        <a href="interpretes.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
+            ← Volver a la lista
+        </a>
+
+        <section id="detalleInterprete" class="seccion">
+            <p class="cargando">Cargando información...</p>
+        </section>
+
+        <section id="seccionTemas" class="seccion" style="display: none;">
+            <h2>🎵 Canciones de este intérprete</h2>
+            <p class="seccion-descripcion">Detalles del intérprete y sus canciones.</p>
+            <div id="listaTemas"></div>
+        </section>
+    </main>
+
+<script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)
+            const nombre = params.get('nombre') || params.get('id');
+
+            if (!nombre) {
+                document.getElementById('detalleInterprete').innerHTML = '<p class="error">No se especificó un intérprete</p>';
+                return;
+            }
+
+            await cargarInterprete(nombre);
+        });
+
+        async function cargarInterprete(nombre) {
+            try {
+                const resp = await fetch(`/api/interpretes/${encodeURIComponent(nombre)}`);
+
+                if (!resp.ok) {
+                    document.getElementById('detalleInterprete').innerHTML = '<p class="error">Intérprete no encontrado</p>';
+                    return;
+                }
+
+                const interprete = await resp.json();
+
+                document.getElementById('detalleInterprete').innerHTML = `
+                    <div class="detalle-header">
+                        <div class="detalle-icono">${ICONOS.iconoInterprete}</div>
+                        <div class="detalle-titulo">
+                            <h2>${escapeHtml(interprete.nombre)}</h2>
+                            <div class="item-info">${formatearNumero(interprete.totalTemas || 0)} canciones en la colección</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total de Canciones</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemas || 0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">En Cassettes</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemasCassette || 0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">En CDs</div>
+                            <div class="stat-value">${formatearNumero(interprete.totalTemasCd || 0)}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Mostrar temas
+                const seccionTemas = document.getElementById('seccionTemas');
+                const listaTemas = document.getElementById('listaTemas');
+
+                if (interprete.temas && interprete.temas.length > 0) {
+                    seccionTemas.style.display = 'block';
+
+                    // Agrupar por Medio
+                    const cassettes = interprete.temas.filter(t => t.tipo === 'cassette');
+                    const cds = interprete.temas.filter(t => t.tipo !== 'cassette');
+
+                    let html = '';
+
+                    if (cassettes.length > 0) {
+                        html += `<h3 style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 32px; height: 32px;">${ICONOS.cassette}</span>
+                            En Cassettes (${cassettes.length})
+                        </h3>`;
+                        html += generarListaTemas(cassettes);
+                    }
+
+                    if (cds.length > 0) {
+                        html += `<h3 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 32px; height: 32px;">${ICONOS.cd}</span>
+                            En CDs (${cds.length})
+                        </h3>`;
+                        html += generarListaTemas(cds);
+                    }
+
+                    listaTemas.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('detalleInterprete').innerHTML = '<p class="error">Error al cargar el intérprete</p>';
+            }
+        }
+
+        function generarListaTemas(temas) {
+            return `
+                <table class="tabla-temas">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Medio</th>
+                            <th>Posición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${temas.map(t => `
+                            <tr>
+                                <td>
+                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;">
+                                        <strong>${escapeHtml(t.tema)}</strong>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
+                                       style="color: var(--color-primario); text-decoration: none;">
+                                        ${escapeHtml(t.numMedio)}
+                                    </a>
+                                </td>
+                                <td>${t.posicion || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    </script>

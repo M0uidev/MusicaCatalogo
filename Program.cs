@@ -226,6 +226,22 @@ var app = builder.Build();
 // Ruta para archivos estáticos (ya declarada globalmente)
 var rutaWeb = Path.Combine(rutaEjecutable, "Web");
 
+// Middleware para forzar modo SPA - redirigir páginas HTML al shell
+app.Use(async (context, next) =>
+{
+    var isAjaxRequest = context.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+    var path = context.Request.Path.Value ?? "";
+    
+    // Redirigir peticiones HTML normales (no AJAX, excepto app.html) al shell SPA
+    if (!isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) && path != "/app.html")
+    {
+        context.Response.Redirect($"/app.html#{path}");
+        return;
+    }
+    
+    await next();
+});
+
 // Middleware para detectar requests AJAX y servir vistas parciales
 app.Use(async (context, next) =>
 {

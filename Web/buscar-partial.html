@@ -1,0 +1,66 @@
+<main class="container">
+        <section class="seccion">
+            <h2>🎵 Canciones</h2>
+            <p class="seccion-descripcion">Explora tu colección de canciones</p>
+
+            <div class="buscador-container">
+                <input type="text" id="inputBusqueda" placeholder="Buscar por canción..." autocomplete="off">
+            </div>
+
+            <div class="filtros-container">
+                <div class="filtro-grupo">
+                    <label>Intérprete</label>
+                    <select id="selectArtista" class="filtro-select">
+                        <option value="todos">Todos los artistas</option>
+                    </select>
+                </div>
+                <div class="filtro-grupo">
+                    <label>Año</label>
+                    <select id="selectAnio" class="filtro-select">
+                        <option value="todos">Todos los años</option>
+                    </select>
+                </div>
+                <div class="filtro-grupo">
+                    <label>Álbum</label>
+                    <select id="selectAlbum" class="filtro-select">
+                        <option value="todos">Todos</option>
+                        <option value="con-album">Con álbum</option>
+                        <option value="sin-album">Sin álbum</option>
+                    </select>
+                </div>
+                <div class="filtro-grupo">
+                    <label>Ordenar por</label>
+                    <select id="selectOrden" class="filtro-select">
+                        <option value="tema">Nombre de canción</option>
+                        <option value="artista">Artista</option>
+                        <option value="anio">Año (nuevo a viejo)</option>
+                        <option value="copias">Cantidad de copias</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filtros-acciones">
+                <div class="stats-canciones" id="statsCanciones">
+                    Cargando canciones...
+                </div>
+                <button class="btn btn-secundario" onclick="limpiarFiltros()"
+                    style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                    Limpiar filtros
+                </button>
+            </div>
+        </section>
+
+        <section class="seccion">
+            <div class="canciones-grid" id="cancionesGrid">
+                <div class="cargando-mas">Cargando canciones...</div>
+            </div>
+
+            <div class="paginacion" id="paginacion" style="display: none;">
+                <button id="btnAnterior" onclick="paginaAnterior()">← Anterior</button>
+                <span id="infoPagina">Página 1</span>
+                <button id="btnSiguiente" onclick="paginaSiguiente()">Siguiente →</button>
+            </div>
+        </section>
+    </main>
+
+

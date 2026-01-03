@@ -33,7 +33,7 @@ function generarHeader() {
     const navLinks = NAV_ITEMS.map(item => {
         const isActivo = paginaActual === item.href || 
                         (paginaActual === '' && item.href === 'index.html');
-        return `<a href="${item.href}" class="${isActivo ? 'activo' : ''}">${item.label}</a>`;
+        return `<a href="${item.href}" class="${isActivo ? 'activo' : ''}" data-spa-link>${item.label}</a>`;
     }).join('\n            ');
 
     return `

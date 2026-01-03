@@ -1,0 +1,174 @@
+<main class="container">
+        <section class="seccion">
+            <h2>🔄 Canciones Duplicadas</h2>
+            <p class="seccion-descripcion">Canciones que aparecen en múltiples formatos o repetidas</p>
+
+            <div class="info-duplicados">
+                <h4>ℹ️ ¿Qué son los duplicados?</h4>
+                <p>Son canciones con el mismo nombre y artista que aparecen en diferentes formatos (CD y cassette)
+                    o múltiples veces en el mismo tipo de formato. Esto es normal cuando tienes la misma canción
+                    grabada en varios medios.</p>
+            </div>
+
+            <div id="statsContainer">
+                <p class="cargando">Cargando estadísticas...</p>
+            </div>
+
+            <div class="filtros-duplicados" id="filtros">
+                <button class="filtro-btn activo" data-filtro="">Todos</button>
+                <button class="filtro-btn" data-filtro="mixtos">🔀 Mixtos (CD + Cassette)</button>
+                <button class="filtro-btn" data-filtro="cassette">📼 Solo Cassettes</button>
+                <button class="filtro-btn" data-filtro="cd">💿 Solo CDs</button>
+            </div>
+
+            <div id="listaGrupos">
+                <p class="cargando">Cargando duplicados...</p>
+            </div>
+        </section>
+    </main>
+
+<script>
+        let gruposData = [];
+        let filtroActual = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([
+                cargarEstadisticas(),
+                cargarDuplicados()
+            ]);
+
+            // Configurar filtros
+            document.querySelectorAll('.filtro-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
+                    btn.classList.add('activo');
+                    filtroActual = btn.dataset.filtro;
+                    cargarDuplicados(filtroActual);
+                });
+            });
+        });
+
+        async function cargarEstadisticas() {
+            try {
+                const resp = await fetch('/api/duplicados/estadisticas');
+                const stats = await resp.json();
+
+                document.getElementById('statsContainer').innerHTML = `
+                    <div class="stats-duplicados">
+                        <div class="stat-card">
+                            <div class="valor">${stats.totalGrupos}</div>
+                            <div class="etiqueta">Grupos de duplicados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="valor">${stats.totalCancionesDuplicadas}</div>
+                            <div class="etiqueta">Total instancias</div>
+                        </div>
+                        <div class="stat-card mixto">
+                            <div class="valor">${stats.gruposMixtos}</div>
+                            <div class="etiqueta">CD + Cassette</div>
+                        </div>
+                        <div class="stat-card cassette">
+                            <div class="valor">${stats.gruposSoloCassette}</div>
+                            <div class="etiqueta">Solo Cassettes</div>
+                        </div>
+                        <div class="stat-card cd">
+                            <div class="valor">${stats.gruposSoloCd}</div>
+                            <div class="etiqueta">Solo CDs</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                document.getElementById('statsContainer').innerHTML = '<p class="error">Error al cargar estadísticas</p>';
+            }
+        }
+
+        async function cargarDuplicados(filtro = '') {
+            try {
+                const url = filtro ? `/api/duplicados?tipo=${filtro}` : '/api/duplicados';
+                const resp = await fetch(url);
+                gruposData = await resp.json();
+
+                renderizarGrupos();
+            } catch (error) {
+                console.error('Error cargando duplicados:', error);
+                document.getElementById('listaGrupos').innerHTML = '<p class="error">Error al cargar duplicados</p>';
+            }
+        }
+
+        function renderizarGrupos() {
+            const container = document.getElementById('listaGrupos');
+
+            if (gruposData.length === 0) {
+                container.innerHTML = `
+                    <div class="sin-duplicados">
+                        <div class="icono">✨</div>
+                        <h3>¡No hay duplicados!</h3>
+                        <p>No se encontraron canciones duplicadas${filtroActual ? ' con este filtro' : ''}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = gruposData.map((grupo, index) => `
+                <div class="grupo-duplicado">
+                    <div class="grupo-header" onclick="toggleGrupo(${index})">
+                        <div class="grupo-info">
+                            <div class="grupo-icono">🎵</div>
+                            <div class="grupo-texto">
+                                <h3>${escapeHtml(grupo.temaNormalizado)}</h3>
+                                <div class="artista">🎤 ${escapeHtml(grupo.interpreteNormalizado)}</div>
+                            </div>
+                        </div>
+                        <div class="grupo-badges">
+                            ${grupo.tieneMixFormatos ? '<span class="badge-mixto">🔀 Mixto</span>' : ''}
+                            <span class="badge-cantidad">${grupo.totalInstancias} copias</span>
+                            <span class="expandir-icono">▼</span>
+                        </div>
+                    </div>
+                    <div class="grupo-contenido" id="grupo-${index}">
+                        <div class="perfil-link" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--color-primario-claro); border-radius: var(--radio); display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: var(--color-texto-secundario);">Esta canción tiene ${grupo.totalInstancias} copias físicas</span>
+                            <a href="perfil-cancion.html?grupo=${encodeURIComponent(grupo.id)}" class="btn-ver" style="background: var(--color-primario); color: white; border: none;">
+                                👤 Ver perfil unificado
+                            </a>
+                        </div>
+                        ${grupo.canciones.map(c => `
+                            <div class="instancia-cancion">
+                                <div class="instancia-tipo">${c.tipo === 'cassette' ? '📼' : '💿'}</div>
+                                <div class="instancia-info">
+                                    <div class="titulo">${escapeHtml(c.tema)}</div>
+                                    <div class="meta">
+                                        <span>${c.tipo === 'cassette' ? 'Cassette' : 'CD'}: ${escapeHtml(c.numFormato)}</span>
+                                        <span>📍 ${escapeHtml(c.posicion || 'Sin posición')}</span>
+                                        ${c.nombreAlbum ? `<span>💿 ${escapeHtml(c.nombreAlbum)}</span>` : ''}
+                                        ${c.tienePortada ? '<span>🖼️</span>' : ''}
+                                        ${c.linkExterno ? '<span>🔗</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="instancia-acciones">
+                                    <a href="cancion.html?id=${c.id}&tipo=${c.tipo}" class="btn-ver">Ver</a>
+                                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}" class="btn-ver">Formato</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleGrupo(index) {
+            const contenido = document.getElementById(`grupo-${index}`);
+            const header = contenido.previousElementSibling;
+
+            contenido.classList.toggle('visible');
+            header.classList.toggle('expandido');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>

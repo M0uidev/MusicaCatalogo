@@ -93,6 +93,9 @@
                 mainContainer.innerHTML = html;
                 mainContainer.style.opacity = '1';
 
+                // Ejecutar scripts inline que puedan estar en el contenido
+                this.executeScripts(mainContainer);
+
                 // Actualizar historial si es necesario
                 if (pushState) {
                     window.history.pushState({ path }, '', path);
@@ -145,7 +148,16 @@
                          doc.querySelector('main') ||
                          doc.body;
 
-            return main ? main.innerHTML : html;
+            if (!main) return html;
+
+            // Extraer el contenido del main
+            let content = main.innerHTML;
+
+            // Extraer scripts inline (que no tienen src) del documento completo
+            const scripts = Array.from(doc.querySelectorAll('script:not([src])'));
+            const scriptContent = scripts.map(s => s.outerHTML).join('\n');
+
+            return content + '\n' + scriptContent;
         },
 
         /**
@@ -170,6 +182,27 @@
             const pageName = path.split('?')[0];
             const title = titles[pageName] || 'Catálogo de Música';
             document.title = `${title} - Catálogo de Música`;
+        },
+
+        /**
+         * Ejecuta los scripts inline del contenido cargado
+         */
+        executeScripts(container) {
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                
+                // Copiar atributos
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                
+                // Copiar contenido
+                newScript.textContent = oldScript.textContent;
+                
+                // Reemplazar el script viejo con el nuevo para que se ejecute
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
         },
 
         /**
