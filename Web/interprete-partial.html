@@ -1,4 +1,4 @@
-<main class="container">
+    <main class="container">
         <a href="interpretes.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
             ← Volver a la lista
         </a>
@@ -14,7 +14,14 @@
         </section>
     </main>
 
-<script>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
             // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)

@@ -1,4 +1,4 @@
-<main class="principal">
+    <main class="principal">
         <div class="contenedor">
             <section>
                 <h2>🔧 Diagnóstico del Sistema</h2>
@@ -41,7 +41,14 @@
         </div>
     </main>
 
-<script>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([
                 cargarDiagnostico(),

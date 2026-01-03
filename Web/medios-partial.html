@@ -1,4 +1,231 @@
-<main class="container">
+    <style>
+        .filtros-container {
+            background: var(--color-fondo);
+            border-radius: var(--radio);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filtros-grupo {
+            margin-bottom: 1rem;
+        }
+
+        .filtros-grupo:last-child {
+            margin-bottom: 0;
+        }
+
+        .filtros-titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-texto-secundario);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filtros-opciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .filtro-chip {
+            background: white;
+            border: 2px solid var(--color-borde);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filtro-chip:hover {
+            border-color: var(--color-primario);
+            background: #f0f9ff;
+        }
+
+        .filtro-chip.activo {
+            background: var(--color-primario);
+            border-color: var(--color-primario);
+            color: white;
+        }
+
+        .filtro-chip .chip-icono {
+            width: 20px;
+            height: 20px;
+        }
+
+        .filtro-chip .chip-count {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.1rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .filtro-chip.activo .chip-count {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .resultados-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ordenar-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--color-borde);
+            border-radius: var(--radio);
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .filtro-chip {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Buscador de Medios */
+        .buscador-Medios {
+            position: relative;
+            max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+
+        .buscador-Medios input {
+            width: 100%;
+            padding: 1rem 1.25rem 1rem 3rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--color-borde);
+            border-radius: var(--radio-grande);
+            background: white;
+        }
+
+        .buscador-Medios input:focus {
+            outline: none;
+            border-color: var(--color-primario);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .buscador-Medios .icono-buscar {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-texto-secundario);
+            pointer-events: none;
+        }
+
+        .buscador-Medios .btn-limpiar {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--color-fondo);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .buscador-Medios .btn-limpiar:hover {
+            background: #e5e7eb;
+        }
+
+        .buscador-Medios.tiene-valor .btn-limpiar {
+            display: flex;
+        }
+
+        .sugerencias-Medios {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--color-borde);
+            border-top: none;
+            border-radius: 0 0 var(--radio) var(--radio);
+            max-height: 350px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: var(--sombra-grande);
+            display: none;
+        }
+
+        .sugerencias-Medios.visible {
+            display: block;
+        }
+
+        .sugerencia-Medio {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--color-borde);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        .sugerencia-Medio:hover,
+        .sugerencia-Medio.activa {
+            background: var(--color-fondo);
+        }
+
+        .sugerencia-Medio:last-child {
+            border-bottom: none;
+        }
+
+        .sugerencia-Medio .sf-icono {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .sugerencia-Medio .sf-contenido {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sugerencia-Medio .sf-nombre {
+            font-weight: 600;
+            color: var(--color-texto);
+        }
+
+        .sugerencia-Medio .sf-detalles {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .sugerencia-Medio .sf-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radio);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .resaltado {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+
+    <main class="container">
         <section class="seccion">
             <div
                 style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
@@ -78,7 +305,14 @@
         </section>
     </main>
 
-<script>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script>
         let MediosCargados = [];
         let filtroTipoActual = 'todos';
         let filtroCintaActual = 'todas';
@@ -668,3 +902,303 @@
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
+
+    <!-- Modal Nuevo Medio -->
+    <div id="modalNuevoMedio" class="modal"
+        style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div
+            style="background:white;border-radius:12px;width:90%;max-width:550px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem;border-bottom:1px solid #e5e7eb;">
+                <h2 style="margin:0;font-size:1.25rem;">➕ Crear Nuevo Medio</h2>
+                <button onclick="cerrarModal('modalNuevoMedio')"
+                    style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">&times;</button>
+            </div>
+            <div style="padding:1.25rem;">
+                <form id="formNuevoMedio">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                        <div>
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Número de Medio *</label>
+                            <input type="text" id="numMedioNuevo" placeholder="Ej: n001, cd001" required
+                                style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                        </div>
+                        <div>
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Tipo *</label>
+                            <select id="tipoNuevo" onchange="toggleCamposCassetteNuevo()"
+                                style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                                <option value="cassette">Cassette</option>
+                                <option value="cd">CD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                        <div class="selector-visual-container">
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Marca *</label>
+                            <div class="selector-visual" id="selectorMarca" data-campo="marca" data-valor=""
+                                onclick="toggleSelectorVisual('marca')">
+                                <span class="selector-texto">Seleccionar marca...</span>
+                                <span class="selector-arrow">▼</span>
+                            </div>
+                            <div class="selector-dropdown" id="dropdownMarca"></div>
+                        </div>
+                        <div class="selector-visual-container">
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Grabador</label>
+                            <div class="selector-visual" id="selectorGrabador" data-campo="grabador" data-valor=""
+                                onclick="toggleSelectorVisual('grabador')">
+                                <span class="selector-texto">Seleccionar grabador...</span>
+                                <span class="selector-arrow">▼</span>
+                            </div>
+                            <div class="selector-dropdown" id="dropdownGrabador"></div>
+                        </div>
+                    </div>
+
+                    <div class="selector-visual-container" style="margin-bottom:1rem;">
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Fuente de Grabación</label>
+                        <div class="selector-visual" id="selectorFuente" data-campo="fuente" data-valor=""
+                            onclick="toggleSelectorVisual('fuente')">
+                            <span class="selector-texto">Seleccionar fuente...</span>
+                            <span class="selector-arrow">▼</span>
+                        </div>
+                        <div class="selector-dropdown" id="dropdownFuente"></div>
+                    </div>
+
+                    <div id="camposCassetteNuevo">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div class="selector-visual-container">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Tipo de Cinta
+                                    *</label>
+                                <div class="selector-visual" id="selectorBias" data-campo="bias" data-valor=""
+                                    onclick="toggleSelectorVisual('bias')">
+                                    <span class="selector-texto">Seleccionar tipo...</span>
+                                    <span class="selector-arrow">▼</span>
+                                </div>
+                                <div class="selector-dropdown" id="dropdownBias"></div>
+                            </div>
+                            <div class="selector-visual-container">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Ecualizador</label>
+                                <div class="selector-visual" id="selectorEcualizador" data-campo="ecualizador"
+                                    data-valor="" onclick="toggleSelectorVisual('ecualizador')">
+                                    <span class="selector-texto">Seleccionar...</span>
+                                    <span class="selector-arrow">▼</span>
+                                </div>
+                                <div class="selector-dropdown" id="dropdownEcualizador"></div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div class="selector-visual-container">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Supresor de
+                                    Ruido</label>
+                                <div class="selector-visual" id="selectorSupresor" data-campo="supresor" data-valor=""
+                                    onclick="toggleSelectorVisual('supresor')">
+                                    <span class="selector-texto">Seleccionar...</span>
+                                    <span class="selector-arrow">▼</span>
+                                </div>
+                                <div class="selector-dropdown" id="dropdownSupresor"></div>
+                            </div>
+                            <div class="selector-visual-container">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Modo</label>
+                                <div class="selector-visual" id="selectorModo" data-campo="modo" data-valor=""
+                                    onclick="toggleSelectorVisual('modo')">
+                                    <span class="selector-texto">Seleccionar...</span>
+                                    <span class="selector-arrow">▼</span>
+                                </div>
+                                <div class="selector-dropdown" id="dropdownModo"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Fecha</label>
+                        <input type="text" id="fechaInicioNuevo" placeholder="DD/MM/AAAA"
+                            style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                    </div>
+                </form>
+            </div>
+            <div
+                style="display:flex;justify-content:flex-end;gap:0.75rem;padding:1.25rem;border-top:1px solid #e5e7eb;background:#f9fafb;">
+                <button onclick="cerrarModal('modalNuevoMedio')"
+                    style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#f3f4f6;">Cancelar</button>
+                <button onclick="crearNuevoMedio()"
+                    style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#10b981;color:white;">Crear
+                    y Agregar Canciones</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal.activo {
+            display: flex !important;
+        }
+
+        /* Selectores visuales tipo dropdown */
+        .selector-visual-container {
+            position: relative;
+        }
+
+        .selector-visual {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selector-visual:hover {
+            border-color: #3b82f6;
+        }
+
+        .selector-visual.abierto {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .selector-visual.seleccionado {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .selector-texto {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #6b7280;
+        }
+
+        .selector-visual.seleccionado .selector-texto {
+            color: #065f46;
+            font-weight: 500;
+        }
+
+        .selector-arrow {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            transition: transform 0.2s;
+        }
+
+        .selector-visual.abierto .selector-arrow {
+            transform: rotate(180deg);
+        }
+
+        .selector-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1002;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .selector-dropdown.visible {
+            display: block;
+        }
+
+        .selector-dropdown-search {
+            padding: 0.6rem;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .selector-dropdown-search input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .selector-dropdown-search input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .selector-dropdown-items {
+            padding: 0.25rem 0;
+        }
+
+        .selector-dropdown-item {
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.15s;
+        }
+
+        .selector-dropdown-item:hover {
+            background: #f3f4f6;
+        }
+
+        .selector-dropdown-item.crear-nuevo {
+            color: #059669;
+            font-weight: 500;
+            border-top: 1px solid #e5e7eb;
+            background: #f0fdf4;
+        }
+
+        .selector-dropdown-item.crear-nuevo:hover {
+            background: #dcfce7;
+        }
+
+        .selector-dropdown-item .item-icono {
+            font-size: 1.1rem;
+        }
+
+        .selector-dropdown-item .item-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            background: #f3f4f6;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast.exito {
+            background: #059669;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+

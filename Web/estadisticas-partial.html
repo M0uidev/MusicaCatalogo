@@ -1,4 +1,4 @@
-<main class="container">
+    <main class="container">
         <section class="seccion">
             <h2>📊 Estadísticas del Catálogo</h2>
             <p class="seccion-descripcion">Resumen general de su colección de música</p>
@@ -56,7 +56,14 @@
         </section>
     </main>
 
-<script>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([
                 cargarEstadisticas(),

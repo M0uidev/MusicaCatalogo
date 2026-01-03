@@ -1,4 +1,4 @@
-<main class="container">
+    <main class="container">
         <section class="seccion">
             <h2>🎤 Intérpretes</h2>
             <p class="seccion-descripcion">Busque un intérprete por nombre o navegue por la lista alfabética</p>
@@ -20,7 +20,14 @@
         </section>
     </main>
 
-<script>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarInterpretes();
 
