@@ -604,7 +604,7 @@
             // Agregar eventos de clic
             sugerencias.querySelectorAll('.sugerencia-Medio').forEach(item => {
                 item.addEventListener('click', () => {
-                    window.location.href = `medio.html?num=${encodeURIComponent(item.dataset.num)}`;
+                    window.SPARouter.navigate(`medio.html?num=${encodeURIComponent(item.dataset.num)}`);
                 });
             });
         }
@@ -881,7 +881,7 @@
                     mostrarToast('Medio creado exitosamente', 'exito');
                     // Ir al nuevo Medio para agregar canciones
                     setTimeout(() => {
-                        window.location.href = `medio.html?num=${encodeURIComponent(numMedio)}`;
+                        window.SPARouter.navigate(`medio.html?num=${encodeURIComponent(numMedio)}`);
                     }, 500);
                 } else {
                     mostrarToast('Error: ' + result.mensaje, 'error');

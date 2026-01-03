@@ -826,9 +826,9 @@
                 return `
                     <div class="cancion-card" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
                         ${p.totalArtistas > 1 ? `<div class="badge-multi-artista">🎸 ${p.totalArtistas} ver.</div>` : ''}
-                        <button class="btn-editar-cancion" onclick="event.stopPropagation(); window.location.href='${editUrl}'">
+                        <a href="${editUrl}" class="btn-editar-cancion" data-spa-link onclick="event.stopPropagation();">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
+                        </a>
                         ${imgUrl ? `<img src="${imgUrl}" class="cancion-portada" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%2394a3b8%22><path d=%22M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z%22/></svg>'">` : '<div class="cancion-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>'}
                         <div class="cancion-info">
                             <div class="cancion-titulo" title="${p.tema}">${escapeHtml(p.tema)}</div>

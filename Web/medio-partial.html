@@ -1583,7 +1583,7 @@
 
                     if (result.exito) {
                         mostrarToast('Medio eliminado correctamente', 'exito');
-                        setTimeout(() => window.location.href = 'medios.html', 1000);
+                        setTimeout(() => window.SPARouter.navigate('medios.html'), 1000);
                     } else {
                         mostrarToast(result.mensaje, 'error');
                     }

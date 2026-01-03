@@ -1295,7 +1295,7 @@
                 if (result.exito) {
                     cerrarModal();
                     // Ir al detalle del nuevo álbum
-                    window.location.href = `albumes.html?id=${result.idCreado}`;
+                    window.SPARouter.navigate(`albumes.html?id=${result.idCreado}`);
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1314,7 +1314,7 @@
                 const resp = await fetch(`/api/albumes/${id}`, { method: 'DELETE' });
                 const result = await resp.json();
                 if (result.exito) {
-                    window.location.href = 'albumes.html';
+                    window.SPARouter.navigate('albumes.html');
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
