@@ -990,6 +990,8 @@
         (function() {
         'use strict';
         
+        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
         function mostrarToast(mensaje, tipo = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -1142,7 +1144,7 @@
                     ` : `
                         <div class="album-grid">
                             ${albumesOrdenados.map(a => `
-                                <a href="albumes.html?id=${a.id}" class="album-card">
+                                <div class="album-card" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html?id=${a.id}')}else{window.location.href='albumes.html?id=${a.id}'}" style="cursor: pointer;">
                                     ${a.tienePortada
                     ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
                     : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
@@ -1157,7 +1159,7 @@
                                             ${a.anio ? `<span>${a.anio}</span>` : ''}
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             `).join('')}
                         </div>
                     `}
@@ -1175,7 +1177,7 @@
             const cancionesUnicas = obtenerCancionesUnicas(a.canciones);
 
             document.getElementById('contenido').innerHTML = `
-                <a href="albumes.html" class="btn-volver">← Volver a álbumes</a>
+                <div class="btn-volver" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html')}else{window.location.href='albumes.html'}" style="cursor: pointer;">← Volver a álbumes</div>
                 
                 <section class="seccion">
                     <div class="album-detalle-header">

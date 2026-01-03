@@ -73,18 +73,18 @@
             }
 
             try {
-                // Ejecutar cleanup de la página anterior
-                if (this.currentCleanup) {
-                    try {
-                        this.currentCleanup();
-                    } catch (err) {
-                        console.warn('Error en cleanup:', err);
-                    }
+                // Ejecutar cleanup de la página anterior (async para no bloquear)
+                if (this.currentCleanup && typeof this.currentCleanup === 'function') {
+                    const cleanup = this.currentCleanup;
+                    setTimeout(() => {
+                        try {
+                            cleanup();
+                        } catch (err) {
+                            console.warn('Error en cleanup:', err);
+                        }
+                    }, 0);
                     this.currentCleanup = null;
                 }
-
-                // NO mostrar indicador de carga para evitar pausas visuales/audio
-                // mainContainer.style.opacity = '0.5';
 
                 // Hacer request AJAX para obtener el contenido
                 const response = await fetch(path, {
@@ -111,27 +111,29 @@
                 // Actualizar página actual
                 this.currentPage = path;
 
-                // Limpiar scripts de página anterior
-                this.cleanupPageScripts();
+                // Limpiar scripts de página anterior (async)
+                setTimeout(() => this.cleanupPageScripts(), 0);
 
-                // Actualizar contenido (sin animación para no pausar audio)
+                // Actualizar contenido
                 mainContainer.innerHTML = html;
-                // mainContainer.style.opacity = '1'; // Ya no es necesario
 
-                // Ejecutar scripts inline que puedan estar en el contenido
-                this.executeScripts(mainContainer);
+                // Ejecutar operaciones pesadas de forma async para no bloquear
+                setTimeout(() => {
+                    // Ejecutar scripts inline que puedan estar en el contenido
+                    this.executeScripts(mainContainer);
 
-                // Actualizar título de la página
-                this.updateTitle(path);
+                    // Actualizar título de la página
+                    this.updateTitle(path);
 
-                // Scroll al inicio
-                window.scrollTo(0, 0);
+                    // Ejecutar inicializador de la página si existe
+                    this.initializePage(path);
 
-                // Ejecutar inicializador de la página si existe
-                this.initializePage(path);
+                    // Re-attachear event listeners para links dinámicos
+                    this.attachDynamicListeners(mainContainer);
+                }, 0);
 
-                // Re-attachear event listeners para links dinámicos
-                this.attachDynamicListeners(mainContainer);
+                // Scroll al inicio (inmediato pero no bloqueante)
+                requestAnimationFrame(() => window.scrollTo(0, 0));
 
             } catch (error) {
                 console.error('Error cargando página:', error);

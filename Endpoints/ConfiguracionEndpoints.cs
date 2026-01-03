@@ -515,6 +515,15 @@ public static class ConfiguracionEndpoints
         .WithName("EliminarAudioCancion")
         .WithTags("Canciones");
 
+        // Marcar/desmarcar canción como favorita
+        app.MapPost("/api/canciones/{id:int}/favorito", async (int id, string tipo, FavoritoRequest request) =>
+        {
+            var resultado = await repo.MarcarComoFavoritoAsync(id, tipo, request.EsFavorito);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("MarcarFavorito")
+        .WithTags("Canciones");
+
         // ==========================================
         // ASIGNACIÓN DE CANCIONES A ÁLBUMES
         // ==========================================

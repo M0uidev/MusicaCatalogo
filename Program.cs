@@ -270,10 +270,16 @@ app.Use(async (context, next) =>
 // Servir archivos estáticos desde la carpeta Web
 if (Directory.Exists(rutaWeb))
 {
+    var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+    provider.Mappings[".html"] = "text/html; charset=utf-8";
+    provider.Mappings[".css"] = "text/css; charset=utf-8";
+    provider.Mappings[".js"] = "application/javascript; charset=utf-8";
+    
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(rutaWeb),
-        RequestPath = ""
+        RequestPath = "",
+        ContentTypeProvider = provider
     });
 
     // Redirigir raíz a app.html (el nuevo shell SPA)

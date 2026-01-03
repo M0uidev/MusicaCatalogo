@@ -86,6 +86,7 @@ public record Tema
     public string? ArchivoAudio { get; init; }
     public int? DuracionSegundos { get; init; }
     public string? FormatoAudio { get; init; }
+    public bool EsFavorito { get; init; }
 }
 
 public record TemaCd
@@ -104,6 +105,7 @@ public record TemaCd
     public string? ArchivoAudio { get; init; }
     public int? DuracionSegundos { get; init; }
     public string? FormatoAudio { get; init; }
+    public bool EsFavorito { get; init; }
 }
 
 // ============================================
@@ -424,6 +426,8 @@ public class CancionDetalle
     public int? DuracionSegundos { get; set; }
     public string? FormatoAudio { get; set; }
     public bool TieneArchivoAudio => !string.IsNullOrEmpty(ArchivoAudio);
+    
+    public bool EsFavorito { get; set; }
 }
 
 /// <summary>DTO para actualizar canción individual</summary>
@@ -477,6 +481,12 @@ public record AsignarCancionSimpleRequest
     public int? IdAlbum { get; init; } // null para quitar del álbum
 }
 
+/// <summary>DTO para marcar/desmarcar canción como favorita</summary>
+public record FavoritoRequest
+{
+    public bool EsFavorito { get; init; }
+}
+
 /// <summary>Referencia a una canción (ID + tipo)</summary>
 public record CancionRef
 {
@@ -503,6 +513,7 @@ public class CancionGaleria
     public long? Hasta { get; set; }
     public long? Ubicacion { get; set; }
     public string? Anio { get; set; }
+    public string? ArchivoAudio { get; set; }
 }
 
 /// <summary>DTO para obtener canciones disponibles para asignar</summary>
@@ -579,6 +590,7 @@ public class CancionDuplicada
     public bool EsCover { get; set; }
     public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
+    public string? ArchivoAudio { get; set; }
 }
 
 /// <summary>Estadísticas de duplicados</summary>
@@ -642,6 +654,7 @@ public class UbicacionCancion
     public bool EsCover { get; set; }
     public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
+    public string? ArchivoAudio { get; set; }
 }
 
 /// <summary>Artista sugerido para marcar como original en covers</summary>

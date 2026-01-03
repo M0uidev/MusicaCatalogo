@@ -355,6 +355,20 @@ public class BaseDatos
             Console.WriteLine("[BaseDatos] Columna formato_audio agregada a temas_cd");
         }
         
+        // Agregar columna es_favorito a temas
+        if (!listaColumnasTemas.Contains("es_favorito"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN es_favorito INTEGER DEFAULT 0");
+            Console.WriteLine("[BaseDatos] Columna es_favorito agregada a temas");
+        }
+        
+        // Agregar columna es_favorito a temas_cd
+        if (!listaColumnasTemasCd.Contains("es_favorito"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_favorito INTEGER DEFAULT 0");
+            Console.WriteLine("[BaseDatos] Columna es_favorito agregada a temas_cd");
+        }
+        
         // Crear carpetas para archivos de audio si no existen
         var directorioBase = AppContext.BaseDirectory;
         var carpetaAudioCassette = Path.Combine(directorioBase, "audio", "cassette");

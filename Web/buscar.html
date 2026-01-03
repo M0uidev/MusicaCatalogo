@@ -7,6 +7,7 @@
     <title>Canciones - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
     <link rel="stylesheet" href="css/componentes.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .buscador-container {
             max-width: 500px;
@@ -364,6 +365,31 @@
             flex: 1;
         }
 
+        .modal-header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-editar-modal {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radio);
+            background: #1db954;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-editar-modal:hover {
+            background: #1ed760;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
+        }
+
         .modal-versiones-portada {
             width: 240px;
             height: 240px;
@@ -518,6 +544,56 @@
             border-color: var(--color-primario);
             background: var(--color-fondo);
         }
+
+        .btn-play {
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: #1db954;
+            cursor: pointer;
+            font-size: 2rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-play:hover {
+            transform: scale(1.1);
+            color: #1ed760;
+            background: transparent;
+        }
+
+        .btn-play.playing {
+            background: transparent;
+            color: #1db954;
+        }
+
+        .btn-editar {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            border-radius: var(--radio);
+            background: #1db954;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-editar:hover {
+            background: #1ed760;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
+        }
+
+        .ubicacion-item.con-audio .btn-play {
+            display: inline-flex;
+        }
+
+        .ubicacion-item:not(.con-audio) .btn-play {
+            display: none;
+        }
     </style>
 </head>
 
@@ -527,7 +603,7 @@
 
     <main class="container">
         <section class="seccion">
-            <h2>🎵 Canciones</h2>
+            <h2><i data-lucide="music"></i> Canciones</h2>
             <p class="seccion-descripcion">Explora tu colección de canciones</p>
 
             <div class="buscador-container">
@@ -536,19 +612,19 @@
 
             <div class="filtros-container">
                 <div class="filtro-grupo">
-                    <label>Intérprete</label>
+                    <label for="selectArtista">Intérprete</label>
                     <select id="selectArtista" class="filtro-select">
                         <option value="todos">Todos los artistas</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label>Año</label>
+                    <label for="selectAnio">Año</label>
                     <select id="selectAnio" class="filtro-select">
                         <option value="todos">Todos los años</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label>Álbum</label>
+                    <label for="selectAlbum">Álbum</label>
                     <select id="selectAlbum" class="filtro-select">
                         <option value="todos">Todos</option>
                         <option value="con-album">Con álbum</option>
@@ -556,7 +632,7 @@
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label>Ordenar por</label>
+                    <label for="selectOrden">Ordenar por</label>
                     <select id="selectOrden" class="filtro-select">
                         <option value="tema">Nombre de canción</option>
                         <option value="artista">Artista</option>
@@ -693,7 +769,8 @@
                             tieneCassette: false,
                             tieneCd: false,
                             totalInstancias: 0,
-                            artistaOriginalMarcado: null
+                            artistaOriginalMarcado: null,
+                            tieneAudio: false
                         });
                     }
 
@@ -714,6 +791,7 @@
                     if (c.esCover === 0) perfil.artistas.get(claveArtista).esCover = false;
                     if (c.tipo === 'cassette') perfil.tieneCassette = true;
                     if (c.tipo === 'cd') perfil.tieneCd = true;
+                    if (c.archivoAudio) perfil.tieneAudio = true;
 
                     if (c.idAlbum && c.idAlbum > 0) {
                         if (!perfil.idAlbum || c.tipo === 'cd' || c.esCover === 0) {
@@ -841,20 +919,22 @@
 
                 return `
                     <div class="cancion-card" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
-                        ${p.totalArtistas > 1 ? `<div class="badge-multi-artista">🎸 ${p.totalArtistas} ver.</div>` : ''}
+                        ${p.totalArtistas > 1 ? `<div class="badge-multi-artista"><i data-lucide="mic-2"></i> ${p.totalArtistas} ver.</div>` : ''}
                         <button class="btn-editar-cancion" onclick="event.stopPropagation(); if(window.SPARouter){SPARouter.navigateTo('${editUrl}')}else{window.location.href='${editUrl}'}">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <i data-lucide="pencil"></i>
                         </button>
                         ${imgUrl ? `<img src="${imgUrl}" class="cancion-portada" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%2394a3b8%22><path d=%22M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z%22/></svg>'">` : '<div class="cancion-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>'}
                         <div class="cancion-info">
                             <div class="cancion-titulo" title="${p.tema}">${escapeHtml(p.tema)}</div>
                             <div class="cancion-artista">${escapeHtml(p.interprete)}</div>
                             <div style="display:flex;gap:0.4rem;align-items:center;margin-top:0.4rem">
-                                <div class="cancion-Medio">${p.tieneCassette ? '📼' : ''}${p.tieneCd ? '💿' : ''} ${p.totalInstancias > 1 ? `x${p.totalInstancias}` : ''}</div>
-                                ${p.anio ? `<div class="cancion-album-badge">📅 ${p.anio}</div>` : ''}                                ${p.tieneAudio ? '<div class="cancion-album-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);" title="Tiene archivo de audio">🎵</div>' : ''}                            </div>
+                                <div class="cancion-Medio">${p.tieneCassette ? '<i data-lucide="cassette-tape"></i>' : ''}${p.tieneCd ? '<i data-lucide="disc-3"></i>' : ''} ${p.totalInstancias > 1 ? `x${p.totalInstancias}` : ''}</div>
+                                ${p.anio ? `<div class="cancion-album-badge"><i data-lucide="calendar"></i> ${p.anio}</div>` : ''}                                ${p.tieneAudio ? '<div class="cancion-album-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);" title="Tiene archivo de audio"><i data-lucide="music"></i></div>' : ''}                            </div>
                         </div>
                     </div>`;
             }).join('');
+
+            lucide.createIcons();
 
             document.getElementById('paginacion').style.display = totalPaginas > 1 ? 'flex' : 'none';
             document.getElementById('infoPagina').textContent = `Página ${paginaActual} de ${totalPaginas}`;
@@ -865,7 +945,40 @@
         function abrirModalVersiones(idx) {
             const p = perfilesFiltrados[idx]; if (!p) return;
             const m = document.getElementById('modalVersiones');
+            
+            // Determinar URL de edición
+            const ins = p.artistas[0].instancias[0];
+            const editUrl = (p.totalArtistas > 1 || p.totalInstancias > 1)
+                ? `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`
+                : `cancion.html?id=${ins.id}&tipo=${ins.tipo}`;
+            
             document.getElementById('modalVersionesTitulo').innerHTML = `${escapeHtml(p.tema)} <small>${escapeHtml(p.interprete)}</small>`;
+            
+            // Agregar botón editar al header
+            const existingActions = document.querySelector('.modal-header-actions');
+            if (!existingActions) {
+                const header = document.querySelector('.modal-versiones-header');
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'modal-header-actions';
+                actionsDiv.innerHTML = `
+                    <button class="btn-editar-modal" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('${editUrl}')}else{window.location.href='${editUrl}'}"><i data-lucide="pencil"></i> Editar</button>
+                    <button class="btn-cerrar-modal" onclick="cerrarModalVersiones()"><i data-lucide="x"></i></button>
+                `;
+                // Remover el botón cerrar existente si está
+                const oldCloseBtn = header.querySelector('.btn-cerrar-modal');
+                if (oldCloseBtn) oldCloseBtn.remove();
+                header.appendChild(actionsDiv);
+            } else {
+                existingActions.querySelector('.btn-editar-modal').onclick = function() {
+                    document.body.style.overflow = '';
+                    if (window.SPARouter) {
+                        SPARouter.navigateTo(editUrl);
+                    } else {
+                        window.location.href = editUrl;
+                    }
+                };
+            }
+            
             const pc = document.getElementById('modalPortada');
             pc.innerHTML = p.idAlbum ? `<img src="/api/albumes/${p.idAlbum}/portada" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">` : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
 
@@ -873,21 +986,77 @@
                 <div class="version-artista">
                     <div class="version-artista-header"><div class="version-artista-nombre">${escapeHtml(a.nombre)} ${a.esCover ? '<span class="badge-cover">Cover</span>' : '<span class="badge-original">Original</span>'}</div></div>
                     <div class="version-ubicaciones">${a.instancias.map(i => `
-                        <div class="ubicacion-item">
-                            <div class="ubicacion-Medio">${i.tipo === 'cassette' ? '📼' : '💿'}</div>
+                        <div class="ubicacion-item ${i.archivoAudio ? 'con-audio' : ''}">
+                            <div class="ubicacion-Medio">${i.tipo === 'cassette' ? '<i data-lucide="cassette-tape"></i>' : '<i data-lucide="disc-3"></i>'}</div>
                             <div class="ubicacion-detalle"><strong>${escapeHtml(i.numMedio)}</strong><small>${i.lado ? `Lado ${i.lado}: ${i.desde}-${i.hasta}` : `Pista ${i.ubicacion}`}</small></div>
                             <div class="ubicacion-acciones">
-                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">Editar</button>
-                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver medio</button>
+                                <button class="btn-play" data-id="${i.id}" data-tipo="${i.tipo}" onclick="togglePlayCancion(this, ${i.id}, '${i.tipo}')" title="Reproducir"><i data-lucide="play"></i></button>
+                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver</button>
                             </div>
                         </div>`).join('')}</div>
                 </div>`).join('');
             m.classList.add('visible'); document.body.style.overflow = 'hidden';
+            lucide.createIcons();
         }
 
         function cerrarModalVersiones() { document.getElementById('modalVersiones').classList.remove('visible'); document.body.style.overflow = ''; }
         function paginaAnterior() { if (paginaActual > 1) { paginaActual--; aplicarFiltros(); window.scrollTo(0, 0); } }
         function paginaSiguiente() { if (paginaActual < Math.ceil(perfilesFiltrados.length / cancionesPorPagina)) { paginaActual++; aplicarFiltros(); window.scrollTo(0, 0); } }
+
+        let cancionActualBtn = null;
+
+        function togglePlayCancion(btn, id, tipo) {
+            const audio = document.getElementById('global-audio');
+            const isPlaying = btn.classList.contains('playing');
+            
+            if (isPlaying) {
+                // Pausar
+                audio.pause();
+                btn.innerHTML = '<i data-lucide="play"></i>';
+                btn.classList.remove('playing');
+                lucide.createIcons();
+            } else {
+                // Reproducir nueva canción
+                if (cancionActualBtn && cancionActualBtn !== btn) {
+                    cancionActualBtn.innerHTML = '<i data-lucide="play"></i>';
+                    cancionActualBtn.classList.remove('playing');
+                }
+                
+                // Iniciar reproducción
+                if (window.reproducirCancion) {
+                    window.reproducirCancion(id, tipo);
+                    btn.innerHTML = '<i data-lucide="pause"></i>';
+                    btn.classList.add('playing');
+                    cancionActualBtn = btn;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Exponer funciones globalmente para onclick
+        window.togglePlayCancion = togglePlayCancion;
+
+        // Sincronizar con el estado del player global
+        document.addEventListener('DOMContentLoaded', function() {
+            const audio = document.getElementById('global-audio');
+            if (audio) {
+                audio.addEventListener('pause', function() {
+                    if (cancionActualBtn) {
+                        cancionActualBtn.innerHTML = '<i data-lucide="play"></i>';
+                        cancionActualBtn.classList.remove('playing');
+                        lucide.createIcons();
+                    }
+                });
+                
+                audio.addEventListener('play', function() {
+                    if (cancionActualBtn) {
+                        cancionActualBtn.innerHTML = '<i data-lucide="pause"></i>';
+                        cancionActualBtn.classList.add('playing');
+                        lucide.createIcons();
+                    }
+                });
+            }
+        });
 
         function limpiarFiltros() {
             filtros = { busqueda: '', artista: 'todos', anio: 'todos', album: 'todos', orden: 'tema' };

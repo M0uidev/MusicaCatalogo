@@ -7,6 +7,7 @@
     <title>Álbumes - Catálogo de Música</title>
     <link rel="stylesheet" href="css/estilos.css">
     <link rel="stylesheet" href="css/componentes.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .album-grid {
             display: grid;
@@ -1003,6 +1004,8 @@
     <script src="js/audioPlayerGlobal.js"></script>
     <script src="js/app.js"></script>
     <script>
+        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
         function mostrarToast(mensaje, tipo = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -1155,7 +1158,7 @@
                     ` : `
                         <div class="album-grid">
                             ${albumesOrdenados.map(a => `
-                                <a href="albumes.html?id=${a.id}" class="album-card">
+                                <div class="album-card" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html?id=${a.id}')}else{window.location.href='albumes.html?id=${a.id}'}" style="cursor: pointer;">
                                     ${a.tienePortada
                     ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
                     : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
@@ -1170,7 +1173,7 @@
                                             ${a.anio ? `<span>${a.anio}</span>` : ''}
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             `).join('')}
                         </div>
                     `}
@@ -1188,7 +1191,7 @@
             const cancionesUnicas = obtenerCancionesUnicas(a.canciones);
 
             document.getElementById('contenido').innerHTML = `
-                <a href="albumes.html" class="btn-volver">← Volver a álbumes</a>
+                <div class="btn-volver" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html')}else{window.location.href='albumes.html'}" style="cursor: pointer;">← Volver a álbumes</div>
                 
                 <section class="seccion">
                     <div class="album-detalle-header">
@@ -1201,7 +1204,7 @@
                         </div>
                         <div class="album-detalle-info">
                             <h2>${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}</h2>
-                            ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}">${escapeHtml(a.interprete)}</a></div>` : ''}
+                            ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}" data-spa-link>${escapeHtml(a.interprete)}</a></div>` : ''}
                             <div class="meta">
                                 ${a.anio ? `📅 ${a.anio} • ` : ''}
                                 ${a.esSingle ? '🎵' : '💿'} ${cancionesUnicas.length} canción${cancionesUnicas.length !== 1 ? 'es' : ''}
@@ -1235,7 +1238,7 @@
                                     <div class="cancion-item-editable">
                                         <span class="cancion-numero">${i + 1}</span>
                                         <div style="flex: 1">
-                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a>
+                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link" data-spa-link>${escapeHtml(c.tema)}</a>
                                             ${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}
                                             <div class="cancion-artista">${escapeHtml(c.interprete)}</div>
                                         </div>

@@ -1422,6 +1422,7 @@ public class RepositorioMusica
         var tieneArchivoAudio = columnasTemas.Contains("archivo_audio");
         var tieneDuracionSegundos = columnasTemas.Contains("duracion_segundos");
         var tieneFormatoAudio = columnasTemas.Contains("formato_audio");
+        var tieneEsFavorito = columnasTemas.Contains("es_favorito");
 
         var esCoverCol = tieneEsCover ? "COALESCE(t.es_cover, 0)" : "0";
         var esOriginalCol = tieneEsOriginal ? "COALESCE(t.es_original, 0)" : "0";
@@ -1429,6 +1430,7 @@ public class RepositorioMusica
         var archivoAudioCol = tieneArchivoAudio ? "t.archivo_audio" : "NULL";
         var duracionSegundosCol = tieneDuracionSegundos ? "t.duracion_segundos" : "NULL";
         var formatoAudioCol = tieneFormatoAudio ? "t.formato_audio" : "NULL";
+        var esFavoritoCol = tieneEsFavorito ? "COALESCE(t.es_favorito, 0)" : "0";
 
         if (tipo.ToLower() == "cassette")
         {
@@ -1440,7 +1442,8 @@ public class RepositorioMusica
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
                        CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum,
                        {esCoverCol} AS EsCover, {esOriginalCol} AS EsOriginal, {artistaOriginalCol} AS ArtistaOriginal,
-                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio
+                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio,
+                       {esFavoritoCol} AS EsFavorito
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
                 LEFT JOIN albumes a ON t.id_album = a.id
@@ -1458,7 +1461,8 @@ public class RepositorioMusica
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
                        CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum,
                        {esCoverCol} AS EsCover, {esOriginalCol} AS EsOriginal, {artistaOriginalCol} AS ArtistaOriginal,
-                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio
+                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio,
+                       {esFavoritoCol} AS EsFavorito
                 FROM temas_cd t
                 JOIN interpretes i ON t.id_interprete = i.id
                 LEFT JOIN albumes a ON t.id_album = a.id
@@ -1759,7 +1763,8 @@ public class RepositorioMusica
                    t.num_formato AS numMedio, t.id_album AS IdAlbum, a.nombre AS AlbumNombre,
                    {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
-                   t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion
+                   t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
+                   t.archivo_audio AS ArchivoAudio
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -1770,7 +1775,8 @@ public class RepositorioMusica
                    t.num_formato AS numMedio, t.id_album AS IdAlbum, a.nombre AS AlbumNombre,
                    {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
-                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion
+                   NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
+                   t.archivo_audio AS ArchivoAudio
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -2243,7 +2249,8 @@ public class RepositorioMusica
                 CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
                 t.link_externo AS LinkExterno,
                 COALESCE(t.es_cover, 0) AS EsCover,
-                t.artista_original AS ArtistaOriginal
+                t.artista_original AS ArtistaOriginal,
+                t.archivo_audio AS ArchivoAudio
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -2264,7 +2271,8 @@ public class RepositorioMusica
                 CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
                 t.link_externo AS LinkExterno,
                 COALESCE(t.es_cover, 0) AS EsCover,
-                t.artista_original AS ArtistaOriginal
+                t.artista_original AS ArtistaOriginal,
+                t.archivo_audio AS ArchivoAudio
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -2289,7 +2297,8 @@ public class RepositorioMusica
                 TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
                 LinkExterno = (string?)t.LinkExterno,
                 EsCover = t.EsCover != null && (long)t.EsCover == 1,
-                ArtistaOriginal = (string?)t.ArtistaOriginal
+                ArtistaOriginal = (string?)t.ArtistaOriginal,
+                ArchivoAudio = (string?)t.ArchivoAudio
             });
         }
         
@@ -2309,7 +2318,8 @@ public class RepositorioMusica
                 TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
                 LinkExterno = (string?)t.LinkExterno,
                 EsCover = t.EsCover != null && (long)t.EsCover == 1,
-                ArtistaOriginal = (string?)t.ArtistaOriginal
+                ArtistaOriginal = (string?)t.ArtistaOriginal,
+                ArchivoAudio = (string?)t.ArchivoAudio
             });
         }
 
@@ -2396,7 +2406,8 @@ public class RepositorioMusica
                     TienePortada = c.TienePortada,
                     LinkExterno = c.LinkExterno,
                     EsCover = c.EsCover,
-                    ArtistaOriginal = c.ArtistaOriginal
+                    ArtistaOriginal = c.ArtistaOriginal,
+                    ArchivoAudio = c.ArchivoAudio
                 }).OrderBy(u => u.Tipo).ThenBy(u => u.numMedio).ToList();
 
                 // Determinar si es original: cualquier instancia marcada como NO cover
@@ -2625,7 +2636,8 @@ public class RepositorioMusica
                 t.id_album AS IdAlbum,
                 a.nombre AS NombreAlbum,
                 CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
-                t.link_externo AS LinkExterno
+                t.link_externo AS LinkExterno,
+                t.archivo_audio AS ArchivoAudio
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -2642,7 +2654,8 @@ public class RepositorioMusica
                 t.id_album AS IdAlbum,
                 a.nombre AS NombreAlbum,
                 CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
-                t.link_externo AS LinkExterno
+                t.link_externo AS LinkExterno,
+                t.archivo_audio AS ArchivoAudio
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -2675,7 +2688,8 @@ public class RepositorioMusica
                     IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
                     NombreAlbum = (string?)t.NombreAlbum,
                     TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
-                    LinkExterno = (string?)t.LinkExterno
+                    LinkExterno = (string?)t.LinkExterno,
+                    ArchivoAudio = (string?)t.ArchivoAudio
                 });
             }
         }
@@ -2703,7 +2717,8 @@ public class RepositorioMusica
                     IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
                     NombreAlbum = (string?)t.NombreAlbum,
                     TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
-                    LinkExterno = (string?)t.LinkExterno
+                    LinkExterno = (string?)t.LinkExterno,
+                    ArchivoAudio = (string?)t.ArchivoAudio
                 });
             }
         }
@@ -3057,6 +3072,37 @@ public class RepositorioMusica
             { 
                 Exito = false, 
                 Mensaje = $"Error al eliminar audio: {ex.Message}" 
+            };
+        }
+    }
+
+    /// <summary>
+    /// Marca o desmarca una canción como favorita
+    /// </summary>
+    public async Task<CrudResponse> MarcarComoFavoritoAsync(int id, string tipo, bool esFavorito)
+    {
+        try
+        {
+            using var conn = _db.ObtenerConexion();
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            
+            await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET es_favorito = @EsFavorito WHERE id = @Id",
+                new { Id = id, EsFavorito = esFavorito ? 1 : 0 }
+            );
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = esFavorito ? "Canción agregada a favoritos" : "Canción quitada de favoritos"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse 
+            { 
+                Exito = false, 
+                Mensaje = $"Error al actualizar favorito: {ex.Message}" 
             };
         }
     }
