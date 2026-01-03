@@ -1298,6 +1298,58 @@ footer p {
     opacity: 1;
 }
 
+/* Volumen */
+.player-volume {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+#player-volume-bar {
+    width: 100px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, white 0%, white 100%, rgba(255,255,255,0.2) 100%, rgba(255,255,255,0.2) 100%);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background 0.1s;
+}
+
+#player-volume-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+#player-volume-bar:hover::-webkit-slider-thumb {
+    opacity: 1;
+}
+
+#player-volume-bar::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+#player-volume-bar:hover::-moz-range-thumb {
+    opacity: 1;
+}
+
 /* Botón cerrar */
 .player-close {
     position: absolute;
@@ -1339,6 +1391,10 @@ footer p {
 
     .player-controls {
         gap: 0.5rem;
+    }
+
+    .player-volume {
+        display: none;
     }
 }
 

@@ -51,6 +51,11 @@
                         <span id="player-duration">0:00</span>
                     </div>
                     
+                    <div class="player-volume">
+                        <button id="player-volume-icon" class="player-btn" title="Volumen">🔊</button>
+                        <input type="range" id="player-volume-bar" value="100" min="0" max="100" step="1">
+                    </div>
+                    
                     <button id="player-close" class="player-close" title="Cerrar">✕</button>
                 </div>
             </div>
@@ -71,6 +76,8 @@
         const durationSpan = document.getElementById('player-duration');
         const coverImg = document.getElementById('player-cover');
         const coverPlaceholder = document.getElementById('player-cover-placeholder');
+        const volumeBar = document.getElementById('player-volume-bar');
+        const volumeIcon = document.getElementById('player-volume-icon');
 
         // Event listeners
         playPauseBtn.addEventListener('click', () => {
@@ -107,6 +114,8 @@
                 const progress = (audio.currentTime / audio.duration) * 100;
                 progressBar.value = progress;
                 currentTimeSpan.textContent = formatTime(audio.currentTime);
+                // Actualizar estilo visual de la barra de progreso
+                progressBar.style.background = `linear-gradient(to right, white 0%, white ${progress}%, rgba(255,255,255,0.2) ${progress}%, rgba(255,255,255,0.2) 100%)`;
             }
         });
 
@@ -131,6 +140,50 @@
                 audio.currentTime = time;
             }
         });
+
+        // Control de volumen
+        volumeBar.addEventListener('input', () => {
+            const volume = volumeBar.value / 100;
+            audio.volume = volume;
+            updateVolumeIcon(volume);
+            // Actualizar estilo visual del slider
+            updateVolumeBarStyle();
+        });
+
+        volumeIcon.addEventListener('click', () => {
+            if (audio.volume > 0) {
+                audio.dataset.previousVolume = audio.volume;
+                audio.volume = 0;
+                volumeBar.value = 0;
+                updateVolumeIcon(0);
+            } else {
+                const previousVolume = parseFloat(audio.dataset.previousVolume) || 1;
+                audio.volume = previousVolume;
+                volumeBar.value = previousVolume * 100;
+                updateVolumeIcon(previousVolume);
+            }
+            updateVolumeBarStyle();
+        });
+
+        // Actualizar estilo de barras al inicio
+        updateVolumeBarStyle();
+
+        // Función para actualizar ícono de volumen
+        function updateVolumeIcon(volume) {
+            if (volume === 0) {
+                volumeIcon.textContent = '🔇';
+            } else if (volume < 0.5) {
+                volumeIcon.textContent = '🔉';
+            } else {
+                volumeIcon.textContent = '🔊';
+            }
+        }
+
+        // Función para actualizar estilo visual del slider de volumen
+        function updateVolumeBarStyle() {
+            const value = volumeBar.value;
+            volumeBar.style.background = `linear-gradient(to right, white 0%, white ${value}%, rgba(255,255,255,0.2) ${value}%, rgba(255,255,255,0.2) 100%)`;
+        }
 
         // Restaurar estado si existe
         restorePlayerState();
