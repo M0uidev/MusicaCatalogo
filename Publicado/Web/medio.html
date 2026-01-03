@@ -1395,10 +1395,20 @@
             }
         }
 
-        function generarPortadaMini(c) {
+        function generarPortadaMini(c, tipoMedio) {
+            // Si tiene álbum asignado, usar su portada
             if (c.idAlbum && c.idAlbum > 0) {
                 return `<img src="/api/albumes/${c.idAlbum}/portada" class="cancion-portada-mini" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder-mini\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`;
             }
+            
+            // Si es cover y tiene artista original, intentar obtener el álbum de la canción original
+            const esCover = c.esCover || c.EsCover || false;
+            const artistaOriginal = c.artistaOriginal || c.ArtistaOriginal || '';
+            if (esCover && artistaOriginal) {
+                // Usar la API de portada de canción que ya maneja la herencia del álbum original
+                return `<img src="/api/canciones/${c.id}/portada?tipo=${tipoMedio}" class="cancion-portada-mini" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder-mini\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`;
+            }
+            
             return `<div class="cancion-placeholder-mini"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
         }
         
@@ -1407,7 +1417,7 @@
             let filas = '';
             
             for (const c of canciones) {
-                const portadaHtml = generarPortadaMini(c);
+                const portadaHtml = generarPortadaMini(c, tipoMedio);
                 const dataCancion = btoa(encodeURIComponent(JSON.stringify({
                     id: c.id, 
                     tema: c.tema, 

@@ -1,4 +1,114 @@
 /* ==========================================
+   SIDEBAR REPRODUCTOR DE AUDIO
+   ========================================== */
+.cancion-detalle-sidebar {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 2.5rem;
+    align-items: flex-start;
+}
+
+.sidebar-reproductor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.2rem;
+    background: var(--color-fondo);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra-sm);
+    padding: 1.2rem 1rem 1.5rem 1rem;
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .cancion-detalle-sidebar {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .sidebar-reproductor {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 1.5rem;
+        padding: 1rem 0.5rem;
+    }
+}
+/* ==========================================
+   REPRODUCTOR DE AUDIO MODERNO
+   ========================================== */
+.audio-player-spotify {
+    background: linear-gradient(135deg, #18181b 60%, #059669 100%);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    padding: 1.2rem 1.5rem 1.1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.5rem;
+    max-width: 420px;
+    width: 100%;
+}
+.audio-player-spotify #audio-controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-top: 0.5rem;
+}
+.audio-player-spotify #play-pause-btn {
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 1.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(5,150,105,0.15);
+    transition: background 0.2s;
+}
+.audio-player-spotify #play-pause-btn:hover {
+    background: #047857;
+}
+.audio-player-spotify #progress-bar {
+    flex: 1;
+    accent-color: #059669;
+    height: 4px;
+    border-radius: 2px;
+    background: #27272a;
+    outline: none;
+    margin: 0 0.5rem;
+}
+.audio-player-spotify #current-time,
+.audio-player-spotify #duration {
+    color: #d1fae5;
+    font-family: monospace;
+    font-size: 1rem;
+    min-width: 48px;
+}
+.audio-player-spotify #load-audio-btn {
+    background: #27272a;
+    color: #d1fae5;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.98rem;
+    margin-top: 0.7rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.audio-player-spotify #load-audio-btn:hover {
+    background: #059669;
+    color: #fff;
+}
+.audio-player-spotify #audio-file-name {
+    color: #a7f3d0;
+    font-size: 0.98rem;
+    margin-left: 0.7rem;
+    word-break: break-all;
+}
+/* ==========================================
    CATÁLOGO DE MÚSICA - DISEÑO PROFESIONAL
    Paleta neutra y elegante
    ========================================== */

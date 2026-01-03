@@ -320,5 +320,48 @@ public class BaseDatos
             await conn.ExecuteAsync("UPDATE temas_cd SET es_original = 1 WHERE id_album IS NOT NULL");
             Console.WriteLine("[BaseDatos] Columna es_original agregada a temas_cd");
         }
+        
+        // Agregar columnas de audio a temas
+        if (!listaColumnasTemas.Contains("archivo_audio"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN archivo_audio TEXT");
+            Console.WriteLine("[BaseDatos] Columna archivo_audio agregada a temas");
+        }
+        if (!listaColumnasTemas.Contains("duracion_segundos"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN duracion_segundos INTEGER");
+            Console.WriteLine("[BaseDatos] Columna duracion_segundos agregada a temas");
+        }
+        if (!listaColumnasTemas.Contains("formato_audio"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN formato_audio TEXT");
+            Console.WriteLine("[BaseDatos] Columna formato_audio agregada a temas");
+        }
+        
+        // Agregar columnas de audio a temas_cd
+        if (!listaColumnasTemasCd.Contains("archivo_audio"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN archivo_audio TEXT");
+            Console.WriteLine("[BaseDatos] Columna archivo_audio agregada a temas_cd");
+        }
+        if (!listaColumnasTemasCd.Contains("duracion_segundos"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN duracion_segundos INTEGER");
+            Console.WriteLine("[BaseDatos] Columna duracion_segundos agregada a temas_cd");
+        }
+        if (!listaColumnasTemasCd.Contains("formato_audio"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN formato_audio TEXT");
+            Console.WriteLine("[BaseDatos] Columna formato_audio agregada a temas_cd");
+        }
+        
+        // Crear carpetas para archivos de audio si no existen
+        var directorioBase = AppContext.BaseDirectory;
+        var carpetaAudioCassette = Path.Combine(directorioBase, "audio", "cassette");
+        var carpetaAudioCd = Path.Combine(directorioBase, "audio", "cd");
+        
+        Directory.CreateDirectory(carpetaAudioCassette);
+        Directory.CreateDirectory(carpetaAudioCd);
+        Console.WriteLine("[BaseDatos] Carpetas de audio creadas");
     }
 }

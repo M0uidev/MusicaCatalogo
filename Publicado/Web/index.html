@@ -62,6 +62,7 @@
     </style>
 </head>
 <body>
+
     <header>
         <h1>Catálogo de Música</h1>
         <nav>
@@ -71,7 +72,6 @@
             <a href="medios.html">Medios</a>
             <a href="interpretes.html">Intérpretes</a>
             <a href="estadisticas.html">Estadísticas</a>
-            
             <div class="notif-container">
                 <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
                     🔔
@@ -84,6 +84,7 @@
             </div>
         </nav>
     </header>
+    <div id="audio-player-global-bar"></div>
 
     <main class="container">
         <!-- Resumen rápido -->
@@ -134,6 +135,13 @@
     </footer>
 
     <script src="js/app.js"></script>
+    <script src="js/audioPlayerGlobal.js"></script>
+    <script>
+        // Inyectar reproductor global en todas las páginas
+        if (window.renderAudioPlayerGlobal) {
+            document.getElementById('audio-player-global-bar').innerHTML = window.renderAudioPlayerGlobal();
+        }
+    </script>
     <script>
         // Cargar resumen
         async function cargarResumen() {

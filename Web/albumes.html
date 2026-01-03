@@ -63,9 +63,10 @@
             font-weight: 600;
             font-size: 1rem;
             margin-bottom: 0.25rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
         }
 
         .album-artista {
@@ -999,6 +1000,7 @@
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
     <script src="js/components.js"></script>
+    <script src="js/audioPlayerGlobal.js"></script>
     <script src="js/app.js"></script>
     <script>
         function mostrarToast(mensaje, tipo = 'info') {
@@ -1160,7 +1162,7 @@
                 }
                                     <div class="album-info">
                                         <div class="album-nombre">
-                                            ${escapeHtml(a.nombre)}${a.esSingle ? '<span class="badge-single">Single</span>' : ''}
+                                            ${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}
                                         </div>
                                         <div class="album-artista">${escapeHtml(a.interprete || 'Sin artista')}</div>
                                         <div class="album-meta">
@@ -1198,7 +1200,7 @@
                             <button class="btn-subir-portada" onclick="subirPortada()">📷 Cambiar</button>
                         </div>
                         <div class="album-detalle-info">
-                            <h2>${escapeHtml(a.nombre)}${a.esSingle ? '<span class="badge-single">Single</span>' : ''}</h2>
+                            <h2>${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}</h2>
                             ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}">${escapeHtml(a.interprete)}</a></div>` : ''}
                             <div class="meta">
                                 ${a.anio ? `📅 ${a.anio} • ` : ''}
@@ -1234,6 +1236,7 @@
                                         <span class="cancion-numero">${i + 1}</span>
                                         <div style="flex: 1">
                                             <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a>
+                                            ${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}
                                             <div class="cancion-artista">${escapeHtml(c.interprete)}</div>
                                         </div>
                                         ${c.linkExterno ? '<span title="Tiene link externo">🔗</span>' : ''}

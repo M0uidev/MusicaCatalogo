@@ -211,45 +211,64 @@ public class RepositorioMusica
                 SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
                        t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
                        COALESCE(t.id_album, 
-                           -- Si no tiene álbum pero tiene artista_original, buscar el álbum de la versión original
-                           CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN
-                               COALESCE(
-                                   -- Buscar en cassettes por el mismo tema y el artista original
-                                   (SELECT t2.id_album FROM temas t2 
-                                    JOIN interpretes i2 ON t2.id_interprete = i2.id 
-                                    WHERE LOWER(t2.tema) = LOWER(t.tema) 
-                                      AND LOWER(i2.nombre) = LOWER(t.artista_original)
-                                      AND t2.id_album IS NOT NULL LIMIT 1),
-                                   -- Si no, buscar en CDs
-                                   (SELECT t3.id_album FROM temas_cd t3 
-                                    JOIN interpretes i3 ON t3.id_interprete = i3.id 
-                                    WHERE LOWER(t3.tema) = LOWER(t.tema) 
-                                      AND LOWER(i3.nombre) = LOWER(t.artista_original)
-                                      AND t3.id_album IS NOT NULL LIMIT 1)
-                               )
-                           END
+                           COALESCE(
+                               (SELECT t2.id_album FROM temas t2 
+                                JOIN interpretes i2 ON t2.id_interprete = i2.id 
+                                WHERE LOWER(t2.tema) = LOWER(t.tema) 
+                                  AND t2.id_album IS NOT NULL 
+                                  AND (
+                                      LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                      OR t2.es_original = 1
+                                  )
+                                ORDER BY 
+                                  CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                                  t2.es_original DESC
+                                LIMIT 1),
+                               (SELECT t3.id_album FROM temas_cd t3 
+                                JOIN interpretes i3 ON t3.id_interprete = i3.id 
+                                WHERE LOWER(t3.tema) = LOWER(t.tema) 
+                                  AND t3.id_album IS NOT NULL 
+                                  AND (
+                                      LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                      OR t3.es_original = 1
+                                  )
+                                ORDER BY 
+                                  CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                                  t3.es_original DESC
+                                LIMIT 1)
+                           )
                        ) AS IdAlbum,
                        COALESCE(a.nombre,
-                           CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' AND t.id_album IS NULL THEN
-                               COALESCE(
-                                   (SELECT a2.nombre FROM temas t2 
-                                    JOIN interpretes i2 ON t2.id_interprete = i2.id 
-                                    JOIN albumes a2 ON t2.id_album = a2.id
-                                    WHERE LOWER(t2.tema) = LOWER(t.tema) 
-                                      AND LOWER(i2.nombre) = LOWER(t.artista_original)
-                                    LIMIT 1),
-                                   (SELECT a3.nombre FROM temas_cd t3 
-                                    JOIN interpretes i3 ON t3.id_interprete = i3.id 
-                                    JOIN albumes a3 ON t3.id_album = a3.id
-                                    WHERE LOWER(t3.tema) = LOWER(t.tema) 
-                                      AND LOWER(i3.nombre) = LOWER(t.artista_original)
-                                    LIMIT 1)
-                               )
-                           END
+                           COALESCE(
+                               (SELECT a2.nombre FROM temas t2 
+                                JOIN interpretes i2 ON t2.id_interprete = i2.id 
+                                JOIN albumes a2 ON t2.id_album = a2.id
+                                WHERE LOWER(t2.tema) = LOWER(t.tema) 
+                                  AND (
+                                      LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                      OR t2.es_original = 1
+                                  )
+                                ORDER BY 
+                                  CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                                  t2.es_original DESC
+                                LIMIT 1),
+                               (SELECT a3.nombre FROM temas_cd t3 
+                                JOIN interpretes i3 ON t3.id_interprete = i3.id 
+                                JOIN albumes a3 ON t3.id_album = a3.id
+                                WHERE LOWER(t3.tema) = LOWER(t.tema) 
+                                  AND (
+                                      LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                      OR t3.es_original = 1
+                                  )
+                                ORDER BY 
+                                  CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                                  t3.es_original DESC
+                                LIMIT 1)
+                           )
                        ) AS NombreAlbum,
                        t.link_externo AS LinkExterno,
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
-                       COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal
+                       COALESCE(t.es_cover, 0) AS EsCover, COALESCE(t.es_original, 0) AS EsOriginal, t.artista_original AS ArtistaOriginal
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
                 LEFT JOIN albumes a ON t.id_album = a.id
@@ -264,42 +283,64 @@ public class RepositorioMusica
             SELECT t.id AS Id, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
                    NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
                    COALESCE(t.id_album,
-                       CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN
-                           COALESCE(
-                               (SELECT t2.id_album FROM temas t2 
-                                JOIN interpretes i2 ON t2.id_interprete = i2.id 
-                                WHERE LOWER(t2.tema) = LOWER(t.tema) 
-                                  AND LOWER(i2.nombre) = LOWER(t.artista_original)
-                                  AND t2.id_album IS NOT NULL LIMIT 1),
-                               (SELECT t3.id_album FROM temas_cd t3 
-                                JOIN interpretes i3 ON t3.id_interprete = i3.id 
-                                WHERE LOWER(t3.tema) = LOWER(t.tema) 
-                                  AND LOWER(i3.nombre) = LOWER(t.artista_original)
-                                  AND t3.id_album IS NOT NULL LIMIT 1)
-                           )
-                       END
+                       COALESCE(
+                           (SELECT t2.id_album FROM temas t2 
+                            JOIN interpretes i2 ON t2.id_interprete = i2.id 
+                            WHERE LOWER(t2.tema) = LOWER(t.tema) 
+                              AND t2.id_album IS NOT NULL 
+                              AND (
+                                  LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                  OR t2.es_original = 1
+                              )
+                            ORDER BY 
+                              CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                              t2.es_original DESC
+                            LIMIT 1),
+                           (SELECT t3.id_album FROM temas_cd t3 
+                            JOIN interpretes i3 ON t3.id_interprete = i3.id 
+                            WHERE LOWER(t3.tema) = LOWER(t.tema) 
+                              AND t3.id_album IS NOT NULL 
+                              AND (
+                                  LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                  OR t3.es_original = 1
+                              )
+                            ORDER BY 
+                              CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                              t3.es_original DESC
+                            LIMIT 1)
+                       )
                    ) AS IdAlbum,
                    COALESCE(a.nombre,
-                       CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' AND t.id_album IS NULL THEN
-                           COALESCE(
-                               (SELECT a2.nombre FROM temas t2 
-                                JOIN interpretes i2 ON t2.id_interprete = i2.id 
-                                JOIN albumes a2 ON t2.id_album = a2.id
-                                WHERE LOWER(t2.tema) = LOWER(t.tema) 
-                                  AND LOWER(i2.nombre) = LOWER(t.artista_original)
-                                LIMIT 1),
-                               (SELECT a3.nombre FROM temas_cd t3 
-                                JOIN interpretes i3 ON t3.id_interprete = i3.id 
-                                JOIN albumes a3 ON t3.id_album = a3.id
-                                WHERE LOWER(t3.tema) = LOWER(t.tema) 
-                                  AND LOWER(i3.nombre) = LOWER(t.artista_original)
-                                LIMIT 1)
-                           )
-                       END
+                       COALESCE(
+                           (SELECT a2.nombre FROM temas t2 
+                            JOIN interpretes i2 ON t2.id_interprete = i2.id 
+                            JOIN albumes a2 ON t2.id_album = a2.id
+                            WHERE LOWER(t2.tema) = LOWER(t.tema) 
+                              AND (
+                                  LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                  OR t2.es_original = 1
+                              )
+                            ORDER BY 
+                              CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                              t2.es_original DESC
+                            LIMIT 1),
+                           (SELECT a3.nombre FROM temas_cd t3 
+                            JOIN interpretes i3 ON t3.id_interprete = i3.id 
+                            JOIN albumes a3 ON t3.id_album = a3.id
+                            WHERE LOWER(t3.tema) = LOWER(t.tema) 
+                              AND (
+                                  LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
+                                  OR t3.es_original = 1
+                              )
+                            ORDER BY 
+                              CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
+                              t3.es_original DESC
+                            LIMIT 1)
+                       )
                    ) AS NombreAlbum,
                    t.link_externo AS LinkExterno,
                    CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
-                   COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal
+                   COALESCE(t.es_cover, 0) AS EsCover, COALESCE(t.es_original, 0) AS EsOriginal, t.artista_original AS ArtistaOriginal
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -324,17 +365,17 @@ public class RepositorioMusica
             return null;
 
         var temasCassette = await conn.QueryAsync<TemaDeInterprete>("""
-            SELECT 'cassette' AS Tipo, num_formato AS numMedio, tema AS Tema,
-                   (lado || ':' || desde || '-' || hasta) AS Posicion
-            FROM temas WHERE id_interprete = @id
-            ORDER BY num_formato, lado, desde
+            SELECT t.id AS Id, 'cassette' AS Tipo, t.num_formato AS numMedio, t.tema AS Tema,
+                   (t.lado || ':' || t.desde || '-' || t.hasta) AS Posicion
+            FROM temas t WHERE t.id_interprete = @id
+            ORDER BY t.num_formato, t.lado, t.desde
             """, new { id = interprete.Id });
 
         var temasCd = await conn.QueryAsync<TemaDeInterprete>("""
-            SELECT 'cd' AS Tipo, num_formato AS numMedio, tema AS Tema,
-                   CAST(ubicacion AS TEXT) AS Posicion
-            FROM temas_cd WHERE id_interprete = @id
-            ORDER BY num_formato, ubicacion
+            SELECT t.id AS Id, 'cd' AS Tipo, t.num_formato AS numMedio, t.tema AS Tema,
+                   CAST(t.ubicacion AS TEXT) AS Posicion
+            FROM temas_cd t WHERE t.id_interprete = @id
+            ORDER BY t.num_formato, t.ubicacion
             """, new { id = interprete.Id });
 
         var listaTemas = temasCassette.Concat(temasCd).ToList();
@@ -488,6 +529,18 @@ public class RepositorioMusica
     {
         using var conn = _db.ObtenerConexion();
         
+        // MIGRACIÓN: Verificar si existe columna es_original en temas
+        var infoTemas = await conn.QueryAsync<string>("SELECT name FROM pragma_table_info('temas')");
+        if (!infoTemas.Contains("es_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN es_original INTEGER DEFAULT 0");
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_original INTEGER DEFAULT 0");
+            
+            // Auto-migración: Marcar como originales las canciones que tienen álbum (lo que ya tenemos)
+            await conn.ExecuteAsync("UPDATE temas SET es_original = 1 WHERE id_album IS NOT NULL");
+            await conn.ExecuteAsync("UPDATE temas_cd SET es_original = 1 WHERE id_album IS NOT NULL");
+        }
+
         // Conteos de tablas
         var conteos = new Dictionary<string, int>
         {
@@ -860,8 +913,8 @@ public class RepositorioMusica
             if (request.TipoMedio.ToLower() == "cassette")
             {
                 await conn.ExecuteAsync("""
-                    INSERT INTO temas (num_formato, id_interprete, tema, lado, desde, hasta, es_cover, artista_original)
-                    VALUES (@numMedio, @idInterprete, @Tema, @Lado, @Desde, @Hasta, @EsCover, @ArtistaOriginal)
+                    INSERT INTO temas (num_formato, id_interprete, tema, lado, desde, hasta, es_cover, es_original, artista_original)
+                    VALUES (@numMedio, @idInterprete, @Tema, @Lado, @Desde, @Hasta, @EsCover, @EsOriginal, @ArtistaOriginal)
                     """, new
                 {
                     request.numMedio,
@@ -871,7 +924,8 @@ public class RepositorioMusica
                     Desde = request.Desde ?? 1,
                     Hasta = request.Hasta ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
-                    ArtistaOriginal = request.ArtistaOriginal
+                    EsOriginal = request.EsOriginal ? 1 : 0,
+                    request.ArtistaOriginal
                 });
                 idCreado = await conn.QueryFirstAsync<long>("SELECT last_insert_rowid()");
             }
@@ -883,8 +937,8 @@ public class RepositorioMusica
                     new { request.numMedio }) ?? 0;
 
                 await conn.ExecuteAsync("""
-                    INSERT INTO temas_cd (num_formato, id_interprete, tema, ubicacion, es_cover, artista_original)
-                    VALUES (@numMedio, @idInterprete, @Tema, @ubicacion, @EsCover, @ArtistaOriginal)
+                    INSERT INTO temas_cd (num_formato, id_interprete, tema, ubicacion, es_cover, es_original, artista_original)
+                    VALUES (@numMedio, @idInterprete, @Tema, @ubicacion, @EsCover, @EsOriginal, @ArtistaOriginal)
                     """, new
                 {
                     request.numMedio,
@@ -892,7 +946,8 @@ public class RepositorioMusica
                     request.Tema,
                     ubicacion = request.Ubicacion ?? (maxUbicacion + 1),
                     EsCover = request.EsCover ? 1 : 0,
-                    ArtistaOriginal = request.ArtistaOriginal
+                    EsOriginal = request.EsOriginal ? 1 : 0,
+                    request.ArtistaOriginal
                 });
                 idCreado = await conn.QueryFirstAsync<long>("SELECT last_insert_rowid()");
             }
@@ -947,7 +1002,7 @@ public class RepositorioMusica
             {
                 rows = await conn.ExecuteAsync("""
                     UPDATE temas SET id_interprete = @idInterprete, tema = @Tema, lado = @Lado, desde = @Desde, hasta = @Hasta,
-                           es_cover = @EsCover, artista_original = @ArtistaOriginal
+                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                     WHERE id = @id
                     """, new
                 {
@@ -958,6 +1013,7 @@ public class RepositorioMusica
                     Desde = request.Desde ?? 1,
                     Hasta = request.Hasta ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
+                    EsOriginal = request.EsOriginal ? 1 : 0,
                     ArtistaOriginal = request.ArtistaOriginal
                 });
             }
@@ -965,7 +1021,7 @@ public class RepositorioMusica
             {
                 rows = await conn.ExecuteAsync("""
                     UPDATE temas_cd SET id_interprete = @idInterprete, tema = @Tema, ubicacion = @Ubicacion,
-                           es_cover = @EsCover, artista_original = @ArtistaOriginal
+                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                     WHERE id = @id
                     """, new
                 {
@@ -974,12 +1030,16 @@ public class RepositorioMusica
                     request.Tema,
                     Ubicacion = request.Ubicacion ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
-                    ArtistaOriginal = request.ArtistaOriginal
+                    EsOriginal = request.EsOriginal ? 1 : 0,
+                    request.ArtistaOriginal
                 });
             }
 
             if (rows == 0)
                 return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            // Gestionar lógica de originales si se marcó como tal
+            await GestionarOriginalidadAsync(id, idInterprete, request.Tema, request.EsOriginal);
 
             return new CrudResponse { Exito = true, Mensaje = "Canción actualizada correctamente" };
         }
@@ -1348,10 +1408,27 @@ public class RepositorioMusica
     {
         using var conn = _db.ObtenerConexion();
 
-        // Verificar si existe la columna es_single
-        var columnas = await conn.QueryAsync<string>("SELECT name FROM pragma_table_info('albumes')");
-        var tieneEsSingle = columnas.Contains("es_single");
+        // Verificar si existe la columna es_single en albumes
+        var columnasAlbumes = await conn.QueryAsync<string>("SELECT name FROM pragma_table_info('albumes')");
+        var tieneEsSingle = columnasAlbumes.Contains("es_single");
         var esSingleCol = tieneEsSingle ? "COALESCE(a.es_single, 0)" : "0";
+
+        // Verificar columnas de covers/originales y audio
+        var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+        var columnasTemas = await conn.QueryAsync<string>($"SELECT name FROM pragma_table_info('{tabla}')");
+        var tieneEsCover = columnasTemas.Contains("es_cover");
+        var tieneEsOriginal = columnasTemas.Contains("es_original");
+        var tieneArtistaOriginal = columnasTemas.Contains("artista_original");
+        var tieneArchivoAudio = columnasTemas.Contains("archivo_audio");
+        var tieneDuracionSegundos = columnasTemas.Contains("duracion_segundos");
+        var tieneFormatoAudio = columnasTemas.Contains("formato_audio");
+
+        var esCoverCol = tieneEsCover ? "COALESCE(t.es_cover, 0)" : "0";
+        var esOriginalCol = tieneEsOriginal ? "COALESCE(t.es_original, 0)" : "0";
+        var artistaOriginalCol = tieneArtistaOriginal ? "t.artista_original" : "NULL";
+        var archivoAudioCol = tieneArchivoAudio ? "t.archivo_audio" : "NULL";
+        var duracionSegundosCol = tieneDuracionSegundos ? "t.duracion_segundos" : "NULL";
+        var formatoAudioCol = tieneFormatoAudio ? "t.formato_audio" : "NULL";
 
         if (tipo.ToLower() == "cassette")
         {
@@ -1362,7 +1439,8 @@ public class RepositorioMusica
                        {esSingleCol} AS EsAlbumSingle, t.link_externo AS LinkExterno,
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
                        CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum,
-                       COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal
+                       {esCoverCol} AS EsCover, {esOriginalCol} AS EsOriginal, {artistaOriginalCol} AS ArtistaOriginal,
+                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
                 LEFT JOIN albumes a ON t.id_album = a.id
@@ -1379,7 +1457,8 @@ public class RepositorioMusica
                        {esSingleCol} AS EsAlbumSingle, t.link_externo AS LinkExterno,
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
                        CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortadaAlbum,
-                       COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal
+                       {esCoverCol} AS EsCover, {esOriginalCol} AS EsOriginal, {artistaOriginalCol} AS ArtistaOriginal,
+                       {archivoAudioCol} AS ArchivoAudio, {duracionSegundosCol} AS DuracionSegundos, {formatoAudioCol} AS FormatoAudio
                 FROM temas_cd t
                 JOIN interpretes i ON t.id_interprete = i.id
                 LEFT JOIN albumes a ON t.id_album = a.id
@@ -1462,13 +1541,13 @@ public class RepositorioMusica
                     ? """
                       UPDATE temas SET tema = @Tema, id_interprete = @idInterprete, id_album = @idAlbum,
                              link_externo = @LinkExterno, lado = @Lado, desde = @Desde, hasta = @Hasta,
-                             es_cover = @EsCover, artista_original = @ArtistaOriginal
+                             es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                       WHERE id = @id
                       """
                     : """
                       UPDATE temas SET tema = @Tema, id_interprete = @idInterprete,
                              link_externo = @LinkExterno, lado = @Lado, desde = @Desde, hasta = @Hasta,
-                             es_cover = @EsCover, artista_original = @ArtistaOriginal
+                             es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                       WHERE id = @id
                       """;
                       
@@ -1483,6 +1562,7 @@ public class RepositorioMusica
                     Desde = request.Desde ?? 1,
                     Hasta = request.Hasta ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
+                    EsOriginal = request.EsOriginal ? 1 : 0,
                     request.ArtistaOriginal
                 });
             }
@@ -1492,13 +1572,13 @@ public class RepositorioMusica
                     ? """
                       UPDATE temas_cd SET tema = @Tema, id_interprete = @idInterprete, id_album = @idAlbum,
                              link_externo = @LinkExterno, ubicacion = @Ubicacion,
-                             es_cover = @EsCover, artista_original = @ArtistaOriginal
+                             es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                       WHERE id = @id
                       """
                     : """
                       UPDATE temas_cd SET tema = @Tema, id_interprete = @idInterprete,
                              link_externo = @LinkExterno, ubicacion = @Ubicacion,
-                             es_cover = @EsCover, artista_original = @ArtistaOriginal
+                             es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
                       WHERE id = @id
                       """;
                       
@@ -1511,12 +1591,16 @@ public class RepositorioMusica
                     request.LinkExterno,
                     Ubicacion = request.Ubicacion ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
+                    EsOriginal = request.EsOriginal ? 1 : 0,
                     request.ArtistaOriginal
                 });
             }
 
             if (rows == 0)
                 return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            // Gestionar lógica de originales si se marcó como tal
+            await GestionarOriginalidadAsync(id, idInterprete, request.Tema, request.EsOriginal);
 
             return new CrudResponse { Exito = true, Mensaje = "Canción actualizada correctamente" };
         }
@@ -1549,28 +1633,110 @@ public class RepositorioMusica
         }
     }
 
-    /// <summary>Obtiene la portada de una canción (propia o heredada del álbum).</summary>
+    /// <summary>Elimina la portada personalizada de una canción.</summary>
+    public async Task<CrudResponse> EliminarPortadaCancionAsync(int id, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            var rows = await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET portada = NULL WHERE id = @id",
+                new { id });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Canción no encontrada" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Portada eliminada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+
+    /// <summary>Obtiene la portada de una canción (propia, heredada del álbum o de la versión original).</summary>
     public async Task<byte[]?> ObtenerPortadaCancionAsync(int id, string tipo)
     {
         using var conn = _db.ObtenerConexion();
 
         var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
         
-        // Primero buscar portada propia
-        var portadaPropia = await conn.QueryFirstOrDefaultAsync<byte[]?>(
-            $"SELECT portada FROM {tabla} WHERE id = @id", new { id });
+        // 1. Buscar portada propia
+        var datosCancion = await conn.QueryFirstOrDefaultAsync<(byte[]? Portada, int? IdAlbum, bool EsCover, string? ArtistaOriginal, string Tema)>(
+            $"SELECT portada, id_album, COALESCE(es_cover, 0) == 1, artista_original, tema FROM {tabla} WHERE id = @id", new { id });
         
-        if (portadaPropia != null)
-            return portadaPropia;
+        if (datosCancion.Portada != null && datosCancion.Portada.Length > 0)
+            return datosCancion.Portada;
 
-        // Si no tiene, buscar portada del álbum
-        var idAlbum = await conn.QueryFirstOrDefaultAsync<int?>(
-            $"SELECT id_album FROM {tabla} WHERE id = @id", new { id });
-
-        if (idAlbum.HasValue)
+        // 2. Si tiene álbum, buscar portada del álbum
+        if (datosCancion.IdAlbum.HasValue)
         {
-            return await conn.QueryFirstOrDefaultAsync<byte[]?>(
-                "SELECT portada FROM albumes WHERE id = @id", new { id = idAlbum.Value });
+            var portadaAlbum = await conn.QueryFirstOrDefaultAsync<byte[]?>(
+                "SELECT portada FROM albumes WHERE id = @id", new { id = datosCancion.IdAlbum.Value });
+            
+            if (portadaAlbum != null && portadaAlbum.Length > 0)
+                return portadaAlbum;
+        }
+
+        // 3. Si es cover y no tiene imagen propia ni álbum, buscar la versión original
+        if (datosCancion.EsCover && !string.IsNullOrEmpty(datosCancion.ArtistaOriginal))
+        {
+            var temaNorm = NormalizarTexto(datosCancion.Tema);
+            var artistaNorm = NormalizarTexto(datosCancion.ArtistaOriginal);
+
+            // Buscar primero en cassettes
+            var originalCassette = await conn.QueryFirstOrDefaultAsync<(int? IdAlbum, byte[]? Portada)?>(
+                """
+                SELECT t.id_album, t.portada 
+                FROM temas t
+                JOIN interpretes i ON t.id_interprete = i.id
+                WHERE LOWER(t.tema) = @temaNorm AND LOWER(i.nombre) = @artistaNorm
+                LIMIT 1
+                """, new { temaNorm, artistaNorm });
+
+            // Verificar si encontramos algo en cassette
+            if (originalCassette.HasValue)
+            {
+                // Si la original tiene portada propia
+                if (originalCassette.Value.Portada != null && originalCassette.Value.Portada.Length > 0)
+                    return originalCassette.Value.Portada;
+                
+                // Si la original tiene álbum, usar portada del álbum
+                if (originalCassette.Value.IdAlbum.HasValue)
+                {
+                    var portadaAlbumOrig = await conn.QueryFirstOrDefaultAsync<byte[]?>(
+                        "SELECT portada FROM albumes WHERE id = @id", new { id = originalCassette.Value.IdAlbum.Value });
+                    if (portadaAlbumOrig != null && portadaAlbumOrig.Length > 0)
+                        return portadaAlbumOrig;
+                }
+            }
+
+            // Si no, buscar en CDs
+            var originalCd = await conn.QueryFirstOrDefaultAsync<(int? IdAlbum, byte[]? Portada)?>(
+                """
+                SELECT t.id_album, t.portada 
+                FROM temas_cd t
+                JOIN interpretes i ON t.id_interprete = i.id
+                WHERE LOWER(t.tema) = @temaNorm AND LOWER(i.nombre) = @artistaNorm
+                LIMIT 1
+                """, new { temaNorm, artistaNorm });
+
+            if (originalCd.HasValue)
+            {
+                if (originalCd.Value.Portada != null && originalCd.Value.Portada.Length > 0)
+                    return originalCd.Value.Portada;
+                
+                if (originalCd.Value.IdAlbum.HasValue)
+                {
+                    var portadaAlbumOrig = await conn.QueryFirstOrDefaultAsync<byte[]?>(
+                        "SELECT portada FROM albumes WHERE id = @id", new { id = originalCd.Value.IdAlbum.Value });
+                    if (portadaAlbumOrig != null && portadaAlbumOrig.Length > 0)
+                        return portadaAlbumOrig;
+                }
+            }
         }
 
         return null;
@@ -1585,9 +1751,13 @@ public class RepositorioMusica
     {
         using var conn = _db.ObtenerConexion();
         
-        var sqlCassette = """
+        var tieneEsSingle = await ExisteColumnaEsSingle(conn);
+        var esSingleCol = tieneEsSingle ? "COALESCE(a.es_single, 0)" : "0";
+
+        var sqlCassette = $"""
             SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
                    t.num_formato AS numMedio, t.id_album AS IdAlbum, a.nombre AS AlbumNombre,
+                   {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
                    t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion
             FROM temas t
@@ -1595,9 +1765,10 @@ public class RepositorioMusica
             LEFT JOIN albumes a ON t.id_album = a.id
             """;
 
-        var sqlCd = """
+        var sqlCd = $"""
             SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete,
                    t.num_formato AS numMedio, t.id_album AS IdAlbum, a.nombre AS AlbumNombre,
+                   {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
                    NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion
             FROM temas_cd t
@@ -1779,13 +1950,63 @@ public class RepositorioMusica
     // ============================================
 
     /// <summary>Obtiene notificaciones sobre datos incompletos o con problemas.</summary>
+    /// <summary>Obtiene notificaciones sobre datos incompletos o con problemas.</summary>
     public async Task<List<NotificacionDatos>> ObtenerNotificacionesAsync()
     {
         using var conn = _db.ObtenerConexion();
         var notificaciones = new List<NotificacionDatos>();
         int contador = 0;
 
-        // 1. Canciones sin intérprete válido (cassettes)
+        // 1. DUPLICADOS MULTI-ARTISTA (Lo más importante)
+        var duplicados = await ObtenerDuplicadosAsync("multiartista");
+        foreach (var grupo in duplicados)
+        {
+            // Verificar si alguna canción del grupo ya está marcada como original
+            bool tieneOriginal = grupo.Canciones.Any(c => c.EsOriginal);
+            int countOriginal = grupo.Canciones.Count(c => c.EsOriginal);
+            
+            // Si no hay original explícito, verificamos si hay ambigüedad
+            // Si hay exactamente una canción que NO es cover, asumimos que esa es la original implícita
+            int noCovers = grupo.Canciones.Count(c => !c.EsCover);
+            bool esAmbiguo = noCovers != 1;
+
+            if (countOriginal > 1)
+            {
+                // Agrupar por artista para ofrecer opciones
+                var artistas = grupo.Canciones
+                    .GroupBy(c => c.IdInterprete)
+                    .Select(g => new 
+                    { 
+                        IdInterprete = g.Key, 
+                        Nombre = g.First().Interprete, 
+                        Cantidad = g.Count() 
+                    })
+                    .OrderByDescending(a => a.Cantidad)
+                    .ToList();
+
+                // Crear lista de opciones para el frontend
+                var opciones = artistas.Select(a => new OpcionArtistaOriginal 
+                {
+                    IdInterprete = a.IdInterprete,
+                    Nombre = a.Nombre,
+                    CantidadCopias = a.Cantidad,
+                    EsMasAntiguo = false
+                }).ToList();
+
+                notificaciones.Add(new NotificacionDatos
+                {
+                    Id = $"notif-{++contador}",
+                    Tipo = "duplicado",
+                    Severidad = "warning",
+                    Mensaje = $"'{grupo.TemaNormalizado}' tiene {grupo.TotalArtistas} artistas distintos. ¿Cuál es el original?",
+                    GrupoId = grupo.Id,
+                    OpcionesArtista = opciones,
+                    UrlArreglar = $"perfil-cancion.html?grupo={System.Net.WebUtility.UrlEncode(grupo.Id)}"
+                });
+            }
+        }
+
+        // 2. Canciones sin intérprete válido (cassettes)
         var sinInterpreteCassette = await conn.QueryAsync<(int Id, string Tema, string numMedio)>("""
             SELECT t.id, t.tema, t.num_formato 
             FROM temas t 
@@ -1799,15 +2020,15 @@ public class RepositorioMusica
                 Id = $"notif-{++contador}",
                 Tipo = "cancion",
                 Severidad = "error",
-                Mensaje = $"Canción '{c.Tema}' sin intérprete asignado",
+                Mensaje = $"Canción '{c.Tema}' (Cassette {c.numMedio}) sin intérprete asignado",
                 EntidadId = c.Id.ToString(),
                 EntidadTipo = "cassette",
                 CampoFaltante = "interprete",
-                UrlArreglar = $"formato.html?num={c.numMedio}&cancion={c.Id}&tipo=cassette"
+                UrlArreglar = $"cancion.html?id={c.Id}&tipo=cassette"
             });
         }
 
-        // 2. Canciones sin intérprete válido (CDs)
+        // 3. Canciones sin intérprete válido (CDs)
         var sinInterpreteCd = await conn.QueryAsync<(int Id, string Tema, string numMedio)>("""
             SELECT t.id, t.tema, t.num_formato 
             FROM temas_cd t 
@@ -1821,15 +2042,99 @@ public class RepositorioMusica
                 Id = $"notif-{++contador}",
                 Tipo = "cancion",
                 Severidad = "error",
-                Mensaje = $"Canción '{c.Tema}' sin intérprete asignado",
+                Mensaje = $"Canción '{c.Tema}' (CD {c.numMedio}) sin intérprete asignado",
                 EntidadId = c.Id.ToString(),
                 EntidadTipo = "cd",
                 CampoFaltante = "interprete",
-                UrlArreglar = $"formato.html?num={c.numMedio}&cancion={c.Id}&tipo=cd"
+                UrlArreglar = $"cancion.html?id={c.Id}&tipo=cd"
             });
         }
 
-        // 3. Canciones con nombre vacío
+        // 4. Álbumes sin portada
+        var albumesSinPortada = await conn.QueryAsync<(int Id, string Nombre)>("""
+            SELECT id, nombre FROM albumes WHERE portada IS NULL AND es_single = 0
+            """);
+        if (albumesSinPortada.Any())
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "info",
+                Mensaje = $"{albumesSinPortada.Count()} álbumes no tienen imagen de portada",
+                UrlArreglar = "albumes.html?filtro=sin-portada" // Asumiendo que podemos filtrar así en el futuro, o redirigir a general
+            });
+        }
+        
+        // 5. Álbumes sin año
+        var albumesSinAnio = await conn.QueryAsync<(int Id, string Nombre)>("""
+            SELECT id, nombre FROM albumes WHERE (anio IS NULL OR anio = '') AND es_single = 0
+            """);
+        foreach (var a in albumesSinAnio.Take(5)) // Limitamos para no inundar
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "info",
+                Mensaje = $"El álbum '{a.Nombre}' no tiene año de lanzamiento",
+                EntidadId = a.Id.ToString(),
+                UrlArreglar = $"albumes.html?id={a.Id}"
+            });
+        }
+        if (albumesSinAnio.Count() > 5)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "info",
+                Mensaje = $"...y otros {albumesSinAnio.Count() - 5} álbumes sin año",
+                UrlArreglar = "albumes.html"
+            });
+        }
+
+        // 6. Resumen de canciones sin álbum
+        // Solo contamos las que tienen intérprete (para no duplicar errores)
+        var totalSinAlbum = await conn.QueryFirstAsync<int>("""
+            SELECT (
+                (SELECT COUNT(*) FROM temas WHERE id_album IS NULL AND id_interprete IS NOT NULL) + 
+                (SELECT COUNT(*) FROM temas_cd WHERE id_album IS NULL AND id_interprete IS NOT NULL)
+            )
+            """);
+            
+        if (totalSinAlbum > 0)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "organizacion",
+                Severidad = "info",
+                Mensaje = $"{totalSinAlbum} canciones aún no están en ningún álbum",
+                UrlArreglar = "buscar.html" // Debería ir un filtro, pero buscar está bien por ahora
+            });
+        }
+
+        // 7. Álbumes vacíos (sin canciones)
+        var albumesVacios = await conn.QueryAsync<(int Id, string Nombre)>("""
+            SELECT a.id, a.nombre FROM albumes a
+            WHERE NOT EXISTS (SELECT 1 FROM temas WHERE id_album = a.id)
+            AND NOT EXISTS (SELECT 1 FROM temas_cd WHERE id_album = a.id)
+            """);
+        foreach (var a in albumesVacios)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "album",
+                Severidad = "warning",
+                Mensaje = $"Álbum '{a.Nombre}' está vacío (sin canciones)",
+                EntidadId = a.Id.ToString(),
+                UrlArreglar = $"albumes.html?id={a.Id}"
+            });
+        }
+
+        // 8. Canciones con nombre vacío
         var nombreVacioCassette = await conn.QueryAsync<(int Id, string numMedio)>("""
             SELECT id, num_formato FROM temas WHERE tema IS NULL OR TRIM(tema) = ''
             """);
@@ -1866,47 +2171,7 @@ public class RepositorioMusica
             });
         }
 
-        // 4. Álbumes sin portada
-        var albumesSinPortada = await conn.QueryAsync<(int Id, string Nombre)>("""
-            SELECT id, nombre FROM albumes WHERE portada IS NULL
-            """);
-        foreach (var a in albumesSinPortada)
-        {
-            notificaciones.Add(new NotificacionDatos
-            {
-                Id = $"notif-{++contador}",
-                Tipo = "album",
-                Severidad = "warning",
-                Mensaje = $"Álbum '{a.Nombre}' sin portada",
-                EntidadId = a.Id.ToString(),
-                EntidadTipo = "album",
-                CampoFaltante = "portada",
-                UrlArreglar = $"albumes.html?id={a.Id}"
-            });
-        }
-
-        // 5. Álbumes sin canciones
-        var albumesVacios = await conn.QueryAsync<(int Id, string Nombre)>("""
-            SELECT a.id, a.nombre FROM albumes a
-            WHERE NOT EXISTS (SELECT 1 FROM temas WHERE id_album = a.id)
-            AND NOT EXISTS (SELECT 1 FROM temas_cd WHERE id_album = a.id)
-            """);
-        foreach (var a in albumesVacios)
-        {
-            notificaciones.Add(new NotificacionDatos
-            {
-                Id = $"notif-{++contador}",
-                Tipo = "album",
-                Severidad = "info",
-                Mensaje = $"Álbum '{a.Nombre}' sin canciones asignadas",
-                EntidadId = a.Id.ToString(),
-                EntidadTipo = "album",
-                CampoFaltante = "canciones",
-                UrlArreglar = $"albumes.html?id={a.Id}"
-            });
-        }
-
-        // 6. Formatos (cassettes) sin marca
+        // 9. Formatos (cassettes) sin marca
         var formatosSinMarca = await conn.QueryAsync<(int Id, string numMedio)>("""
             SELECT fg.id, fg.num_formato 
             FROM formato_grabado fg
@@ -1928,7 +2193,7 @@ public class RepositorioMusica
             });
         }
 
-        // 7. Intérpretes sin nombre
+        // 10. Intérpretes sin nombre
         var interpretesSinNombre = await conn.QueryAsync<int>("""
             SELECT id FROM interpretes WHERE nombre IS NULL OR TRIM(nombre) = ''
             """);
@@ -1947,48 +2212,9 @@ public class RepositorioMusica
             });
         }
 
-        // 8. Grupos de duplicados multi-artista sin artista original definido
-        try
-        {
-            var duplicados = await ObtenerDuplicadosAsync("multiartista");
-            foreach (var grupo in duplicados)
-            {
-                // Verificar si hay al menos una canción marcada como NO cover (es decir, original)
-                var tieneOriginal = grupo.Canciones.Any(c => !c.EsCover);
-                
-                if (!tieneOriginal && grupo.TotalArtistas > 1)
-                {
-                    // Obtener opciones de artista, el más antiguo por defecto
-                    var artistasPorAntiguedad = grupo.Canciones
-                        .GroupBy(c => new { c.Interprete, c.IdInterprete })
-                        .Select((g, index) => new OpcionArtistaOriginal
-                        {
-                            IdInterprete = g.Key.IdInterprete,
-                            Nombre = g.Key.Interprete,
-                            CantidadCopias = g.Count(),
-                            EsMasAntiguo = index == 0 // El primero es el más antiguo (ordenado por ID)
-                        })
-                        .ToList();
-
-                    notificaciones.Add(new NotificacionDatos
-                    {
-                        Id = $"notif-{++contador}",
-                        Tipo = "duplicado",
-                        Severidad = "warning",
-                        Mensaje = $"'{grupo.Canciones.First().Tema}' tiene {grupo.TotalArtistas} artistas - Seleccionar original",
-                        EntidadId = grupo.Id,
-                        EntidadTipo = "grupo",
-                        GrupoId = grupo.Id,
-                        UrlArreglar = $"perfil-cancion.html?grupo={grupo.Id}",
-                        OpcionesArtista = artistasPorAntiguedad
-                    });
-                }
-            }
-        }
-        catch { /* Ignorar errores al obtener duplicados */ }
-
         return notificaciones;
     }
+
 
     // ============================================
     // DETECCIÓN DE CANCIONES DUPLICADAS
@@ -2492,4 +2718,453 @@ public class RepositorioMusica
             Ubicaciones = ubicaciones.OrderBy(u => u.Tipo).ThenBy(u => u.numMedio).ToList()
         };
     }
+
+    /// <summary>
+    /// Sincroniza los álbumes de los covers basándose en el tema original.
+    /// </summary>
+    public async Task<CrudResponse> SincronizarAlbumesCoversAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        try
+        {
+            // 1. Actualizar Cassettes (temas)
+            // Prioridad 1: Coincidencia exacta de nombre de tema y artista (definido como original en la misma fila o el intérprete del tema)
+            var rowsTemas = await conn.ExecuteAsync("""
+                UPDATE temas
+                SET id_album = (
+                    SELECT t2.id_album 
+                    FROM temas t2 
+                    JOIN interpretes i2 ON t2.id_interprete = i2.id
+                    JOIN interpretes i1 ON temas.id_interprete = i1.id
+                    WHERE LOWER(t2.tema) = LOWER(temas.tema)
+                    AND t2.id_album IS NOT NULL
+                    AND (
+                        LOWER(i2.nombre) = LOWER(CASE WHEN temas.artista_original IS NOT NULL AND temas.artista_original != '' THEN temas.artista_original ELSE i1.nombre END)
+                        OR t2.es_original = 1
+                    )
+                    ORDER BY 
+                      CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN temas.artista_original IS NOT NULL AND temas.artista_original != '' THEN temas.artista_original ELSE i1.nombre END) THEN 1 ELSE 2 END,
+                      t2.es_original DESC
+                    LIMIT 1
+                )
+                WHERE id_album IS NULL
+                """);
+
+            // 2. Actualizar CDs (temas_cd)
+            var rowsCds = await conn.ExecuteAsync("""
+                UPDATE temas_cd
+                SET id_album = (
+                    SELECT t2.id_album 
+                    FROM temas t2 
+                    JOIN interpretes i2 ON t2.id_interprete = i2.id
+                    JOIN interpretes i1 ON temas_cd.id_interprete = i1.id
+                    WHERE LOWER(t2.tema) = LOWER(temas_cd.tema)
+                    AND t2.id_album IS NOT NULL
+                    AND (
+                        LOWER(i2.nombre) = LOWER(CASE WHEN temas_cd.artista_original IS NOT NULL AND temas_cd.artista_original != '' THEN temas_cd.artista_original ELSE i1.nombre END)
+                        OR t2.es_original = 1
+                    )
+                    ORDER BY 
+                      CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN temas_cd.artista_original IS NOT NULL AND temas_cd.artista_original != '' THEN temas_cd.artista_original ELSE i1.nombre END) THEN 1 ELSE 2 END,
+                      t2.es_original DESC
+                    LIMIT 1
+                )
+                WHERE id_album IS NULL
+                """);
+            
+            // También comprobar contra la tabla opuesta (si el original está en CD y el cover en Cassette, etc) 
+            // Esto se podría refinar, pero por ahora la lógica principal cubre la mayoría de casos donde el original suele estar en la misma tabla o se busca en ambas.
+            // La query de arriba solo busca originales en 'temas'. Haremos una pasada extra buscando originales en 'temas_cd'.
+
+             var rowsTemasCross = await conn.ExecuteAsync("""
+                UPDATE temas
+                SET id_album = (
+                    SELECT t3.id_album 
+                    FROM temas_cd t3
+                    JOIN interpretes i3 ON t3.id_interprete = i3.id
+                    JOIN interpretes i1 ON temas.id_interprete = i1.id
+                    WHERE LOWER(t3.tema) = LOWER(temas.tema)
+                    AND t3.id_album IS NOT NULL
+                    AND (
+                        LOWER(i3.nombre) = LOWER(CASE WHEN temas.artista_original IS NOT NULL AND temas.artista_original != '' THEN temas.artista_original ELSE i1.nombre END)
+                        OR t3.es_original = 1
+                    )
+                    ORDER BY 
+                      CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN temas.artista_original IS NOT NULL AND temas.artista_original != '' THEN temas.artista_original ELSE i1.nombre END) THEN 1 ELSE 2 END,
+                      t3.es_original DESC
+                    LIMIT 1
+                )
+                WHERE id_album IS NULL
+                """);
+
+             var rowsCdsCross = await conn.ExecuteAsync("""
+                UPDATE temas_cd
+                SET id_album = (
+                    SELECT t3.id_album 
+                    FROM temas_cd t3
+                    JOIN interpretes i3 ON t3.id_interprete = i3.id
+                    JOIN interpretes i1 ON temas_cd.id_interprete = i1.id
+                    WHERE LOWER(t3.tema) = LOWER(temas_cd.tema)
+                    AND t3.id_album IS NOT NULL
+                    AND (
+                        LOWER(i3.nombre) = LOWER(CASE WHEN temas_cd.artista_original IS NOT NULL AND temas_cd.artista_original != '' THEN temas_cd.artista_original ELSE i1.nombre END)
+                        OR t3.es_original = 1
+                    )
+                    ORDER BY 
+                      CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN temas_cd.artista_original IS NOT NULL AND temas_cd.artista_original != '' THEN temas_cd.artista_original ELSE i1.nombre END) THEN 1 ELSE 2 END,
+                      t3.es_original DESC
+                    LIMIT 1
+                )
+                WHERE id_album IS NULL
+                """);
+
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = $"Sincronización completada. Actualizados: {rowsTemas + rowsTemasCross} en Cassettes, {rowsCds + rowsCdsCross} en CDs." 
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = "Error al sincronizar: " + ex.Message };
+        }
+    }
+
+    // ============================================
+    // MÉTODOS AUXILIARES PRIVADOS
+    // ============================================
+
+    /// <summary>
+    /// Gestiona la lógica de original/cover/versión tras una actualización.
+    /// Asegura que solo haya un original y clasifica el resto automáticamente.
+    /// </summary>
+    private async Task GestionarOriginalidadAsync(int id, int idInterprete, string tema, bool esOriginal)
+    {
+        if (!esOriginal) return;
+
+        using var conn = _db.ObtenerConexion();
+        
+        // 1. Obtener nombre del artista original (el actual)
+        var nombreArtista = await conn.QueryFirstOrDefaultAsync<string>("SELECT nombre FROM interpretes WHERE id = @id", new { id = idInterprete });
+        if (string.IsNullOrEmpty(nombreArtista)) return;
+
+        // 2. Normalizar tema para buscar versiones
+        var temaNorm = NormalizarTexto(tema);
+
+        // 3. Buscar TODAS las canciones con el mismo tema (en tablas temas y temas_cd)
+        // Excluyendo la actual
+        var duplicadosCassette = await conn.QueryAsync<(int Id, int IdInterprete)>("""
+            SELECT id, id_interprete FROM temas 
+            WHERE id != @id AND LOWER(tema) = @temaNorm
+            """, new { id, temaNorm = tema.ToLower() }); // NormalizarTexto ya devuelve minúsculas si es similar a la implementación standard
+
+        var duplicadosCd = await conn.QueryAsync<(int Id, int IdInterprete)>("""
+            SELECT id, id_interprete FROM temas_cd 
+            WHERE id != @id AND LOWER(tema) = @temaNorm
+            """, new { id, temaNorm = tema.ToLower() });
+            
+        // NOTA: NormalizarTexto puede ser compleja, aquí usamosToLower() básico para la query SQL, 
+        // pero idealmente deberíamos usar la misma lógica de normalización que ObtenerDuplicadosAsync.
+        // Asumiendo que 'tema' ya viene limpio o que el SQL LIKE maneja acentos si la DB está configurada.
+
+        // 4. Actualizar duplicados
+        foreach (var d in duplicadosCassette)
+        {
+            bool mismoArtista = d.IdInterprete == idInterprete;
+            await conn.ExecuteAsync("""
+                UPDATE temas SET 
+                    es_original = 0,
+                    es_cover = @esCover,
+                    artista_original = @artistaOriginal
+                WHERE id = @idCancion
+                """, new 
+                { 
+                    idCancion = d.Id,
+                    esCover = mismoArtista ? 0 : 1,
+                    artistaOriginal = mismoArtista ? null : nombreArtista 
+                });
+        }
+
+        foreach (var d in duplicadosCd)
+        {
+            bool mismoArtista = d.IdInterprete == idInterprete;
+            await conn.ExecuteAsync("""
+                UPDATE temas_cd SET 
+                    es_original = 0,
+                    es_cover = @esCover,
+                    artista_original = @artistaOriginal
+                WHERE id = @idCancion
+                """, new 
+                { 
+                    idCancion = d.Id,
+                    esCover = mismoArtista ? 0 : 1,
+                    artistaOriginal = mismoArtista ? null : nombreArtista 
+                });
+        }
+    }
+
+    // ==========================================
+    // GESTIÓN DE ARCHIVOS DE AUDIO
+    // ==========================================
+
+    /// <summary>
+    /// Guarda un archivo de audio en el sistema de archivos y actualiza la base de datos
+    /// </summary>
+    public async Task<CrudResponse> GuardarArchivoAudioAsync(int id, string tipo, string nombreArchivo, byte[] contenido)
+    {
+        try
+        {
+            tipo = tipo.ToLower();
+            var tabla = tipo == "cassette" ? "temas" : "temas_cd";
+            
+            // Obtener extensión del archivo
+            var extension = Path.GetExtension(nombreArchivo).ToLowerInvariant();
+            var formatosPermitidos = new[] { ".mp3", ".wav", ".m4a", ".flac", ".ogg" };
+            
+            if (!formatosPermitidos.Contains(extension))
+            {
+                return new CrudResponse 
+                { 
+                    Exito = false, 
+                    Mensaje = $"Formato no soportado. Use: {string.Join(", ", formatosPermitidos)}" 
+                };
+            }
+            
+            // Crear nombre único: tipo_id.ext
+            var nombreArchivoFinal = $"{tipo}_{id}{extension}";
+            
+            // Determinar carpeta: audio/cassette/ o audio/cd/
+            var directorioBase = AppContext.BaseDirectory;
+            var carpetaAudio = Path.Combine(directorioBase, "audio", tipo);
+            Directory.CreateDirectory(carpetaAudio);
+            
+            // Ruta completa del archivo
+            var rutaCompleta = Path.Combine(carpetaAudio, nombreArchivoFinal);
+            
+            // Eliminar archivo anterior si existe
+            if (File.Exists(rutaCompleta))
+            {
+                File.Delete(rutaCompleta);
+            }
+            
+            // Guardar archivo
+            await File.WriteAllBytesAsync(rutaCompleta, contenido);
+            
+            // Calcular duración (aproximada basada en tamaño, para MP3 típico 128kbps)
+            // Nota: Para duración exacta se requeriría una biblioteca como TagLibSharp
+            int duracionAproximada = contenido.Length / (16000); // ~128kbps en segundos
+            
+            // Actualizar base de datos con ruta relativa
+            var rutaRelativa = $"audio/{tipo}/{nombreArchivoFinal}";
+            var formato = extension.TrimStart('.');
+            
+            using var conn = _db.ObtenerConexion();
+            await conn.ExecuteAsync(
+                $"""
+                UPDATE {tabla} 
+                SET archivo_audio = @rutaRelativa, 
+                    duracion_segundos = @duracion, 
+                    formato_audio = @formato 
+                WHERE id = @id
+                """,
+                new { id, rutaRelativa, duracion = duracionAproximada, formato });
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = "Audio guardado correctamente",
+                IdCreado = id
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse 
+            { 
+                Exito = false, 
+                Mensaje = $"Error al guardar audio: {ex.Message}" 
+            };
+        }
+    }
+
+    /// <summary>
+    /// Obtiene la ruta absoluta del archivo de audio de una canción
+    /// </summary>
+    public async Task<string?> ObtenerRutaAudioAsync(int id, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+        var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+        
+        var rutaRelativa = await conn.QueryFirstOrDefaultAsync<string?>(
+            $"SELECT archivo_audio FROM {tabla} WHERE id = @id", 
+            new { id });
+        
+        if (string.IsNullOrEmpty(rutaRelativa))
+            return null;
+        
+        var rutaAbsoluta = Path.Combine(AppContext.BaseDirectory, rutaRelativa);
+        
+        // Verificar que el archivo existe
+        if (!File.Exists(rutaAbsoluta))
+        {
+            // Limpiar registro de BD si el archivo no existe
+            await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET archivo_audio = NULL, duracion_segundos = NULL, formato_audio = NULL WHERE id = @id",
+                new { id });
+            return null;
+        }
+        
+        return rutaAbsoluta;
+    }
+
+    /// <summary>
+    /// Elimina el archivo de audio de una canción y actualiza la base de datos
+    /// </summary>
+    public async Task<CrudResponse> EliminarArchivoAudioAsync(int id, string tipo)
+    {
+        try
+        {
+            var rutaArchivo = await ObtenerRutaAudioAsync(id, tipo);
+            
+            // Eliminar archivo físico si existe
+            if (rutaArchivo != null && File.Exists(rutaArchivo))
+            {
+                File.Delete(rutaArchivo);
+            }
+            
+            // Actualizar base de datos
+            using var conn = _db.ObtenerConexion();
+            var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            
+            await conn.ExecuteAsync(
+                $"""
+                UPDATE {tabla} 
+                SET archivo_audio = NULL, 
+                    duracion_segundos = NULL, 
+                    formato_audio = NULL 
+                WHERE id = @id
+                """,
+                new { id });
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = "Audio eliminado correctamente" 
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse 
+            { 
+                Exito = false, 
+                Mensaje = $"Error al eliminar audio: {ex.Message}" 
+            };
+        }
+    }
+
+    /// <summary>
+    /// Obtiene todas las canciones de un medio específico, ordenadas para reproducción
+    /// </summary>
+    public async Task<List<CancionDetalle>> ObtenerCancionesDelMedioAsync(string numMedio, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+        tipo = tipo.ToLower();
+
+        if (tipo == "cassette")
+        {
+            var canciones = await conn.QueryAsync<dynamic>("""
+                SELECT 
+                    t.id, t.num_formato as numMedio, t.tema, t.lado, t.desde, t.hasta,
+                    t.id_interprete as idInterprete, i.nombre as interprete,
+                    t.id_album as idAlbum, a.nombre as nombreAlbum, a.anio as anioAlbum,
+                    a.es_single as esAlbumSingle,
+                    ai.nombre as artistaAlbum,
+                    t.link_externo as linkExterno,
+                    CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortada,
+                    CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortadaAlbum,
+                    t.es_cover as esCover, t.es_original as esOriginal, t.artista_original as artistaOriginal,
+                    t.archivo_audio as archivoAudio, t.duracion_segundos as duracionSegundos, t.formato_audio as formatoAudio
+                FROM temas t
+                INNER JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
+                LEFT JOIN interpretes ai ON a.id_interprete = ai.id
+                WHERE t.num_formato = @numMedio
+                ORDER BY t.lado, t.desde
+                """, new { numMedio });
+
+            return canciones.Select(c => new CancionDetalle
+            {
+                Id = c.id,
+                Tipo = "cassette",
+                Tema = c.tema,
+                Interprete = c.interprete,
+                IdInterprete = c.idInterprete,
+                numMedio = c.numMedio,
+                Lado = c.lado,
+                Desde = c.desde,
+                Hasta = c.hasta,
+                IdAlbum = c.idAlbum,
+                NombreAlbum = c.nombreAlbum,
+                ArtistaAlbum = c.artistaAlbum,
+                AnioAlbum = c.anioAlbum,
+                EsAlbumSingle = c.esAlbumSingle == 1,
+                LinkExterno = c.linkExterno,
+                TienePortada = c.tienePortada == 1,
+                TienePortadaAlbum = c.tienePortadaAlbum == 1,
+                EsCover = c.esCover == 1,
+                EsOriginal = c.esOriginal == 1,
+                ArtistaOriginal = c.artistaOriginal,
+                ArchivoAudio = c.archivoAudio,
+                DuracionSegundos = c.duracionSegundos,
+                FormatoAudio = c.formatoAudio
+            }).ToList();
+        }
+        else // cd
+        {
+            var canciones = await conn.QueryAsync<dynamic>("""
+                SELECT 
+                    t.id, t.num_formato as numMedio, t.tema, t.ubicacion,
+                    t.id_interprete as idInterprete, i.nombre as interprete,
+                    t.id_album as idAlbum, a.nombre as nombreAlbum, a.anio as anioAlbum,
+                    a.es_single as esAlbumSingle,
+                    ai.nombre as artistaAlbum,
+                    t.link_externo as linkExterno,
+                    CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortada,
+                    CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortadaAlbum,
+                    t.es_cover as esCover, t.es_original as esOriginal, t.artista_original as artistaOriginal,
+                    t.archivo_audio as archivoAudio, t.duracion_segundos as duracionSegundos, t.formato_audio as formatoAudio
+                FROM temas_cd t
+                INNER JOIN interpretes i ON t.id_interprete = i.id
+                LEFT JOIN albumes a ON t.id_album = a.id
+                LEFT JOIN interpretes ai ON a.id_interprete = ai.id
+                WHERE t.num_formato = @numMedio
+                ORDER BY t.ubicacion
+                """, new { numMedio });
+
+            return canciones.Select(c => new CancionDetalle
+            {
+                Id = c.id,
+                Tipo = "cd",
+                Tema = c.tema,
+                Interprete = c.interprete,
+                IdInterprete = c.idInterprete,
+                numMedio = c.numMedio,
+                Ubicacion = c.ubicacion,
+                IdAlbum = c.idAlbum,
+                NombreAlbum = c.nombreAlbum,
+                ArtistaAlbum = c.artistaAlbum,
+                AnioAlbum = c.anioAlbum,
+                EsAlbumSingle = c.esAlbumSingle == 1,
+                LinkExterno = c.linkExterno,
+                TienePortada = c.tienePortada == 1,
+                TienePortadaAlbum = c.tienePortadaAlbum == 1,
+                EsCover = c.esCover == 1,
+                EsOriginal = c.esOriginal == 1,
+                ArtistaOriginal = c.artistaOriginal,
+                ArchivoAudio = c.archivoAudio,
+                DuracionSegundos = c.duracionSegundos,
+                FormatoAudio = c.formatoAudio
+            }).ToList();
+        }
+    }
 }
+

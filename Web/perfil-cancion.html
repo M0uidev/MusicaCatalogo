@@ -610,7 +610,6 @@
     <!-- Contenedor de notificaciones toast -->
     <div id="notificaciones-component"></div>
 
-    <!-- Footer generado dinámicamente -->
     <div id="footer-component"></div>
 
     <script src="js/components.js"></script>
@@ -919,7 +918,7 @@
                 </div>
 
                 <div class="versiones-container">
-                    ${versiones.map(v => renderizarVersionArtista(v, !tieneOriginal)).join('')}
+                    ${versiones.map(v => renderizarVersionArtista(v, true)).join('')}
                 </div>
             `;
 
@@ -962,8 +961,8 @@
                 ? `<div class="version-original-ref">Cover de: ${escapeHtml(artistaOriginalRef)}</div>`
                 : '';
 
-            // Botón para marcar como original (solo si no hay ninguno definido)
-            const btnOriginalHtml = mostrarBotonOriginal && !esOriginal ? `
+            // Botón para marcar como original (mostrar siempre que NO sea la original actual)
+            const btnOriginalHtml = !esOriginal ? `
                 <button class="btn-marcar-original" onclick="marcarComoOriginal('${grupoId}', ${idInterprete})">
                     ⭐ Marcar como original
                 </button>
@@ -989,6 +988,15 @@
                 `;
             }).join('');
 
+            // Datos para gestión de portada (tomamos la primera ubicación disponible)
+            const primerUbicacion = ubicaciones[0];
+            const primerId = primerUbicacion ? (primerUbicacion.id || primerUbicacion.Id) : 0;
+            const primerTipo = primerUbicacion ? (primerUbicacion.tipo || primerUbicacion.Tipo) : 'cassette';
+            // Verificar si tiene portada custom (tienePortada es true Y NO es heredada de álbum)
+            // La API de perfil devuelve TienePortada. Pero RepositorioMusica perfil multiartista projection:
+            // TienePortada = c.TienePortada (que es de la tabla temas, so it IS custom or uploaded)
+            const tienePortadaCustom = primerUbicacion && (primerUbicacion.tienePortada || primerUbicacion.TienePortada);
+
             return `
                 <div class="version-artista ${claseVersion}">
                     <div class="version-header">
@@ -1007,6 +1015,11 @@
                             </div>
                             ${refOriginalHtml}
                             ${btnOriginalHtml}
+                        </div>
+                        <div class="version-acciones-portada" style="display:flex; flex-direction:column; gap:0.5rem; margin:0 1rem; align-items:center;">
+                            <a href="cancion.html?id=${primerId}&tipo=${primerTipo}" class="btn-accion secundario" style="font-size:0.8rem; padding:0.3rem 0.6rem; text-decoration:none; color:var(--color-texto-secundario);">
+                                ✏️ Detalle
+                            </a>
                         </div>
                         ${linkHtml}
                     </div>

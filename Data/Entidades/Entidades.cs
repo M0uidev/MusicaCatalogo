@@ -83,6 +83,9 @@ public record Tema
     public bool EsCover { get; init; }
     public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
+    public string? ArchivoAudio { get; init; }
+    public int? DuracionSegundos { get; init; }
+    public string? FormatoAudio { get; init; }
 }
 
 public record TemaCd
@@ -98,6 +101,9 @@ public record TemaCd
     public bool EsCover { get; init; }
     public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
+    public string? ArchivoAudio { get; init; }
+    public int? DuracionSegundos { get; init; }
+    public string? FormatoAudio { get; init; }
 }
 
 // ============================================
@@ -163,6 +169,7 @@ public record DetalleInterprete
 
 public record TemaDeInterprete
 {
+    public int Id { get; init; }
     public required string Tipo { get; init; }
     public required string numMedio { get; init; }
     public required string Tema { get; init; }
@@ -411,6 +418,12 @@ public class CancionDetalle
     public bool EsCover { get; set; }
     public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
+    
+    // Campos de audio
+    public string? ArchivoAudio { get; set; }
+    public int? DuracionSegundos { get; set; }
+    public string? FormatoAudio { get; set; }
+    public bool TieneArchivoAudio => !string.IsNullOrEmpty(ArchivoAudio);
 }
 
 /// <summary>DTO para actualizar canción individual</summary>
@@ -481,6 +494,7 @@ public class CancionGaleria
     public string numMedio { get; set; } = "";
     public int? IdAlbum { get; set; }
     public string? AlbumNombre { get; set; }
+    public bool EsAlbumSingle { get; set; }
     public int EsCover { get; set; }
     public int EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
@@ -488,6 +502,7 @@ public class CancionGaleria
     public long? Desde { get; set; }
     public long? Hasta { get; set; }
     public long? Ubicacion { get; set; }
+    public string? Anio { get; set; }
 }
 
 /// <summary>DTO para obtener canciones disponibles para asignar</summary>

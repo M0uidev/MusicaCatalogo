@@ -632,6 +632,11 @@
             overflow: hidden;
             flex-direction: column;
         }
+        
+        /* Asegurar que el dropdown del modal tenga z-index alto */
+        #modalCrearAlbum .artista-selector-dropdown {
+            z-index: 1001;
+        }
 
         .artista-selector-dropdown.visible {
             display: flex;
@@ -816,9 +821,26 @@
                     <input type="text" id="nuevoAlbumNombre" placeholder="Nombre del álbum o single">
                 </div>
                 <div class="form-row">
-                    <div class="form-grupo">
-                        <label for="nuevoAlbumArtista">Artista</label>
-                        <input type="text" id="nuevoAlbumArtista" placeholder="Artista">
+                    <div class="form-grupo artista-selector">
+                        <label>Artista</label>
+                        <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaModal()">
+                            <div class="artista-icono">🎤</div>
+                            <span class="artista-btn-nombre" id="nuevoAlbumArtistaNombre">Sin artista</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="artista-selector-dropdown" id="artistaDropdownModal">
+                            <div class="artista-selector-header">
+                                <input type="text" id="buscarArtistaInputModal" placeholder="Buscar artista..." oninput="filtrarArtistasSelectorModal()">
+                            </div>
+                            <div class="artista-selector-lista" id="listaArtistasSelectorModal">
+                                <p class="artista-vacio-dropdown">Cargando...</p>
+                            </div>
+                            <div class="artista-nuevo-inline" id="artistaNuevoInlineModal" style="display: none;">
+                                <input type="text" id="inputNuevoArtistaModal" placeholder="Nombre del nuevo artista...">
+                                <button onclick="crearNuevoArtistaModal()">✓</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="nuevoAlbumArtista" value="">
                     </div>
                     <div class="form-grupo">
                         <label for="nuevoAlbumAnio">Año</label>
@@ -913,6 +935,21 @@
                             <button class="btn-cambiar-portada" onclick="cambiarPortada()">
                                 📷 Cambiar
                             </button>
+                               <div id="audio-player-container" style="margin-top:1.5rem;">
+                                   <div class="audio-player-spotify">
+                                       <audio id="audio-player" src="${c.archivoAudio ? `/api/canciones/${c.id}/audio?tipo=${c.tipo}` : ''}" preload="none"></audio>
+                                       <div id="audio-controls">
+                                           <button id="play-pause-btn">▶️</button>
+                                           <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1">
+                                           <span id="current-time">0:00</span> / <span id="duration">0:00</span>
+                                       </div>
+                                       <div style="width:100%;display:flex;align-items:center;justify-content:flex-start;">
+                                           <input type="file" id="audio-file-input" accept="audio/*" style="display:none;">
+                                           <button id="load-audio-btn">Cargar archivo MP3</button>
+                                           <span id="audio-file-name"></span>
+                                       </div>
+                                   </div>
+                               </div>
                         </div>
                         
                         <div class="cancion-info">
@@ -962,14 +999,13 @@
                                             </div>
                                             <div class="artista-nuevo-inline" id="artistaNuevoInline" style="display: none;">
                                                 <input type="text" id="inputNuevoArtista" placeholder="Nombre del nuevo artista...">
-                                                <button onclick="crearNuevoArtista()">✓</button>
                                             </div>
                                         </div>
                                         <input type="hidden" id="inputInterprete" value="${escapeHtml(c.interprete)}">
                                     </div>
                                     <div class="form-grupo album-selector">
-                                        <label>Álbum / Single</label>
-                                        <button type="button" class="album-selector-btn" onclick="toggleSelectorAlbum()">
+                                        <label>Álbum / Single ${c.esCover ? '<span style="font-size: 0.85rem; color: #ec4899; font-weight: normal;">(del original)</span>' : ''}</label>
+                                        <button type="button" class="album-selector-btn ${c.esCover ? 'album-bloqueado' : ''}" onclick="${c.esCover ? 'return false;' : 'toggleSelectorAlbum()'}" ${c.esCover ? 'disabled style=\"opacity: 0.7; cursor: not-allowed;\"' : ''}>
                                             ${c.idAlbum 
                                                 ? `${c.tienePortadaAlbum 
                                                     ? `<img src="/api/albumes/${c.idAlbum}/portada" alt="">`
@@ -977,13 +1013,18 @@
                                                   }
                                                   <div class="album-btn-info">
                                                       <div class="album-btn-nombre">${escapeHtml(c.nombreAlbum)}</div>
-                                                      <div class="album-btn-artista">${c.artistaAlbum ? escapeHtml(c.artistaAlbum) : 'Sin artista'}</div>
+                                                      <div class="album-btn-artista">${c.artistaAlbum ? escapeHtml(c.artistaAlbum) : 'Sin artista'}${c.esCover ? ' <span style=\"color: #ec4899; font-size: 0.8rem;\">(original)</span>' : ''}</div>
                                                   </div>`
                                                 : `<div class="placeholder-img">➕</div>
                                                    <span class="sin-album">Sin álbum asignado</span>`
                                             }
-                                            <span>▼</span>
+                                            ${c.esCover ? '<span style="opacity: 0.5;">🔒</span>' : '<span>▼</span>'}
                                         </button>
+                                        ${c.esCover ? `
+                                            <div style="font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
+                                                🔒 El álbum se asigna automáticamente desde la canción original
+                                            </div>
+                                        ` : `
                                         <div class="album-selector-dropdown" id="albumDropdown">
                                             <div class="album-selector-header">
                                                 <input type="text" id="buscarAlbumInput" placeholder="Buscar álbum..." oninput="filtrarAlbumesSelector()">
@@ -1005,6 +1046,7 @@
                                                 </div>
                                             ` : ''}
                                         </div>
+                                        `}
                                         <input type="hidden" id="inputAlbumId" value="${c.idAlbum || ''}">
                                     </div>
                                 </div>
@@ -1012,6 +1054,17 @@
                                 <div class="form-grupo">
                                     <label for="inputLink">Link externo (YouTube, Spotify, etc.)</label>
                                     <input type="url" id="inputLink" value="${escapeHtml(c.linkExterno || '')}" placeholder="https://...">
+                                </div>
+
+                                <div class="form-grupo" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radio); padding: 1rem; margin: 0.5rem 0;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <input type="checkbox" id="inputEsCover" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleArtistaOriginal()">
+                                        <label for="inputEsCover" style="cursor: pointer; font-weight: 500; color: #ec4899; margin: 0;">🎸 Esta canción es un cover</label>
+                                    </div>
+                                    <div id="campoArtistaOriginal" style="display: ${c.esCover ? 'block' : 'none'}; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(236, 72, 153, 0.2);">
+                                        <label for="inputArtistaOriginal" style="display: block; font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--color-texto-secundario);">Artista original</label>
+                                        <input type="text" id="inputArtistaOriginal" value="${escapeHtml(c.artistaOriginal || '')}" placeholder="Nombre del artista original..." style="width: 100%; padding: 0.5rem; border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radio); background: rgba(255, 255, 255, 0.8);">
+                                    </div>
                                 </div>
 
                                 ${esCassette ? `
@@ -1051,7 +1104,172 @@
 
             // Configurar autocompletado y selector de álbum
             configurarAutocompletado();
-            cargarAlbumesSelector();
+            cargarAlbumesSelector().then(() => {
+                // Si es cover, configurar auto-asignación de álbum original
+                if (c.esCover && c.artistaOriginal) {
+                    // Si no tiene álbum asignado, buscar y asignar el del original
+                    if (!c.idAlbum) {
+                        configurarCoverAutoAsignacion(c.tema, c.artistaOriginal);
+                    } else {
+                        // Si ya tiene álbum, asegurar que esté seleccionado en el selector
+                        albumSeleccionadoId = c.idAlbum;
+                        document.getElementById('inputAlbumId').value = c.idAlbum;
+                        
+                        // Bloquear el selector de álbum ya que es un cover
+                        setTimeout(() => {
+                            const albumBtn = document.querySelector('.album-selector-btn');
+                            if (albumBtn) {
+                                albumBtn.classList.add('album-bloqueado');
+                                albumBtn.disabled = true;
+                                albumBtn.style.opacity = '0.7';
+                                albumBtn.style.cursor = 'not-allowed';
+                                albumBtn.onclick = () => false;
+                                // Cambiar el icono
+                                const span = albumBtn.querySelector('span:last-child');
+                                if (span) span.textContent = '🔒';
+                            }
+                            
+                            // Ocultar dropdown si existe
+                            const albumDropdown = document.getElementById('albumDropdown');
+                            if (albumDropdown) {
+                                albumDropdown.remove();
+                            }
+                        }, 100);
+                    }
+                }
+            });
+            
+            // Marcar checkbox de cover si corresponde
+            if (c.esCover) {
+                const checkbox = document.getElementById('inputEsCover');
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            }
+        }
+        
+        function toggleArtistaOriginal() {
+            const esCover = document.getElementById('inputEsCover').checked;
+            const campo = document.getElementById('campoArtistaOriginal');
+            campo.style.display = esCover ? 'block' : 'none';
+            
+            // Obtener el selector de álbum
+            const albumSelector = document.querySelector('.album-selector');
+            const albumBtn = document.querySelector('.album-selector-btn');
+            const albumDropdown = document.getElementById('albumDropdown');
+            
+            if (!esCover) {
+                document.getElementById('inputArtistaOriginal').value = '';
+                // Restaurar selector de álbum normal
+                if (albumBtn) {
+                    albumBtn.classList.remove('album-bloqueado');
+                    albumBtn.disabled = false;
+                    albumBtn.style.opacity = '1';
+                    albumBtn.style.cursor = 'pointer';
+                    albumBtn.onclick = () => toggleSelectorAlbum();
+                    // Cambiar el icono
+                    const span = albumBtn.querySelector('span:last-child');
+                    if (span) span.textContent = '▼';
+                }
+                // Restaurar dropdown si estaba oculto
+                if (albumDropdown && !albumDropdown.parentElement) {
+                    const albumSelectorDiv = document.querySelector('.album-selector');
+                    if (albumSelectorDiv) {
+                        albumSelectorDiv.appendChild(albumDropdown);
+                    }
+                }
+            } else {
+                // Si se marca como cover, bloquear selector de álbum
+                const artistaOriginal = document.getElementById('inputArtistaOriginal').value;
+                if (artistaOriginal && cancionActual) {
+                    configurarCoverAutoAsignacion(cancionActual.tema, artistaOriginal);
+                }
+                
+                // Bloquear selector de álbum
+                if (albumBtn) {
+                    albumBtn.classList.add('album-bloqueado');
+                    albumBtn.disabled = true;
+                    albumBtn.style.opacity = '0.7';
+                    albumBtn.style.cursor = 'not-allowed';
+                    albumBtn.onclick = () => false;
+                    // Cambiar el icono
+                    const span = albumBtn.querySelector('span:last-child');
+                    if (span) span.textContent = '🔒';
+                }
+                // Ocultar dropdown
+                if (albumDropdown) {
+                    albumDropdown.remove();
+                }
+                // Agregar mensaje de bloqueo
+                const existingMsg = albumSelector?.querySelector('.album-bloqueado-msg');
+                if (!existingMsg && albumSelector) {
+                    const msg = document.createElement('div');
+                    msg.className = 'album-bloqueado-msg';
+                    msg.style.cssText = 'font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;';
+                    msg.innerHTML = '🔒 El álbum se asigna automáticamente desde la canción original';
+                    albumSelector.appendChild(msg);
+                }
+            }
+        }
+        
+        async function configurarCoverAutoAsignacion(tema, artistaOriginal) {
+            try {
+                // Buscar la canción original para obtener su álbum
+                const resp = await fetch(`/api/cancion/perfil?tema=${encodeURIComponent(tema)}&artista=${encodeURIComponent(artistaOriginal)}`);
+                if (!resp.ok) {
+                    console.log('No se encontró perfil de canción original');
+                    return;
+                }
+                
+                const perfil = await resp.json();
+                if (perfil && perfil.ubicaciones && perfil.ubicaciones.length > 0) {
+                    // Buscar ubicación con álbum (preferir CD sobre cassette)
+                    const ubicacionConAlbum = perfil.ubicaciones.find(u => u.idAlbum && u.idAlbum > 0 && u.tipo === 'cd') 
+                        || perfil.ubicaciones.find(u => u.idAlbum && u.idAlbum > 0);
+                    if (ubicacionConAlbum && ubicacionConAlbum.idAlbum) {
+                        // Auto-asignar el álbum original
+                        await seleccionarAlbum(ubicacionConAlbum.idAlbum);
+                        
+                        // Bloquear el selector de álbum
+                        const albumBtn = document.querySelector('.album-selector-btn');
+                        if (albumBtn) {
+                            albumBtn.classList.add('album-bloqueado');
+                            albumBtn.disabled = true;
+                            albumBtn.style.opacity = '0.7';
+                            albumBtn.style.cursor = 'not-allowed';
+                            albumBtn.onclick = () => false;
+                            // Cambiar el icono
+                            const span = albumBtn.querySelector('span:last-child');
+                            if (span) span.textContent = '🔒';
+                        }
+                        
+                        // Ocultar dropdown si existe
+                        const albumDropdown = document.getElementById('albumDropdown');
+                        if (albumDropdown) {
+                            albumDropdown.remove();
+                        }
+                        
+                        // Agregar mensaje de bloqueo si no existe
+                        const albumSelector = document.querySelector('.album-selector');
+                        const existingMsg = albumSelector?.querySelector('.album-bloqueado-msg');
+                        if (!existingMsg && albumSelector) {
+                            const msg = document.createElement('div');
+                            msg.className = 'album-bloqueado-msg';
+                            msg.style.cssText = 'font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;';
+                            msg.innerHTML = '🔒 El álbum se asigna automáticamente desde la canción original';
+                            albumSelector.appendChild(msg);
+                        }
+                        
+                        // Actualizar el artista original si no está definido
+                        const inputArtistaOriginal = document.getElementById('inputArtistaOriginal');
+                        if (!inputArtistaOriginal.value && artistaOriginal) {
+                            inputArtistaOriginal.value = artistaOriginal;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error buscando álbum original:', error);
+            }
         }
 
         let albumesDisponibles = [];
@@ -1216,15 +1434,30 @@
             titulo.textContent = esSingle ? '🎵 Nuevo Single' : '💿 Nuevo Álbum';
             
             // Pre-llenar con el artista de la canción
-            document.getElementById('nuevoAlbumArtista').value = cancionActual.interprete || '';
+            const artistaActual = cancionActual?.interprete || '';
+            artistaSeleccionadoModal = artistaActual;
+            document.getElementById('nuevoAlbumArtista').value = artistaActual;
+            const btnArtista = document.querySelector('#modalCrearAlbum .artista-selector-btn .artista-btn-nombre');
+            if (btnArtista) {
+                btnArtista.textContent = artistaActual || 'Sin artista';
+            }
+            
             document.getElementById('nuevoAlbumNombre').value = '';
             document.getElementById('nuevoAlbumAnio').value = '';
+            
+            // Cerrar cualquier dropdown abierto
+            const dropdownModal = document.getElementById('artistaDropdownModal');
+            if (dropdownModal) dropdownModal.classList.remove('visible');
+            
+            // Cargar artistas para el selector del modal
+            cargarArtistasSelectorModal();
             
             modal.classList.add('activo');
             document.getElementById('nuevoAlbumNombre').focus();
             
-            // Cerrar el dropdown
-            document.getElementById('albumDropdown').classList.remove('visible');
+            // Cerrar el dropdown del selector de álbum principal
+            const albumDropdown = document.getElementById('albumDropdown');
+            if (albumDropdown) albumDropdown.classList.remove('visible');
         }
 
         function cerrarModalAlbum() {
@@ -1247,7 +1480,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nombre,
-                        interprete: artista || null,
+                        nombreInterprete: artista || null,
                         anio: anio || null,
                         esSingle: creandoSingle
                     })
@@ -1275,6 +1508,131 @@
                 alert('Error al crear el álbum');
             }
         }
+        
+        // ============ Selector de Artista para Modal ============
+        let artistasDisponiblesModal = [];
+        let artistaSeleccionadoModal = null;
+        let mostrandoInputNuevoModal = false;
+        let timeoutBusquedaArtistaModal = null;
+
+        async function cargarArtistasSelectorModal(filtro = '') {
+            try {
+                const params = new URLSearchParams();
+                if (filtro) params.append('filtro', filtro);
+                params.append('limite', '50');
+                
+                const resp = await fetch(`/api/interpretes?${params}`);
+                artistasDisponiblesModal = await resp.json();
+                renderizarArtistasSelectorModal(filtro);
+            } catch (e) {
+                console.error('Error cargando artistas:', e);
+            }
+        }
+
+        function renderizarArtistasSelectorModal(filtro = '') {
+            const lista = document.getElementById('listaArtistasSelectorModal');
+            if (!lista) return;
+
+            let artistas = artistasDisponiblesModal;
+
+            // Verificar si el filtro no coincide con ningún artista existente
+            const filtroLower = (filtro || '').toLowerCase();
+            const coincideExacto = artistas.some(a => a.interprete.toLowerCase() === filtroLower);
+            const mostrarCrear = filtro && filtro.length > 0 && !coincideExacto;
+
+            if (artistas.length === 0 && !mostrarCrear) {
+                lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
+                ocultarInputNuevoArtistaModal();
+                return;
+            }
+
+            lista.innerHTML = artistas.map(a => `
+                <div class="artista-selector-item ${a.interprete === artistaSeleccionadoModal ? 'seleccionado' : ''}" 
+                     onclick="seleccionarArtistaModal('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
+                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
+                    <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
+                </div>
+            `).join('');
+
+            // Mostrar opción de crear nuevo si no hay coincidencia exacta
+            if (mostrarCrear) {
+                mostrarInputNuevoArtistaModal(filtro);
+            } else {
+                ocultarInputNuevoArtistaModal();
+            }
+        }
+
+        function mostrarInputNuevoArtistaModal(nombre) {
+            const container = document.getElementById('artistaNuevoInlineModal');
+            const input = document.getElementById('inputNuevoArtistaModal');
+            if (container && input) {
+                container.style.display = 'flex';
+                input.value = nombre;
+                mostrandoInputNuevoModal = true;
+            }
+        }
+
+        function ocultarInputNuevoArtistaModal() {
+            const container = document.getElementById('artistaNuevoInlineModal');
+            if (container) container.style.display = 'none';
+            mostrandoInputNuevoModal = false;
+        }
+
+        function toggleSelectorArtistaModal() {
+            const dropdown = document.getElementById('artistaDropdownModal');
+            const isVisible = dropdown.classList.contains('visible');
+            
+            if (isVisible) {
+                dropdown.classList.remove('visible');
+            } else {
+                dropdown.classList.add('visible');
+                const input = document.getElementById('buscarArtistaInputModal');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+                cargarArtistasSelectorModal(''); // Cargar sin filtro
+            }
+        }
+
+        function filtrarArtistasSelectorModal() {
+            // Debounce: esperar 300ms después de que el usuario deje de escribir
+            clearTimeout(timeoutBusquedaArtistaModal);
+            const input = document.getElementById('buscarArtistaInputModal');
+            if (!input) return;
+            const filtro = input.value.trim();
+            
+            timeoutBusquedaArtistaModal = setTimeout(() => {
+                cargarArtistasSelectorModal(filtro);
+            }, 300);
+        }
+
+        function seleccionarArtistaModal(nombre) {
+            artistaSeleccionadoModal = nombre;
+            document.getElementById('nuevoAlbumArtista').value = nombre;
+
+            // Actualizar el botón selector
+            const btn = document.querySelector('#modalCrearAlbum .artista-selector-btn');
+            const nombreSpan = btn?.querySelector('.artista-btn-nombre');
+            if (nombreSpan) {
+                nombreSpan.textContent = nombre;
+            }
+
+            // Cerrar dropdown
+            const dropdown = document.getElementById('artistaDropdownModal');
+            if (dropdown) dropdown.classList.remove('visible');
+        }
+
+        function crearNuevoArtistaModal() {
+            const input = document.getElementById('inputNuevoArtistaModal');
+            if (!input) return;
+            const nombre = input.value.trim();
+            if (!nombre) return;
+
+            // Seleccionar el nuevo artista
+            seleccionarArtistaModal(nombre);
+        }
 
         // Cerrar dropdowns al hacer clic fuera
         document.addEventListener('click', (e) => {
@@ -1284,6 +1642,11 @@
             }
             if (!e.target.closest('.artista-selector')) {
                 const dropdown = document.getElementById('artistaDropdown');
+                if (dropdown) dropdown.classList.remove('visible');
+            }
+            // Cerrar dropdown del modal de artista
+            if (!e.target.closest('#modalCrearAlbum .artista-selector')) {
+                const dropdown = document.getElementById('artistaDropdownModal');
                 if (dropdown) dropdown.classList.remove('visible');
             }
         });
@@ -1415,6 +1778,8 @@
             const tema = document.getElementById('inputTema').value.trim();
             const interprete = document.getElementById('inputInterprete').value.trim();
             const link = document.getElementById('inputLink').value.trim();
+            const esCover = document.getElementById('inputEsCover').checked;
+            const artistaOriginal = document.getElementById('inputArtistaOriginal').value.trim();
 
             if (!tema || !interprete) {
                 alert('El nombre y el artista son obligatorios');
@@ -1424,7 +1789,9 @@
             const datos = {
                 tema,
                 nombreInterprete: interprete,
-                linkExterno: link || null
+                linkExterno: link || null,
+                esCover: esCover,
+                artistaOriginal: esCover ? (artistaOriginal || null) : null
             };
 
             if (cancionActual.tipo === 'cassette') {
@@ -1446,6 +1813,91 @@
                 if (result.exito) {
                     alert('Cambios guardados correctamente');
                     cargarCancion();
+                        // ========== AUDIO PLAYER ===========
+                        function formatTime(seconds) {
+                            const m = Math.floor(seconds / 60);
+                            const s = Math.floor(seconds % 60);
+                            return `${m}:${s.toString().padStart(2, '0')}`;
+                        }
+
+                        function setupAudioPlayer() {
+                            const audio = document.getElementById('audio-player');
+                            const playPauseBtn = document.getElementById('play-pause-btn');
+                            const progressBar = document.getElementById('progress-bar');
+                            const currentTimeSpan = document.getElementById('current-time');
+                            const durationSpan = document.getElementById('duration');
+                            const loadAudioBtn = document.getElementById('load-audio-btn');
+                            const audioFileInput = document.getElementById('audio-file-input');
+                            const audioFileName = document.getElementById('audio-file-name');
+
+                            let userLoadedFile = false;
+
+                            playPauseBtn.onclick = function() {
+                                if (audio.paused) {
+                                    audio.play();
+                                } else {
+                                    audio.pause();
+                                }
+                            };
+
+                            audio.addEventListener('play', () => {
+                                playPauseBtn.textContent = '⏸️';
+                            });
+                            audio.addEventListener('pause', () => {
+                                playPauseBtn.textContent = '▶️';
+                            });
+
+                            audio.addEventListener('loadedmetadata', () => {
+                                progressBar.max = audio.duration;
+                                durationSpan.textContent = formatTime(audio.duration);
+                            });
+
+                            audio.addEventListener('timeupdate', () => {
+                                progressBar.value = audio.currentTime;
+                                currentTimeSpan.textContent = formatTime(audio.currentTime);
+                            });
+
+                            progressBar.oninput = function() {
+                                audio.currentTime = progressBar.value;
+                            };
+
+                            loadAudioBtn.onclick = function() {
+                                audioFileInput.click();
+                            };
+
+                            audioFileInput.onchange = function(e) {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const url = URL.createObjectURL(file);
+                                    audio.src = url;
+                                    audioFileName.textContent = file.name;
+                                    userLoadedFile = true;
+                                    audio.load();
+                                    playPauseBtn.textContent = '▶️';
+                                    currentTimeSpan.textContent = '0:00';
+                                    durationSpan.textContent = '0:00';
+                                }
+                            };
+
+                            // Si hay un archivo de audio por defecto, mostrar el nombre
+                            if (audio.src && !userLoadedFile) {
+                                const parts = audio.src.split('/');
+                                const name = parts[parts.length-1];
+                                audioFileName.textContent = decodeURIComponent(name);
+                            }
+                        }
+
+                        // Llamar al setup cada vez que se renderiza la canción
+                        function afterRenderCancion() {
+                            setupAudioPlayer();
+                        }
+
+                        // Modificar renderizarCancion para llamar afterRenderCancion
+                        const _renderizarCancion = renderizarCancion;
+                        renderizarCancion = function() {
+                            _renderizarCancion.apply(this, arguments);
+                            setTimeout(afterRenderCancion, 0);
+                        };
                 } else {
                     alert('Error: ' + result.mensaje);
                 }

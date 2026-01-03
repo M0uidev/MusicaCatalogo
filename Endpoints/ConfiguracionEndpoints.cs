@@ -445,6 +445,77 @@ public static class ConfiguracionEndpoints
         .WithTags("Canciones");
 
         // ==========================================
+        // AUDIO DE CANCIÓN
+        // ==========================================
+
+        // Obtener/reproducir archivo de audio
+        app.MapGet("/api/canciones/{id:int}/audio", async (int id, string tipo) =>
+        {
+            var rutaArchivo = await repo.ObtenerRutaAudioAsync(id, tipo);
+            
+            if (rutaArchivo == null || !File.Exists(rutaArchivo))
+                return Results.NotFound();
+            
+            var stream = File.OpenRead(rutaArchivo);
+            var extension = Path.GetExtension(rutaArchivo).ToLowerInvariant();
+            var contentType = extension switch
+            {
+                ".mp3" => "audio/mpeg",
+                ".wav" => "audio/wav",
+                ".m4a" => "audio/mp4",
+                ".flac" => "audio/flac",
+                ".ogg" => "audio/ogg",
+                _ => "application/octet-stream"
+            };
+            
+            return Results.File(stream, contentType, enableRangeProcessing: true);
+        })
+        .WithName("ObtenerAudioCancion")
+        .WithTags("Canciones");
+
+        // Subir archivo de audio
+        app.MapPost("/api/canciones/{id:int}/audio", async (int id, string tipo, HttpContext context) =>
+        {
+            var form = await context.Request.ReadFormAsync();
+            var file = form.Files.FirstOrDefault();
+            
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Archivo requerido" });
+            
+            // Validar tamaño (límite 20MB)
+            if (file.Length > 20 * 1024 * 1024)
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "El archivo no debe superar 20MB" });
+            
+            // Validar extensión
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var formatosPermitidos = new[] { ".mp3", ".wav", ".m4a", ".flac", ".ogg" };
+            
+            if (!formatosPermitidos.Contains(extension))
+                return Results.BadRequest(new CrudResponse 
+                { 
+                    Exito = false, 
+                    Mensaje = $"Formato no soportado. Use: {string.Join(", ", formatosPermitidos)}" 
+                });
+            
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var resultado = await repo.GuardarArchivoAudioAsync(id, tipo, file.FileName, ms.ToArray());
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SubirAudioCancion")
+        .WithTags("Canciones")
+        .DisableAntiforgery();
+
+        // Eliminar archivo de audio
+        app.MapDelete("/api/canciones/{id:int}/audio", async (int id, string tipo) =>
+        {
+            var resultado = await repo.EliminarArchivoAudioAsync(id, tipo);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("EliminarAudioCancion")
+        .WithTags("Canciones");
+
+        // ==========================================
         // ASIGNACIÓN DE CANCIONES A ÁLBUMES
         // ==========================================
 

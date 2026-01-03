@@ -330,10 +330,26 @@
                 // Agrupar por tema+artista normalizado para obtener perfiles únicos
                 const grupos = new Map();
                 
+                // Primero, agrupar por tema para detectar múltiples versiones
+                const gruposPorTema = new Map();
+                for (const c of todasLasCanciones) {
+                    const temaNorm = normalizar(c.tema);
+                    if (!gruposPorTema.has(temaNorm)) {
+                        gruposPorTema.set(temaNorm, []);
+                    }
+                    gruposPorTema.get(temaNorm).push(c);
+                }
+                
                 for (const c of todasLasCanciones) {
                     const clave = `${normalizar(c.tema)}|${normalizar(c.interprete)}`;
                     
                     if (!grupos.has(clave)) {
+                        // Verificar si hay múltiples versiones de esta canción
+                        const temaNorm = normalizar(c.tema);
+                        const versionesDelTema = gruposPorTema.get(temaNorm) || [];
+                        const artistasUnicos = new Set(versionesDelTema.map(v => normalizar(v.interprete)));
+                        const tieneMultiplesVersiones = artistasUnicos.size > 1;
+                        
                         grupos.set(clave, {
                             tema: c.tema,
                             interprete: c.interprete,
@@ -341,7 +357,9 @@
                             albumNombre: c.albumNombre,
                             instancias: [],
                             tieneCassette: false,
-                            tieneCd: false
+                            tieneCd: false,
+                            tieneMultiplesVersiones: tieneMultiplesVersiones,
+                            esCover: c.esCover || c.EsCover || false
                         });
                     }
                     
@@ -355,6 +373,11 @@
                     if (c.idAlbum && c.idAlbum > 0 && (!perfil.idAlbum || c.tipo === 'cd')) {
                         perfil.idAlbum = c.idAlbum;
                         perfil.albumNombre = c.albumNombre;
+                    }
+                    
+                    // Si alguna instancia es cover, marcar el perfil como cover
+                    if (c.esCover || c.EsCover) {
+                        perfil.esCover = true;
                     }
                 }
                 
@@ -448,9 +471,15 @@
                 // Generar URL del perfil con tema y artista
                 const perfilUrl = `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`;
                 
-                // URL de edición (primera instancia)
-                const primeraInstancia = p.instancias[0];
-                const editarUrl = `cancion.html?id=${primeraInstancia.id}&tipo=${primeraInstancia.tipo}`;
+                // URL de edición - si es cover, usar la instancia que es cover, sino la primera
+                let instanciaParaEditar = p.instancias[0];
+                if (p.esCover) {
+                    const instanciaCover = p.instancias.find(i => i.esCover || i.EsCover);
+                    if (instanciaCover) {
+                        instanciaParaEditar = instanciaCover;
+                    }
+                }
+                const editarUrl = `cancion.html?id=${instanciaParaEditar.id}&tipo=${instanciaParaEditar.tipo}`;
                 
                 return `
                     <div class="cancion-card" onclick="window.location.href='${perfilUrl}'">
