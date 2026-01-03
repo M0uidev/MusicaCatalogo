@@ -97,20 +97,21 @@
                 // Si el servidor devolvió la página completa, extraer solo el contenido
                 html = this.extractMainContent(html);
 
-                // Actualizar contenido
-                mainContainer.innerHTML = html;
-                mainContainer.style.opacity = '1';
-
-                // Ejecutar scripts inline que puedan estar en el contenido
-                this.executeScripts(mainContainer);
-
-                // Actualizar historial si es necesario
+                // Actualizar historial ANTES de actualizar contenido y ejecutar scripts
+                // Esto asegura que window.location.search tenga los parámetros correctos
                 if (pushState) {
                     window.history.pushState({ path }, '', path);
                 }
 
                 // Actualizar página actual
                 this.currentPage = path;
+
+                // Actualizar contenido
+                mainContainer.innerHTML = html;
+                mainContainer.style.opacity = '1';
+
+                // Ejecutar scripts inline que puedan estar en el contenido
+                this.executeScripts(mainContainer);
 
                 // Actualizar título de la página
                 this.updateTitle(path);
