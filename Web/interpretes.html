@@ -87,7 +87,7 @@
                 }
 
                 lista.innerHTML = interpretes.map(i => `
-                    <a href="interprete.html?nombre=${encodeURIComponent(i.interprete)}" class="item-card">
+                    <a href="interprete.html?nombre=${encodeURIComponent(i.interprete)}" class="item-card" data-spa-link>
                         <div class="item-icono">${ICONOS.iconoInterprete}</div>
                         <div class="item-contenido">
                             <div class="item-titulo">${escapeHtml(i.interprete)}</div>

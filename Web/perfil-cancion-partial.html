@@ -707,7 +707,7 @@
                     <div class="perfil-info">
                         <h1>${escapeHtml(datosCancion.tema)}</h1>
                         <div class="perfil-artista">
-                            <a href="buscar.html?q=${encodeURIComponent(datosCancion.artista)}">${escapeHtml(datosCancion.artista)}</a>
+                            <a href="buscar.html?q=${encodeURIComponent(datosCancion.artista)}" data-spa-link>${escapeHtml(datosCancion.artista)}</a>
                         </div>
                         ${ubicacionConAlbum ? `<div style="color: var(--color-texto-secundario); font-size: 0.9rem; margin-bottom: 0.5rem;">💿 ${escapeHtml(ubicacionConAlbum.nombreAlbum)}</div>` : ''}
                         
@@ -774,7 +774,7 @@
             const tipoLabel = ubicacion.tipo === 'cassette' ? 'Cassette' : 'CD';
 
             return `
-                <a href="${urlDestino}" class="ubicacion-card">
+                <a href="${urlDestino}" class="ubicacion-card" data-spa-link>
                     <div class="ubicacion-portada-container">
                         ${ubicacion.tienePortada
                     ? `<img src="/api/${ubicacion.tipo === 'cd' ? 'temas-cd' : 'temas'}/${ubicacion.id}/portada" 
@@ -962,7 +962,7 @@
                 const urlDestino = `medio.html?num=${encodeURIComponent(numMedio)}${tipo === 'cd' ? '&tipo=cd' : ''}`;
 
                 return `
-                    <a href="${urlDestino}" class="ubicacion-mini">
+                    <a href="${urlDestino}" class="ubicacion-mini" data-spa-link>
                         <span class="ubicacion-mini-icono">${icono}</span>
                         <div class="ubicacion-mini-info">
                             <div class="ubicacion-mini-Medio">${tipo === 'cassette' ? 'Cassette' : 'CD'} ${escapeHtml(numMedio)}</div>
@@ -990,7 +990,7 @@
                         </div>
                         <div class="version-info">
                             <h3 class="version-artista-nombre">
-                                <a href="buscar.html?q=${encodeURIComponent(artista)}" style="color: inherit; text-decoration: none;">
+                                <a href="buscar.html?q=${encodeURIComponent(artista)}" style="color: inherit; text-decoration: none;" data-spa-link>
                                     ${escapeHtml(artista)}
                                 </a>
                                 ${badge}
@@ -1002,7 +1002,7 @@
                             ${btnOriginalHtml}
                         </div>
                         <div class="version-acciones-portada" style="display:flex; flex-direction:column; gap:0.5rem; margin:0 1rem; align-items:center;">
-                            <a href="cancion.html?id=${primerId}&tipo=${primerTipo}" class="btn-accion secundario" style="font-size:0.8rem; padding:0.3rem 0.6rem; text-decoration:none; color:var(--color-texto-secundario);">
+                            <a href="cancion.html?id=${primerId}&tipo=${primerTipo}" class="btn-accion secundario" style="font-size:0.8rem; padding:0.3rem 0.6rem; text-decoration:none; color:var(--color-texto-secundario);" data-spa-link>
                                 ✏️ Detalle
                             </a>
                         </div>

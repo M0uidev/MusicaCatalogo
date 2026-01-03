@@ -49,14 +49,15 @@
     <div id="footer-component"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             await Promise.all([
                 cargarDiagnostico(),
                 cargarInfoRed()
             ]);
 
             document.getElementById('btnReimportar').addEventListener('click', reimportar);
-        });
+        })();
 
         async function cargarDiagnostico() {
             try {

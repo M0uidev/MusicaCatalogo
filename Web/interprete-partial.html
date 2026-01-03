@@ -1,5 +1,5 @@
     <main class="container">
-        <a href="interpretes.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
+        <a href="interpretes.html" class="btn btn-primario" data-spa-link style="margin-bottom: 1.5rem; display: inline-flex;">
             ← Volver a la lista
         </a>
 
@@ -22,7 +22,8 @@
     <div id="footer-component"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             const params = new URLSearchParams(window.location.search);
             // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)
             const nombre = params.get('nombre') || params.get('id');
@@ -33,7 +34,7 @@
             }
 
             await cargarInterprete(nombre);
-        });
+        })();
 
         async function cargarInterprete(nombre) {
             try {
@@ -123,13 +124,13 @@
                         ${temas.map(t => `
                             <tr>
                                 <td>
-                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;">
+                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;" data-spa-link>
                                         <strong>${escapeHtml(t.tema)}</strong>
                                     </a>
                                 </td>
                                 <td>
                                     <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
-                                       style="color: var(--color-primario); text-decoration: none;">
+                                       style="color: var(--color-primario); text-decoration: none;" data-spa-link>
                                         ${escapeHtml(t.numMedio)}
                                     </a>
                                 </td>

@@ -413,7 +413,7 @@
                     <div class="grupo-contenido" id="grupo-${index}">
                         <div class="perfil-link" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--color-primario-claro); border-radius: var(--radio); display: flex; align-items: center; justify-content: space-between;">
                             <span style="color: var(--color-texto-secundario);">Esta canción tiene ${grupo.totalInstancias} copias físicas</span>
-                            <a href="perfil-cancion.html?grupo=${encodeURIComponent(grupo.id)}" class="btn-ver" style="background: var(--color-primario); color: white; border: none;">
+                            <a href="perfil-cancion.html?grupo=${encodeURIComponent(grupo.id)}" class="btn-ver" style="background: var(--color-primario); color: white; border: none;" data-spa-link>
                                 👤 Ver perfil unificado
                             </a>
                         </div>
@@ -431,8 +431,8 @@
                                     </div>
                                 </div>
                                 <div class="instancia-acciones">
-                                    <a href="cancion.html?id=${c.id}&tipo=${c.tipo}" class="btn-ver">Ver</a>
-                                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}" class="btn-ver">Formato</a>
+                                    <a href="cancion.html?id=${c.id}&tipo=${c.tipo}" class="btn-ver" data-spa-link>Ver</a>
+                                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}" class="btn-ver" data-spa-link>Formato</a>
                                 </div>
                             </div>
                         `).join('')}

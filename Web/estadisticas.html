@@ -159,7 +159,7 @@
                 const topInterpretes = document.getElementById('topInterpretes');
                 if (stats.topInterpretes && stats.topInterpretes.length > 0) {
                     topInterpretes.innerHTML = stats.topInterpretes.map((i, idx) => `
-                        <a href="interprete.html?nombre=${encodeURIComponent(i.nombre)}" class="item-card">
+                        <a href="interprete.html?nombre=${encodeURIComponent(i.nombre)}" class="item-card" data-spa-link>
                             <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--color-primario); color: white; border-radius: var(--radio); font-size: 1.5rem; font-weight: 700;">
                                 ${idx + 1}
                             </div>

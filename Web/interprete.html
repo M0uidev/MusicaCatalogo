@@ -140,13 +140,13 @@
                         ${temas.map(t => `
                             <tr>
                                 <td>
-                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;">
+                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;" data-spa-link>
                                         <strong>${escapeHtml(t.tema)}</strong>
                                     </a>
                                 </td>
                                 <td>
                                     <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
-                                       style="color: var(--color-primario); text-decoration: none;">
+                                       style="color: var(--color-primario); text-decoration: none;" data-spa-link>
                                         ${escapeHtml(t.numMedio)}
                                     </a>
                                 </td>

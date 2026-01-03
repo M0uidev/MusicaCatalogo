@@ -18,8 +18,14 @@
      */
     function initGlobalPlayer() {
         // Verificar si el reproductor ya existe
-        if (document.getElementById('global-audio-player')) {
-            restorePlayerState();
+        const existingPlayer = document.getElementById('global-audio-player');
+        if (existingPlayer) {
+            // Si ya existe, no hacer nada (ya está funcionando)
+            // Solo restaurar estado si no hay audio cargado
+            const audio = document.getElementById('global-audio');
+            if (audio && !audio.src) {
+                restorePlayerState();
+            }
             return;
         }
 
@@ -148,6 +154,8 @@
             updateVolumeIcon(volume);
             // Actualizar estilo visual del slider
             updateVolumeBarStyle();
+            // Guardar volumen
+            saveVolume(volume);
         });
 
         volumeIcon.addEventListener('click', () => {
@@ -156,11 +164,13 @@
                 audio.volume = 0;
                 volumeBar.value = 0;
                 updateVolumeIcon(0);
+                saveVolume(0);
             } else {
                 const previousVolume = parseFloat(audio.dataset.previousVolume) || 1;
                 audio.volume = previousVolume;
                 volumeBar.value = previousVolume * 100;
                 updateVolumeIcon(previousVolume);
+                saveVolume(previousVolume);
             }
             updateVolumeBarStyle();
         });
@@ -184,6 +194,18 @@
             const value = volumeBar.value;
             volumeBar.style.background = `linear-gradient(to right, white 0%, white ${value}%, rgba(255,255,255,0.2) ${value}%, rgba(255,255,255,0.2) 100%)`;
         }
+
+        // Función para guardar volumen
+        function saveVolume(volume) {
+            try {
+                localStorage.setItem('audioPlayerVolume', volume.toString());
+            } catch (e) {
+                console.warn('Error guardando volumen:', e);
+            }
+        }
+
+        // Restaurar volumen guardado
+        restoreVolume();
 
         // Restaurar estado si existe
         restorePlayerState();
@@ -241,7 +263,10 @@
             // Reproducir
             setTimeout(() => {
                 audio.play().catch(err => {
-                    console.error('Error al reproducir:', err);
+                    // Silenciar error de autoplay (esperado en algunos navegadores)
+                    if (err.name !== 'NotAllowedError') {
+                        console.error('Error al reproducir:', err);
+                    }
                 });
             }, 100);
 
@@ -373,6 +398,41 @@
             }));
         } catch (e) {
             console.warn('Error guardando estado:', e);
+        }
+    }
+
+    /**
+     * Restaura el volumen guardado
+     */
+    function restoreVolume() {
+        try {
+            const savedVolume = localStorage.getItem('audioPlayerVolume');
+            if (savedVolume !== null) {
+                const audio = document.getElementById('global-audio');
+                const volumeBar = document.getElementById('player-volume-bar');
+                const volumeIcon = document.getElementById('player-volume-icon');
+                
+                if (audio && volumeBar) {
+                    const volume = parseFloat(savedVolume);
+                    audio.volume = volume;
+                    volumeBar.value = volume * 100;
+                    
+                    // Actualizar ícono
+                    if (volume === 0) {
+                        volumeIcon.textContent = '🔇';
+                    } else if (volume < 0.5) {
+                        volumeIcon.textContent = '🔉';
+                    } else {
+                        volumeIcon.textContent = '🔊';
+                    }
+                    
+                    // Actualizar estilo de la barra
+                    const value = volumeBar.value;
+                    volumeBar.style.background = `linear-gradient(to right, white 0%, white ${value}%, rgba(255,255,255,0.2) ${value}%, rgba(255,255,255,0.2) 100%)`;
+                }
+            }
+        } catch (e) {
+            console.warn('Error restaurando volumen:', e);
         }
     }
 

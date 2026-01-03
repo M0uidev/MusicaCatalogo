@@ -605,6 +605,9 @@
     </div>
 
     <script>
+        // Envolver en IIFE para evitar contaminación de scope global
+        (function() {
+        'use strict';
         let todasLasCanciones = [];
         let perfilesUnicos = [];
         let perfilesFiltrados = [];
@@ -861,8 +864,8 @@
                             <div class="ubicacion-Medio">${i.tipo === 'cassette' ? '📼' : '💿'}</div>
                             <div class="ubicacion-detalle"><strong>${escapeHtml(i.numMedio)}</strong><small>${i.lado ? `Lado ${i.lado}: ${i.desde}-${i.hasta}` : `Pista ${i.ubicacion}`}</small></div>
                             <div class="ubicacion-acciones">
-                                <a href="cancion.html?id=${i.id}&tipo=${i.tipo}" class="btn-ubicacion">Editar</a>
-                                <a href="medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}" class="btn-ubicacion">Ver medio</a>
+                                <button class="btn-ubicacion" onclick="if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">Editar</button>
+                                <button class="btn-ubicacion" onclick="if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver medio</button>
                             </div>
                         </div>`).join('')}</div>
                 </div>`).join('');
@@ -884,6 +887,13 @@
             aplicarFiltros();
         }
 
+        // Exponer funciones necesarias para onclick globalmente
+        window.abrirModalVersiones = abrirModalVersiones;
+        window.cerrarModalVersiones = cerrarModalVersiones;
+        window.paginaAnterior = paginaAnterior;
+        window.paginaSiguiente = paginaSiguiente;
+        window.limpiarFiltros = limpiarFiltros;
+
         document.getElementById('inputBusqueda').addEventListener('input', e => {
             filtros.busqueda = e.target.value; clearTimeout(timeoutBusqueda);
             timeoutBusqueda = setTimeout(aplicarFiltros, 300);
@@ -898,4 +908,5 @@
 
         inicializarFiltrosDesdeURL();
         cargarCanciones();
+        })(); // Fin de IIFE
     </script>

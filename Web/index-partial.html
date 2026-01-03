@@ -11,17 +11,17 @@
     <section class="acceso-rapido">
         <h2>🚀 Acceso Rápido</h2>
         <div class="botones-acceso">
-            <a href="buscar.html" class="boton-grande">
+            <a href="buscar.html" class="boton-grande" data-spa-link>
                 <span class="boton-icono">🔍</span>
                 <span class="boton-texto">Buscar Canciones</span>
                 <span class="boton-desc">Encuentra cualquier canción</span>
             </a>
-            <a href="medios.html" class="boton-grande">
+            <a href="medios.html" class="boton-grande" data-spa-link>
                 <span class="boton-icono">📼</span>
                 <span class="boton-texto">Ver Cassettes y CDs</span>
                 <span class="boton-desc">Explora toda la colección</span>
             </a>
-            <a href="interpretes.html" class="boton-grande">
+            <a href="interpretes.html" class="boton-grande" data-spa-link>
                 <span class="boton-icono">🎤</span>
                 <span class="boton-texto">Ver Intérpretes</span>
                 <span class="boton-desc">Busca por artista o banda</span>
@@ -103,9 +103,6 @@
             const resp = await fetch('/api/estadisticas');
             if (!resp.ok) throw new Error('Error cargando estadísticas');
             const stats = await resp.json();
-            console.log('📊 Estadísticas recibidas:', stats);
-            console.log('📊 totalTemasCassette:', stats.totalTemasCassette);
-            console.log('📊 totalTemasCd:', stats.totalTemasCd);
             
             document.getElementById('resumenColeccion').innerHTML = `
                 <div class="resumen-card">

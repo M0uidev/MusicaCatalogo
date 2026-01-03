@@ -8,6 +8,7 @@
     const SPARouter = {
         currentPage: null,
         currentCleanup: null,
+        mutationObserver: null,
         
         /**
          * Inicializa el router SPA
@@ -15,15 +16,11 @@
         init() {
             // Interceptar clicks en links con data-spa-link
             document.addEventListener('click', (e) => {
-                console.log('🔍 DEBUG click evento - target:', e.target);
                 const link = e.target.closest('[data-spa-link]');
-                console.log('🔍 DEBUG click evento - link encontrado:', link);
                 if (link && link.href) {
                     e.preventDefault();
                     const url = new URL(link.href);
                     const fullPath = url.pathname + url.search;
-                    console.log('🔍 DEBUG click interceptado - href:', link.href);
-                    console.log('🔍 DEBUG click interceptado - fullPath:', fullPath);
                     this.navigateTo(fullPath);
                 }
             });
@@ -33,6 +30,9 @@
                 const path = e.state?.path || window.location.pathname;
                 this.loadPage(path, false); // false = no pushState
             });
+
+            // Iniciar MutationObserver para detectar nuevos links dinámicamente
+            this.initMutationObserver();
 
             // Verificar si hay un hash en la URL (redirect del servidor)
             if (window.location.hash) {
@@ -61,9 +61,6 @@
          * Carga el contenido de una página
          */
         async loadPage(path, pushState = true) {
-            console.log('🔍 DEBUG router.loadPage - path recibido:', path);
-            console.log('🔍 DEBUG router.loadPage - pushState:', pushState);
-            
             const mainContainer = document.getElementById('app-main');
             if (!mainContainer) {
                 console.error('Contenedor #app-main no encontrado');
@@ -86,8 +83,8 @@
                     this.currentCleanup = null;
                 }
 
-                // Mostrar indicador de carga
-                mainContainer.style.opacity = '0.5';
+                // NO mostrar indicador de carga para evitar pausas visuales/audio
+                // mainContainer.style.opacity = '0.5';
 
                 // Hacer request AJAX para obtener el contenido
                 const response = await fetch(path, {
@@ -114,9 +111,12 @@
                 // Actualizar página actual
                 this.currentPage = path;
 
-                // Actualizar contenido
+                // Limpiar scripts de página anterior
+                this.cleanupPageScripts();
+
+                // Actualizar contenido (sin animación para no pausar audio)
                 mainContainer.innerHTML = html;
-                mainContainer.style.opacity = '1';
+                // mainContainer.style.opacity = '1'; // Ya no es necesario
 
                 // Ejecutar scripts inline que puedan estar en el contenido
                 this.executeScripts(mainContainer);
@@ -142,7 +142,7 @@
                         <button onclick="SPARouter.navigateTo('/index.html')" class="btn">Volver al inicio</button>
                     </div>
                 `;
-                mainContainer.style.opacity = '1';
+                // mainContainer.style.opacity = '1'; // No necesario
             }
         },
 
@@ -202,6 +202,49 @@
         },
 
         /**
+         * Limpia los scripts de la página anterior
+         */
+        cleanupPageScripts() {
+            // Remover scripts temporales de páginas previas
+            const oldScripts = document.querySelectorAll('script[data-page-script]');
+            oldScripts.forEach(script => script.remove());
+            
+            // Lista de funciones globales que las páginas pueden crear
+            // Se limpian para evitar conflictos al recargar la misma página
+            const pageFunctions = [
+                // buscar.html
+                'abrirModalVersiones', 'cerrarModalVersiones', 'paginaAnterior', 'paginaSiguiente', 'limpiarFiltros',
+                // cancion.html
+                'cargarCancion', 'eliminarAudio', 'subirAudio', 'reproducirAudio',
+                // albumes.html
+                'cerrarModal', 'toggleSelectorArtistaNuevo', 'usarNuevoArtistaNuevo', 'crearAlbum',
+                'cerrarModalCanciones', 'asignarCancionesSeleccionadas', 'cerrarModalEditar',
+                'toggleSelectorArtistaEditar', 'usarNuevoArtistaEditar', 'guardarEdicionAlbum',
+                'abrirModal', 'cambiarFiltroTipo', 'subirPortada', 'abrirModalEditarAlbum',
+                'eliminarAlbum', 'abrirModalAgregarCanciones', 'cargarAlbum',
+                // medios.html
+                'abrirModalNuevoMedio', 'seleccionarOpcion', 'toggleSelectorVisual', 'crearNuevoMedio',
+                // medio.html  
+                'cargarMedio', 'eliminarMedio',
+                // interprete.html
+                'cargarInterprete'
+            ];
+            
+            // Limpiar funciones globales de la página anterior
+            // Usar try-catch porque algunas propiedades pueden no ser configurables
+            pageFunctions.forEach(funcName => {
+                try {
+                    if (window[funcName]) {
+                        delete window[funcName];
+                    }
+                } catch (e) {
+                    // Si delete falla, asignar undefined
+                    window[funcName] = undefined;
+                }
+            });
+        },
+
+        /**
          * Ejecuta los scripts inline del contenido cargado
          */
         executeScripts(container) {
@@ -213,16 +256,27 @@
                 }
 
                 try {
-                    // Crear nuevo elemento script que se ejecuta en scope global
-                    // Esto permite que funciones onclick y event handlers funcionen
+                    const scriptContent = oldScript.textContent;
+                    
+                    // Crear nuevo elemento script
                     const newScript = document.createElement('script');
-                    newScript.textContent = oldScript.textContent;
+                    newScript.setAttribute('data-page-script', 'true');
                     
-                    // Insertarlo temporalmente en el head para ejecución global
-                    document.head.appendChild(newScript);
+                    // Envolver el contenido en una IIFE para aislar el scope
+                    // PERO: permitir que las funciones globales se expongan
+                    // Reemplazar declaraciones let/const por var para evitar errores de redeclaración
+                    let wrappedContent = scriptContent
+                        // Reemplazar let al inicio de línea o después de ; { o espacio
+                        .replace(/(\s|^|;|\{)let\s+/g, '$1var ')
+                        // Reemplazar const al inicio de línea o después de ; { o espacio
+                        .replace(/(\s|^|;|\{)const\s+/g, '$1var ');
                     
-                    // Remover ambos scripts
-                    setTimeout(() => newScript.remove(), 0);
+                    newScript.textContent = wrappedContent;
+                    
+                    // Insertarlo en el body (no head) para poder limpiarlo después
+                    document.body.appendChild(newScript);
+                    
+                    // Remover el script original del contenedor
                     oldScript.remove();
                 } catch (err) {
                     console.error('Error ejecutando script:', err);
@@ -260,8 +314,12 @@
          * Attachea event listeners a links dinámicos dentro del contenedor
          */
         attachDynamicListeners(container) {
+            // Procesar todo el documento, no solo el contenedor
+            // Esto asegura que modales y contenido fuera de #app-main también se procesen
+            const targetContainer = container || document;
+            
             // Buscar todos los links dentro del contenedor
-            const links = container.querySelectorAll('a[href]');
+            const links = targetContainer.querySelectorAll('a[href]');
             links.forEach(link => {
                 const href = link.getAttribute('href');
                 
@@ -269,10 +327,70 @@
                 if (href && (href.startsWith('/') || href.endsWith('.html'))) {
                     // No tiene target blank ni download
                     if (!link.hasAttribute('target') && !link.hasAttribute('download')) {
-                        link.setAttribute('data-spa-link', '');
+                        // No agregar si ya tiene el atributo
+                        if (!link.hasAttribute('data-spa-link')) {
+                            link.setAttribute('data-spa-link', '');
+                        }
                     }
                 }
             });
+        },
+
+        /**
+         * Inicializa MutationObserver para detectar nuevos links añadidos al DOM
+         */
+        initMutationObserver() {
+            // Desconectar observer previo si existe
+            if (this.mutationObserver) {
+                this.mutationObserver.disconnect();
+            }
+
+            // Crear nuevo observer
+            this.mutationObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    // Solo procesar nodos añadidos
+                    if (mutation.addedNodes.length > 0) {
+                        mutation.addedNodes.forEach((node) => {
+                            // Solo procesar elementos (no text nodes)
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // Si el nodo es un link, procesarlo
+                                if (node.tagName === 'A') {
+                                    this.processLink(node);
+                                }
+                                // Buscar links dentro del nodo añadido
+                                const links = node.querySelectorAll && node.querySelectorAll('a[href]');
+                                if (links) {
+                                    links.forEach(link => this.processLink(link));
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Observar todo el body para cambios en el árbol DOM
+            this.mutationObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        },
+
+        /**
+         * Procesa un link individual para añadirle data-spa-link si corresponde
+         */
+        processLink(link) {
+            const href = link.getAttribute('href');
+            
+            // Si es link interno (empieza con / o es relativo .html)
+            if (href && (href.startsWith('/') || href.endsWith('.html'))) {
+                // No tiene target blank ni download
+                if (!link.hasAttribute('target') && !link.hasAttribute('download')) {
+                    // No agregar si ya tiene el atributo
+                    if (!link.hasAttribute('data-spa-link')) {
+                        link.setAttribute('data-spa-link', '');
+                    }
+                }
+            }
         }
     };
 

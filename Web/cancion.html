@@ -1037,9 +1037,9 @@
 
             document.getElementById('contenido').innerHTML = `
                 <div class="breadcrumb">
-                    <a href="buscar.html">Canciones</a>
+                    <a href="buscar.html" data-spa-link>Canciones</a>
                     <span>›</span>
-                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
+                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}" data-spa-link>${escapeHtml(c.numMedio)}</a>
                     <span>›</span>
                     <span>${escapeHtml(c.tema)}</span>
                 </div>
@@ -1065,16 +1065,16 @@
                         <div class="cancion-info">
                             <h2 id="tituloCancion">${escapeHtml(c.tema)}</h2>
                             <div class="cancion-interprete">
-                                🎤 <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}">${escapeHtml(c.interprete)}</a>
+                                🎤 <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}" data-spa-link>${escapeHtml(c.interprete)}</a>
                             </div>
                             
                             <div class="cancion-meta">
                                 <span class="meta-badge">
                                     ${esCassette ? '📼' : '💿'} 
-                                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
+                                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}" data-spa-link>${escapeHtml(c.numMedio)}</a>
                                 </span>
                                 <span class="meta-badge">📍 ${posicion}</span>
-                                ${c.nombreAlbum ? `<span class="meta-badge">💿 <a href="albumes.html?id=${c.idAlbum}">${escapeHtml(c.nombreAlbum)}</a></span>` : ''}
+                                ${c.nombreAlbum ? `<span class="meta-badge">💿 <a href="albumes.html?id=${c.idAlbum}" data-spa-link>${escapeHtml(c.nombreAlbum)}</a></span>` : ''}
                                 ${c.anioAlbum ? `<span class="meta-badge">📅 ${escapeHtml(c.anioAlbum)}</span>` : ''}
                                 ${c.esCover ? `<span class="cover-badge-cancion">🎸 Cover${c.artistaOriginal ? ' de ' + escapeHtml(c.artistaOriginal) : ''}</span>` : ''}
                             </div>

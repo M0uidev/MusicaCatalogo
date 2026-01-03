@@ -986,6 +986,10 @@
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
     <script>
+        // Envolver en IIFE para evitar contaminación de scope global
+        (function() {
+        'use strict';
+        
         function mostrarToast(mensaje, tipo = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -1802,4 +1806,24 @@
         } else {
             cargarAlbumes();
         }
+        
+        // Exponer funciones necesarias para onclick globalmente
+        window.cerrarModal = cerrarModal;
+        window.toggleSelectorArtistaNuevo = toggleSelectorArtistaNuevo;
+        window.usarNuevoArtistaNuevo = usarNuevoArtistaNuevo;
+        window.crearAlbum = crearAlbum;
+        window.cerrarModalCanciones = cerrarModalCanciones;
+        window.asignarCancionesSeleccionadas = asignarCancionesSeleccionadas;
+        window.cerrarModalEditar = cerrarModalEditar;
+        window.toggleSelectorArtistaEditar = toggleSelectorArtistaEditar;
+        window.usarNuevoArtistaEditar = usarNuevoArtistaEditar;
+        window.guardarEdicionAlbum = guardarEdicionAlbum;
+        window.abrirModal = abrirModal;
+        window.cambiarFiltroTipo = cambiarFiltroTipo;
+        window.subirPortada = subirPortada;
+        window.abrirModalEditarAlbum = abrirModalEditarAlbum;
+        window.eliminarAlbum = eliminarAlbum;
+        window.abrirModalAgregarCanciones = abrirModalAgregarCanciones;
+        
+        })(); // Fin de IIFE
     </script>

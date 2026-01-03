@@ -1412,17 +1412,17 @@
                 filas += `
                     <tr data-cancion="${dataCancion}">
                         <td class="celda-portada">
-                            <a href="cancion.html?id=${c.id}&tipo=${tipoMedio}">${portadaHtml}</a>
+                            <a href="cancion.html?id=${c.id}&tipo=${tipoMedio}" data-spa-link>${portadaHtml}</a>
                         </td>
                         <td class="cancion-nombre">
-                            <a href="cancion.html?id=${c.id}&tipo=${tipoMedio}" class="cancion-link">
+                            <a href="cancion.html?id=${c.id}&tipo=${tipoMedio}" class="cancion-link" data-spa-link>
                                 ${escapeHtml(c.tema)}
                             </a>
                             ${c.tieneArchivoAudio ? '<span style="display: inline-block; margin-left: 0.5rem; font-size: 0.9rem;" title="Tiene archivo de audio">🎵</span>' : ''}
                             ${c.linkExterno ? `<a href="${escapeHtml(c.linkExterno)}" target="_blank" class="link-externo" title="Ver enlace externo">🔗</a>` : ''}
                         </td>
                         <td class="cancion-interprete">
-                            <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}">
+                            <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}" data-spa-link>
                                 ${escapeHtml(c.interprete)}
                             </a>
                         </td>
@@ -1599,7 +1599,13 @@
 
                     if (result.exito) {
                         mostrarToast('Medio eliminado correctamente', 'exito');
-                        setTimeout(() => window.location.href = 'medios.html', 1000);
+                        setTimeout(() => {
+                            if (window.SPARouter) {
+                                SPARouter.navigateTo('medios.html');
+                            } else {
+                                window.location.href = 'medios.html';
+                            }
+                        }, 1000);
                     } else {
                         mostrarToast(result.mensaje, 'error');
                     }
