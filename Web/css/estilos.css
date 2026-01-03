@@ -1135,6 +1135,7 @@ footer p {
     color: white;
     z-index: 9999;
     box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.4);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .player-main {
@@ -1155,6 +1156,7 @@ footer p {
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     flex-shrink: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .player-cover {
@@ -1178,6 +1180,7 @@ footer p {
     flex: 1;
     min-width: 0;
     margin-right: 2rem;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .player-song {
@@ -1204,6 +1207,7 @@ footer p {
     gap: 1rem;
     align-items: center;
     flex-shrink: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .player-btn {
@@ -1247,6 +1251,7 @@ footer p {
     flex: 1;
     max-width: 500px;
     margin: 0 2rem;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .player-progress span {
@@ -1305,6 +1310,7 @@ footer p {
     gap: 0.5rem;
     flex-shrink: 0;
     margin-left: 1rem;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 #player-volume-bar {
@@ -1350,8 +1356,8 @@ footer p {
     opacity: 1;
 }
 
-/* Botón cerrar */
-.player-close {
+/* Botón minimizar */
+.player-minimize {
     position: absolute;
     top: 8px;
     right: 12px;
@@ -1361,11 +1367,31 @@ footer p {
     cursor: pointer;
     font-size: 1.2rem;
     padding: 4px 8px;
-    transition: color 0.2s;
+    transition: all 0.3s;
 }
 
-.player-close:hover {
+.player-minimize:hover {
     color: white;
+    transform: scale(1.2);
+}
+
+/* Player minimizado */
+.audio-player-global.minimized {
+    transform: translateY(calc(100% - 40px));
+}
+
+.audio-player-global.minimized .player-cover-container,
+.audio-player-global.minimized .player-info,
+.audio-player-global.minimized .player-controls,
+.audio-player-global.minimized .player-progress,
+.audio-player-global.minimized .player-volume {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.audio-player-global.minimized:hover {
+    transform: translateY(calc(100% - 70px));
 }
 
 /* Responsive */

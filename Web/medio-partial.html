@@ -1,22 +1,42 @@
     <style>
+        .lados-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .lados-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lado-card {
+            background: white;
+            border-radius: var(--radio);
+            box-shadow: var(--sombra);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
         .lado-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin: 2rem 0 1rem;
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.25rem;
             background: var(--color-fondo);
-            border-radius: var(--radio);
         }
 
         .lado-header.lado-a {
             background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            border-left: 4px solid #16a34a;
+            border-bottom: 3px solid #16a34a;
         }
 
         .lado-header.lado-b {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 4px solid #d97706;
+            border-bottom: 3px solid #d97706;
         }
 
         .lado-header h3 {
@@ -1338,28 +1358,33 @@
                 const ladoA = canciones.filter(t => t.lado === 'A' || t.lado === 'a');
                 const ladoB = canciones.filter(t => t.lado === 'B' || t.lado === 'b');
 
-                let html = '';
+                let html = '<div class="lados-grid">';
 
                 if (ladoA.length > 0) {
                     html += `
-                        <div class="lado-header lado-a">
-                            <h3>🅰️ Lado A</h3>
-                            <span class="lado-count">${ladoA.length} canciones</span>
+                        <div class="lado-card">
+                            <div class="lado-header lado-a">
+                                <h3>🅰️ Lado A</h3>
+                                <span class="lado-count">${ladoA.length} canciones</span>
+                            </div>
+                            ${generarTablaCanciones(ladoA, true)}
                         </div>
                     `;
-                    html += generarTablaCanciones(ladoA, true);
                 }
 
                 if (ladoB.length > 0) {
                     html += `
-                        <div class="lado-header lado-b">
-                            <h3>🅱️ Lado B</h3>
-                            <span class="lado-count">${ladoB.length} canciones</span>
+                        <div class="lado-card">
+                            <div class="lado-header lado-b">
+                                <h3>🅱️ Lado B</h3>
+                                <span class="lado-count">${ladoB.length} canciones</span>
+                            </div>
+                            ${generarTablaCanciones(ladoB, true)}
                         </div>
                     `;
-                    html += generarTablaCanciones(ladoB, true);
                 }
 
+                html += '</div>';
                 lista.innerHTML = html;
             } else {
                 lista.innerHTML = generarTablaCanciones(canciones, false);

@@ -877,8 +877,8 @@
                             <div class="ubicacion-Medio">${i.tipo === 'cassette' ? '📼' : '💿'}</div>
                             <div class="ubicacion-detalle"><strong>${escapeHtml(i.numMedio)}</strong><small>${i.lado ? `Lado ${i.lado}: ${i.desde}-${i.hasta}` : `Pista ${i.ubicacion}`}</small></div>
                             <div class="ubicacion-acciones">
-                                <button class="btn-ubicacion" onclick="if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">Editar</button>
-                                <button class="btn-ubicacion" onclick="if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver medio</button>
+                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">Editar</button>
+                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver medio</button>
                             </div>
                         </div>`).join('')}</div>
                 </div>`).join('');

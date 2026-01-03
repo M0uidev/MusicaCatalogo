@@ -62,7 +62,7 @@
                         <input type="range" id="player-volume-bar" value="100" min="0" max="100" step="1">
                     </div>
                     
-                    <button id="player-close" class="player-close" title="Cerrar">✕</button>
+                    <button id="player-minimize" class="player-minimize" title="Minimizar">▼</button>
                 </div>
             </div>
         `;
@@ -76,7 +76,7 @@
         const playPauseBtn = document.getElementById('player-play-pause');
         const prevBtn = document.getElementById('player-prev');
         const nextBtn = document.getElementById('player-next');
-        const closeBtn = document.getElementById('player-close');
+        const minimizeBtn = document.getElementById('player-minimize');
         const progressBar = document.getElementById('player-progress-bar');
         const currentTimeSpan = document.getElementById('player-current-time');
         const durationSpan = document.getElementById('player-duration');
@@ -96,10 +96,15 @@
 
         prevBtn.addEventListener('click', () => playPrevious());
         nextBtn.addEventListener('click', () => playNext());
-        closeBtn.addEventListener('click', () => {
-            audio.pause();
-            player.style.display = 'none';
-            clearPlayerState();
+        minimizeBtn.addEventListener('click', () => {
+            player.classList.toggle('minimized');
+            if (player.classList.contains('minimized')) {
+                minimizeBtn.textContent = '▲';
+                minimizeBtn.title = 'Expandir';
+            } else {
+                minimizeBtn.textContent = '▼';
+                minimizeBtn.title = 'Minimizar';
+            }
         });
 
         // Eventos del audio
