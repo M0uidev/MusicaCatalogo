@@ -29,6 +29,14 @@
                 this.loadPage(path, false); // false = no pushState
             });
 
+            // Verificar si hay un hash en la URL (redirect del servidor)
+            if (window.location.hash) {
+                const targetPath = window.location.hash.substring(1); // Remove #
+                window.history.replaceState({ path: targetPath }, '', targetPath);
+                this.loadPage(targetPath, false);
+                return;
+            }
+
             // Cargar página inicial según la URL actual
             const initialPath = window.location.pathname === '/' || window.location.pathname === '/app.html' 
                 ? '/index.html' 
