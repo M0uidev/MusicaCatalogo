@@ -204,12 +204,16 @@
                 }
 
                 try {
-                    // Ejecutar usando Function constructor para permitir redeclaraciones
-                    const scriptContent = oldScript.textContent;
-                    const func = new Function(scriptContent);
-                    func.call(window);
+                    // Crear nuevo elemento script que se ejecuta en scope global
+                    // Esto permite que funciones onclick y event handlers funcionen
+                    const newScript = document.createElement('script');
+                    newScript.textContent = oldScript.textContent;
                     
-                    // Remover el script viejo
+                    // Insertarlo temporalmente en el head para ejecución global
+                    document.head.appendChild(newScript);
+                    
+                    // Remover ambos scripts
+                    setTimeout(() => newScript.remove(), 0);
                     oldScript.remove();
                 } catch (err) {
                     console.error('Error ejecutando script:', err);
