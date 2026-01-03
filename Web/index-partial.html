@@ -103,6 +103,9 @@
             const resp = await fetch('/api/estadisticas');
             if (!resp.ok) throw new Error('Error cargando estadísticas');
             const stats = await resp.json();
+            console.log('📊 Estadísticas recibidas:', stats);
+            console.log('📊 totalTemasCassette:', stats.totalTemasCassette);
+            console.log('📊 totalTemasCd:', stats.totalTemasCd);
             
             document.getElementById('resumenColeccion').innerHTML = `
                 <div class="resumen-card">
@@ -122,7 +125,7 @@
                 <div class="resumen-card">
                     <div class="resumen-icono">${ICONOS.iconoMusica}</div>
                     <div class="resumen-info">
-                        <span class="resumen-numero">${formatearNumero(stats.totalTemasCassette + stats.totalTemasCd)}</span>
+                        <span class="resumen-numero">${formatearNumero((stats.totalTemasCassette || 0) + (stats.totalTemasCd || 0))}</span>
                         <span class="resumen-label">Canciones</span>
                     </div>
                 </div>
