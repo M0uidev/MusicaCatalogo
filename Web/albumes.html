@@ -1018,15 +1018,38 @@
         let ordenActual = 'nombre';
         let filtroTipo = 'todos'; // 'todos', 'albumes', 'singles'
 
-        // Obtener canciones únicas por tema+intérprete
+        // Obtener canciones únicas por tema, priorizando originales
         function obtenerCancionesUnicas(canciones) {
-            const vistas = new Set();
-            return canciones.filter(c => {
-                const clave = `${c.tema.toLowerCase()}|${(c.interprete || '').toLowerCase()}`;
-                if (vistas.has(clave)) return false;
-                vistas.add(clave);
-                return true;
+            const grupos = new Map();
+
+            // Agrupar por tema normalizado (sin considerar intérprete para agrupar versiones)
+            canciones.forEach(c => {
+                const temaNorm = (c.tema || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+                if (!grupos.has(temaNorm)) {
+                    grupos.set(temaNorm, []);
+                }
+                grupos.get(temaNorm).push(c);
             });
+
+            const unicas = [];
+            grupos.forEach(grupo => {
+                // Si hay varios, buscar original
+                // Prioridad: esOriginal=true > esCover=false > primero
+                let candidato = grupo.find(c => c.esOriginal === true || c.EsOriginal === true);
+
+                if (!candidato) {
+                    candidato = grupo.find(c => c.esCover === false || c.EsCover === false);
+                }
+
+                if (!candidato) {
+                    candidato = grupo[0];
+                }
+
+                unicas.push(candidato);
+            });
+
+            return unicas;
         }
 
         const params = new URLSearchParams(window.location.search);
@@ -1160,6 +1183,7 @@
 
         function renderizarDetalle() {
             const a = albumActual;
+            const cancionesUnicas = obtenerCancionesUnicas(a.canciones);
 
             document.getElementById('contenido').innerHTML = `
                 <a href="albumes.html" class="btn-volver">← Volver a álbumes</a>
@@ -1178,7 +1202,7 @@
                             ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}">${escapeHtml(a.interprete)}</a></div>` : ''}
                             <div class="meta">
                                 ${a.anio ? `📅 ${a.anio} • ` : ''}
-                                ${a.esSingle ? '🎵' : '💿'} ${a.canciones.length} canción${a.canciones.length !== 1 ? 'es' : ''}
+                                ${a.esSingle ? '🎵' : '💿'} ${cancionesUnicas.length} canción${cancionesUnicas.length !== 1 ? 'es' : ''}
                             </div>
                             <div class="album-detalle-acciones">
                                 <button class="btn-modal btn-editar" onclick="abrirModalEditarAlbum()">✏️ Editar</button>
@@ -1205,11 +1229,11 @@
                             </div>
                         ` : `
                             <div class="lista-canciones">
-                                ${obtenerCancionesUnicas(a.canciones).map((c, i) => `
+                                ${cancionesUnicas.map((c, i) => `
                                     <div class="cancion-item-editable">
                                         <span class="cancion-numero">${i + 1}</span>
                                         <div style="flex: 1">
-                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a></a>
+                                            <a href="perfil-cancion.html?tema=${encodeURIComponent(c.tema)}&artista=${encodeURIComponent(c.interprete)}" class="cancion-nombre-link">${escapeHtml(c.tema)}</a>
                                             <div class="cancion-artista">${escapeHtml(c.interprete)}</div>
                                         </div>
                                         ${c.linkExterno ? '<span title="Tiene link externo">🔗</span>' : ''}

@@ -294,6 +294,13 @@ public class BaseDatos
             await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN artista_original TEXT");
             Console.WriteLine("[BaseDatos] Columna artista_original agregada a temas");
         }
+        if (!listaColumnasTemas.Contains("es_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN es_original INTEGER DEFAULT 0");
+            // Marcar como original las canciones que ya tienen álbum
+            await conn.ExecuteAsync("UPDATE temas SET es_original = 1 WHERE id_album IS NOT NULL");
+            Console.WriteLine("[BaseDatos] Columna es_original agregada a temas");
+        }
         
         // Agregar columnas de cover a temas_cd
         if (!listaColumnasTemasCd.Contains("es_cover"))
@@ -305,6 +312,13 @@ public class BaseDatos
         {
             await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN artista_original TEXT");
             Console.WriteLine("[BaseDatos] Columna artista_original agregada a temas_cd");
+        }
+        if (!listaColumnasTemasCd.Contains("es_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_original INTEGER DEFAULT 0");
+            // Marcar como original las canciones que ya tienen álbum
+            await conn.ExecuteAsync("UPDATE temas_cd SET es_original = 1 WHERE id_album IS NOT NULL");
+            Console.WriteLine("[BaseDatos] Columna es_original agregada a temas_cd");
         }
     }
 }
