@@ -197,19 +197,23 @@
          */
         executeScripts(container) {
             const scripts = container.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                
-                // Copiar atributos
-                Array.from(oldScript.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
-                });
-                
-                // Copiar contenido
-                newScript.textContent = oldScript.textContent;
-                
-                // Reemplazar el script viejo con el nuevo para que se ejecute
-                oldScript.parentNode.replaceChild(newScript, oldScript);
+            scripts.forEach((oldScript) => {
+                // Solo ejecutar scripts inline (sin src)
+                if (oldScript.src) {
+                    return;
+                }
+
+                try {
+                    // Ejecutar usando Function constructor para permitir redeclaraciones
+                    const scriptContent = oldScript.textContent;
+                    const func = new Function(scriptContent);
+                    func.call(window);
+                    
+                    // Remover el script viejo
+                    oldScript.remove();
+                } catch (err) {
+                    console.error('Error ejecutando script:', err);
+                }
             });
         },
 
