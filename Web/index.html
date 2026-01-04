@@ -67,7 +67,7 @@
     <!-- Header generado dinámicamente por components.js -->
     <div id="header-component"></div>
 
-    <main class="container">
+    <main id="app-main" class="container">
         <!-- Resumen rápido -->
         <section class="resumen-principal">
             <h2>Resumen de la Colección</h2>
@@ -80,17 +80,17 @@
         <section class="acceso-rapido">
             <h2>🚀 Acceso Rápido</h2>
             <div class="botones-acceso">
-                <a href="buscar.html" class="boton-grande">
+                <a href="buscar.html" class="boton-grande" data-spa-link>
                     <span class="boton-icono">🔍</span>
                     <span class="boton-texto">Buscar Canciones</span>
                     <span class="boton-desc">Encuentra cualquier canción</span>
                 </a>
-                <a href="medios.html" class="boton-grande">
+                <a href="medios.html" class="boton-grande" data-spa-link>
                     <span class="boton-icono">📼</span>
                     <span class="boton-texto">Ver Cassettes y CDs</span>
                     <span class="boton-desc">Explora toda la colección</span>
                 </a>
-                <a href="interpretes.html" class="boton-grande">
+                <a href="interpretes.html" class="boton-grande" data-spa-link>
                     <span class="boton-icono">🎤</span>
                     <span class="boton-texto">Ver Intérpretes</span>
                     <span class="boton-desc">Busca por artista o banda</span>
@@ -118,8 +118,17 @@
     <!-- Scripts: components.js ANTES de app.js -->
     <script src="js/components.js"></script>
     <script src="js/audioPlayerGlobal.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/pageInitializers.js"></script>
     <script src="js/app.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar router SPA
+            if (window.SPARouter) {
+                window.SPARouter.init();
+            }
+        });
+
         // Cargar resumen
         async function cargarResumen() {
             try {
@@ -145,7 +154,7 @@
                     <div class="resumen-card">
                         <div class="resumen-icono">${ICONOS.iconoMusica}</div>
                         <div class="resumen-info">
-                            <span class="resumen-numero">${formatearNumero(stats.totalTemasCassette + stats.totalTemasCd)}</span>
+                            <span class="resumen-numero">${formatearNumero((stats.totalTemasCassette || 0) + (stats.totalTemasCd || 0))}</span>
                             <span class="resumen-label">Canciones</span>
                         </div>
                     </div>
@@ -198,9 +207,11 @@
             }
         }
 
-        // Inicializar
-        cargarResumen();
-        generarQR();
+        // Inicializar solo si no estamos en modo SPA (si no existe #app-main)
+        if (!document.getElementById('app-main')) {
+            cargarResumen();
+            generarQR();
+        }
     </script>
 </body>
 </html>

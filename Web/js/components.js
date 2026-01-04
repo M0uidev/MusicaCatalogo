@@ -7,12 +7,12 @@
  * Configuración de navegación
  */
 const NAV_ITEMS = [
-    { href: 'index.html', label: 'Inicio', icon: '🏠' },
-    { href: 'buscar.html', label: 'Canciones', icon: '🎵' },
-    { href: 'albumes.html', label: 'Álbumes', icon: '💿' },
-    { href: 'medios.html', label: 'Medios', icon: '📼' },
-    { href: 'interpretes.html', label: 'Intérpretes', icon: '🎤' },
-    { href: 'estadisticas.html', label: 'Estadísticas', icon: '📊' }
+    { href: 'index.html', label: 'Inicio', icon: 'home' },
+    { href: 'buscar.html', label: 'Canciones', icon: 'music' },
+    { href: 'albumes.html', label: 'Álbumes', icon: 'disc' },
+    { href: 'medios.html', label: 'Medios', icon: 'cassette-tape' },
+    { href: 'interpretes.html', label: 'Intérpretes', icon: 'mic-2' },
+    { href: 'estadisticas.html', label: 'Estadísticas', icon: 'bar-chart-3' }
 ];
 
 /**
@@ -33,7 +33,7 @@ function generarHeader() {
     const navLinks = NAV_ITEMS.map(item => {
         const isActivo = paginaActual === item.href || 
                         (paginaActual === '' && item.href === 'index.html');
-        return `<a href="${item.href}" class="${isActivo ? 'activo' : ''}" data-spa-link>${item.label}</a>`;
+        return `<a href="${item.href}" class="${isActivo ? 'activo' : ''}" data-spa-link><i data-lucide="${item.icon}"></i> ${item.label}</a>`;
     }).join('\n            ');
 
     return `
@@ -44,7 +44,7 @@ function generarHeader() {
             
             <div class="notif-container">
                 <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
+                    <i data-lucide="bell"></i>
                     <span id="notifBadge" class="notif-badge"></span>
                 </button>
                 <div id="notifDropdown" class="notif-dropdown">
@@ -117,6 +117,8 @@ function initComponents() {
             footer.insertAdjacentHTML('beforebegin', generarNotificacionesContainer());
         }
     }
+    
+    if (window.lucide) window.lucide.createIcons();
 }
 
 /**

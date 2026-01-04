@@ -16,7 +16,8 @@
         shuffledPlaylist: [],
         shuffledIndex: -1,
         likedSongs: new Set(),
-        queueVisible: false
+        queueVisible: false,
+        randomQueue: [] // Cola de canciones aleatorias
     };
 
     /**
@@ -41,55 +42,61 @@
                 <audio id="global-audio" preload="metadata"></audio>
                 
                 <div class="player-main">
-                    <div class="player-cover-container">
-                        <img id="player-cover" class="player-cover" alt="Portada" style="display: none;">
-                        <div id="player-cover-placeholder" class="player-cover-placeholder">🎵</div>
+                    <div class="player-left">
+                        <div class="player-cover-container">
+                            <img id="player-cover" class="player-cover" alt="Portada" style="display: none;">
+                            <div id="player-cover-placeholder" class="player-cover-placeholder"><i data-lucide="music"></i></div>
+                        </div>
+                        
+                        <div class="player-info">
+                            <div class="player-song" id="player-song">Sin canción</div>
+                            <div class="player-artist" id="player-artist"></div>
+                        </div>
                     </div>
                     
-                    <div class="player-info">
-                        <div class="player-song" id="player-song">Sin canción</div>
-                        <div class="player-artist" id="player-artist"></div>
+                    <div class="player-center-controls">
+                        <div class="player-controls">
+                            <button id="player-shuffle" class="player-btn" title="Reproducción aleatoria"><i data-lucide="shuffle"></i></button>
+                            <button id="player-prev" class="player-btn" title="Anterior"><i data-lucide="skip-back"></i></button>
+                            <button id="player-play-pause" class="player-btn-main" title="Reproducir"><i data-lucide="play"></i></button>
+                            <button id="player-next" class="player-btn" title="Siguiente"><i data-lucide="skip-forward"></i></button>
+                            <button id="player-repeat" class="player-btn" title="Repetir"><i data-lucide="repeat"></i></button>
+                        </div>
+                        
+                        <div class="player-progress">
+                            <span id="player-current-time">0:00</span>
+                            <input type="range" id="player-progress-bar" value="0" min="0" max="100" step="0.1">
+                            <span id="player-duration">0:00</span>
+                        </div>
                     </div>
                     
-                    <div class="player-controls">
-                        <button id="player-shuffle" class="player-btn" title="Reproducción aleatoria">🔀</button>
-                        <button id="player-prev" class="player-btn" title="Anterior">⏮</button>
-                        <button id="player-play-pause" class="player-btn-main" title="Reproducir">▶</button>
-                        <button id="player-next" class="player-btn" title="Siguiente">⏭</button>
-                        <button id="player-repeat" class="player-btn" title="Repetir">🔁</button>
+                    <div class="player-right">
+                        <div class="player-volume">
+                            <button id="player-volume-icon" class="player-btn" title="Volumen"><i data-lucide="volume-2"></i></button>
+                            <input type="range" id="player-volume-bar" value="100" min="0" max="100" step="1">
+                        </div>
+                        
+                        <button id="player-like" class="player-btn" title="Me gusta"><i data-lucide="heart"></i></button>
+                        <button id="player-queue" class="player-btn" title="Cola de reproducción"><i data-lucide="list-music"></i></button>
+                        <button id="player-minimize" class="player-minimize" title="Minimizar"><i data-lucide="chevron-down"></i></button>
                     </div>
-                    
-                    <div class="player-progress">
-                        <span id="player-current-time">0:00</span>
-                        <input type="range" id="player-progress-bar" value="0" min="0" max="100" step="0.1">
-                        <span id="player-duration">0:00</span>
-                    </div>
-                    
-                    <div class="player-volume">
-                        <button id="player-volume-icon" class="player-btn" title="Volumen">🔊</button>
-                        <input type="range" id="player-volume-bar" value="100" min="0" max="100" step="1">
-                    </div>
-                    
-                    <button id="player-like" class="player-btn" title="Me gusta">♡</button>
-                    <button id="player-queue" class="player-btn" title="Cola de reproducción">📃</button>
-                    <button id="player-minimize" class="player-minimize" title="Minimizar">▼</button>
                 </div>
-                
-                <!-- Cola de reproducción -->
-                <div id="player-queue-panel" class="player-queue-panel" style="display: none;">
-                    <div class="queue-header">
-                        <h3>Cola de reproducción</h3>
-                        <button id="queue-close" class="player-btn" title="Cerrar">▼</button>
+            </div>
+            
+            <!-- Cola de reproducción -->
+            <div id="player-queue-panel" class="player-queue-panel" style="display: none;">
+                <div class="queue-header">
+                    <h3>Cola de reproducción</h3>
+                    <button id="queue-close" class="player-btn" title="Cerrar"><i data-lucide="chevron-down"></i></button>
+                </div>
+                <div class="queue-content">
+                    <div class="queue-now-playing">
+                        <div class="queue-section-title">Reproduciendo ahora</div>
+                        <div id="queue-current-song"></div>
                     </div>
-                    <div class="queue-content">
-                        <div class="queue-now-playing">
-                            <div class="queue-section-title">Reproduciendo ahora</div>
-                            <div id="queue-current-song"></div>
-                        </div>
-                        <div class="queue-next">
-                            <div class="queue-section-title">Siguiente</div>
-                            <div id="queue-next-songs"></div>
-                        </div>
+                    <div class="queue-next">
+                        <div class="queue-section-title">Siguiente</div>
+                        <div id="queue-next-songs"></div>
                     </div>
                 </div>
             </div>
@@ -142,26 +149,35 @@
         
         minimizeBtn.addEventListener('click', () => {
             player.classList.toggle('minimized');
+            
+            // Si se minimiza, cerrar la cola si está abierta
+            if (player.classList.contains('minimized') && state.queueVisible) {
+                toggleQueue();
+            }
+
             if (player.classList.contains('minimized')) {
-                minimizeBtn.textContent = '▲';
+                minimizeBtn.innerHTML = '<i data-lucide="chevron-up"></i>';
                 minimizeBtn.title = 'Expandir';
             } else {
-                minimizeBtn.textContent = '▼';
+                minimizeBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
                 minimizeBtn.title = 'Minimizar';
             }
+            if (window.lucide) window.lucide.createIcons();
         });
 
         // Eventos del audio
         audio.addEventListener('play', () => {
-            playPauseBtn.textContent = '⏸';
+            playPauseBtn.innerHTML = '<i data-lucide="pause"></i>';
             state.isPlaying = true;
             savePlayerState();
+            if (window.lucide) window.lucide.createIcons();
         });
 
         audio.addEventListener('pause', () => {
-            playPauseBtn.textContent = '▶';
+            playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
             state.isPlaying = false;
             savePlayerState();
+            if (window.lucide) window.lucide.createIcons();
         });
 
         audio.addEventListener('timeupdate', () => {
@@ -190,7 +206,8 @@
 
         audio.addEventListener('error', (e) => {
             console.error('Error de audio:', e);
-            playPauseBtn.textContent = '▶';
+            playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
+            if (window.lucide) window.lucide.createIcons();
         });
 
         // Barra de progreso
@@ -238,12 +255,13 @@
         // Función para actualizar ícono de volumen
         function updateVolumeIcon(volume) {
             if (volume === 0) {
-                volumeIcon.textContent = '🔇';
+                volumeIcon.innerHTML = '<i data-lucide="volume-x"></i>';
             } else if (volume < 0.5) {
-                volumeIcon.textContent = '🔉';
+                volumeIcon.innerHTML = '<i data-lucide="volume-1"></i>';
             } else {
-                volumeIcon.textContent = '🔊';
+                volumeIcon.innerHTML = '<i data-lucide="volume-2"></i>';
             }
+            if (window.lucide) window.lucide.createIcons();
         }
 
         // Función para actualizar estilo visual del slider de volumen
@@ -264,6 +282,8 @@
         // Restaurar volumen guardado
         restoreVolume();
 
+        
+        if (window.lucide) window.lucide.createIcons();
         // Restaurar estado si existe
         restorePlayerState();
     }
@@ -271,7 +291,7 @@
     /**
      * Reproduce una canción
      */
-    async function playSong(idCancion, tipo) {
+    async function playSong(idCancion, tipo, contextPlaylist = null) {
         const player = document.getElementById('global-audio-player');
         const audio = document.getElementById('global-audio');
         
@@ -304,13 +324,25 @@
                 return;
             }
 
-            // Cargar playlist (todas las canciones del medio)
-            await loadPlaylist(cancion.numMedio, tipo);
+            // Cargar playlist
+            if (contextPlaylist && Array.isArray(contextPlaylist) && contextPlaylist.length > 0) {
+                state.playlist = contextPlaylist;
+            } else {
+                // Cargar playlist (todas las canciones del medio)
+                await loadPlaylist(cancion.numMedio, tipo);
+            }
 
             // Encontrar índice de la canción actual
             state.currentIndex = state.playlist.findIndex(c => c.id === idCancion && c.tipo === tipo);
             if (state.currentIndex === -1) {
-                state.currentIndex = 0;
+                // Si la canción no está en la playlist (caso raro si viene de contexto), 
+                // la agregamos o forzamos carga de medio
+                if (contextPlaylist) {
+                     // Fallback: si se pasó contexto pero la canción no está, cargar medio
+                     await loadPlaylist(cancion.numMedio, tipo);
+                     state.currentIndex = state.playlist.findIndex(c => c.id === idCancion && c.tipo === tipo);
+                }
+                if (state.currentIndex === -1) state.currentIndex = 0;
             }
 
             state.currentSong = cancion;
@@ -435,19 +467,17 @@
         
         // Ir a la canción anterior
         if (state.shuffleMode) {
-            state.shuffledIndex--;
-            if (state.shuffledIndex < 0) {
-                state.shuffledIndex = state.shuffledPlaylist.length - 1;
-            }
-            const song = state.shuffledPlaylist[state.shuffledIndex];
-            playSong(song.id, song.tipo);
+            // En modo aleatorio infinito, "anterior" suele ser solo reiniciar o ir a una anterior en historial
+            // Por simplicidad, aquí reiniciamos o vamos a una aleatoria nueva si está al principio
+            // O podríamos implementar un historial. Para esta versión simple, vamos a una aleatoria.
+            playNext(); 
         } else {
             state.currentIndex--;
             if (state.currentIndex < 0) {
                 state.currentIndex = state.playlist.length - 1;
             }
             const song = state.playlist[state.currentIndex];
-            playSong(song.id, song.tipo);
+            if (song) playSong(song.id, song.tipo);
         }
     }
 
@@ -458,29 +488,26 @@
         if (state.playlist.length === 0) return;
         
         if (state.shuffleMode) {
-            state.shuffledIndex++;
-            if (state.shuffledIndex >= state.shuffledPlaylist.length) {
-                if (state.repeatMode === 'playlist') {
-                    state.shuffledIndex = 0;
-                } else {
-                    // Fin de la playlist
-                    return;
-                }
+            // Modo aleatorio infinito
+            if (state.randomQueue.length === 0) {
+                generateRandomQueue();
             }
-            const song = state.shuffledPlaylist[state.shuffledIndex];
-            playSong(song.id, song.tipo);
+            
+            // Tomar la siguiente de la cola aleatoria
+            const nextSong = state.randomQueue.shift();
+            
+            // Añadir una nueva al final para mantener la cola llena
+            addRandomSongToQueue();
+            
+            if (nextSong) {
+                // Actualizar currentIndex para mantener consistencia si cambiamos a modo normal
+                state.currentIndex = state.playlist.findIndex(s => s.id === nextSong.id && s.tipo === nextSong.tipo);
+                playSong(nextSong.id, nextSong.tipo);
+            }
         } else {
-            state.currentIndex++;
-            if (state.currentIndex >= state.playlist.length) {
-                if (state.repeatMode === 'playlist') {
-                    state.currentIndex = 0;
-                } else {
-                    // Fin de la playlist
-                    return;
-                }
-            }
+            state.currentIndex = (state.currentIndex + 1) % state.playlist.length;
             const song = state.playlist[state.currentIndex];
-            playSong(song.id, song.tipo);
+            if (song) playSong(song.id, song.tipo);
         }
     }
 
@@ -532,12 +559,13 @@
                     
                     // Actualizar ícono
                     if (volume === 0) {
-                        volumeIcon.textContent = '🔇';
+                        volumeIcon.innerHTML = '<i data-lucide="volume-x"></i>';
                     } else if (volume < 0.5) {
-                        volumeIcon.textContent = '🔉';
+                        volumeIcon.innerHTML = '<i data-lucide="volume-1"></i>';
                     } else {
-                        volumeIcon.textContent = '🔊';
+                        volumeIcon.innerHTML = '<i data-lucide="volume-2"></i>';
                     }
+                    if (window.lucide) window.lucide.createIcons();
                     
                     // Actualizar estilo de la barra
                     const value = volumeBar.value;
@@ -604,10 +632,13 @@
         if (state.shuffleMode) {
             shuffleBtn.classList.add('active');
             shuffleBtn.style.color = '#1db954'; // Spotify green
-            createShuffledPlaylist();
+            
+            // Generar cola aleatoria inicial
+            generateRandomQueue();
         } else {
             shuffleBtn.classList.remove('active');
             shuffleBtn.style.color = '';
+            state.randomQueue = [];
         }
         
         updateQueue();
@@ -615,25 +646,47 @@
     }
 
     /**
-     * Create shuffled playlist
+     * Genera una cola de canciones aleatorias
+     */
+    function generateRandomQueue() {
+        state.randomQueue = [];
+        if (state.playlist.length === 0) return;
+
+        // Generar 10 canciones aleatorias
+        for (let i = 0; i < 10; i++) {
+            addRandomSongToQueue();
+        }
+    }
+
+    /**
+     * Añade una canción aleatoria a la cola
+     */
+    function addRandomSongToQueue() {
+        if (state.playlist.length === 0) return;
+        
+        let nextIndex;
+        // Intentar no repetir la última canción añadida (o la actual si la cola está vacía)
+        const lastSong = state.randomQueue.length > 0 ? state.randomQueue[state.randomQueue.length - 1] : state.currentSong;
+        
+        if (state.playlist.length > 1) {
+            let attempts = 0;
+            do {
+                nextIndex = Math.floor(Math.random() * state.playlist.length);
+                attempts++;
+            } while (lastSong && state.playlist[nextIndex].id === lastSong.id && attempts < 5);
+        } else {
+            nextIndex = 0;
+        }
+        
+        state.randomQueue.push(state.playlist[nextIndex]);
+    }
+
+    /**
+     * Create shuffled playlist (DEPRECATED but kept for compatibility if needed)
      */
     function createShuffledPlaylist() {
-        // Copy playlist and shuffle
-        state.shuffledPlaylist = [...state.playlist];
-        
-        // Fisher-Yates shuffle
-        for (let i = state.shuffledPlaylist.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [state.shuffledPlaylist[i], state.shuffledPlaylist[j]] = 
-                [state.shuffledPlaylist[j], state.shuffledPlaylist[i]];
-        }
-        
-        // Find current song in shuffled playlist
-        if (state.currentSong) {
-            state.shuffledIndex = state.shuffledPlaylist.findIndex(
-                s => s.id === state.currentSong.id && s.tipo === state.currentSong.tipo
-            );
-        }
+        // Ya no se usa en el nuevo modo aleatorio "infinito"
+        // Pero si se necesitara, aquí iría la lógica
     }
 
     /**
@@ -644,25 +697,26 @@
         
         if (state.repeatMode === 'off') {
             state.repeatMode = 'playlist';
-            repeatBtn.textContent = '🔁';
+            repeatBtn.innerHTML = '<i data-lucide="repeat"></i>';
             repeatBtn.classList.add('active');
             repeatBtn.style.color = '#1db954';
             repeatBtn.title = 'Repetir lista';
         } else if (state.repeatMode === 'playlist') {
             state.repeatMode = 'song';
-            repeatBtn.textContent = '🔂';
+            repeatBtn.innerHTML = '<i data-lucide="repeat-1"></i>';
             repeatBtn.classList.add('active');
             repeatBtn.style.color = '#1db954';
             repeatBtn.title = 'Repetir canción';
         } else {
             state.repeatMode = 'off';
-            repeatBtn.textContent = '🔁';
+            repeatBtn.innerHTML = '<i data-lucide="repeat"></i>';
             repeatBtn.classList.remove('active');
             repeatBtn.style.color = '';
             repeatBtn.title = 'Repetir';
         }
         
         savePlayerPreferences();
+        if (window.lucide) window.lucide.createIcons();
     }
 
     /**
@@ -686,15 +740,17 @@
             if (response.ok) {
                 if (esFavorito) {
                     state.likedSongs.add(songKey);
-                    likeBtn.textContent = '♥';
+                    likeBtn.innerHTML = '<i data-lucide="heart" fill="currentColor"></i>';
                     likeBtn.classList.add('active');
                     likeBtn.style.color = '#1db954';
                 } else {
                     state.likedSongs.delete(songKey);
-                    likeBtn.textContent = '♡';
+                    likeBtn.innerHTML = '<i data-lucide="heart"></i>';
                     likeBtn.classList.remove('active');
                     likeBtn.style.color = '';
                 }
+                
+                if (window.lucide) window.lucide.createIcons();
                 saveLikedSongs();
             }
         } catch (error) {
@@ -712,14 +768,15 @@
         const likeBtn = document.getElementById('player-like');
         
         if (state.likedSongs.has(songKey)) {
-            likeBtn.textContent = '♥';
+            likeBtn.innerHTML = '<i data-lucide="heart" fill="currentColor"></i>';
             likeBtn.classList.add('active');
             likeBtn.style.color = '#1db954';
         } else {
-            likeBtn.textContent = '♡';
+            likeBtn.innerHTML = '<i data-lucide="heart"></i>';
             likeBtn.classList.remove('active');
             likeBtn.style.color = '';
         }
+        if (window.lucide) window.lucide.createIcons();
     }
 
     /**
@@ -758,12 +815,29 @@
         const currentSongDiv = document.getElementById('queue-current-song');
         const nextSongsDiv = document.getElementById('queue-next-songs');
         
+        if (!currentSongDiv || !nextSongsDiv) return;
+        
+        const getCoverUrl = (song) => {
+            if (song.idAlbum) return `/api/albumes/${song.idAlbum}/portada`;
+            return null; // Placeholder handled by onerror
+        };
+
+        const placeholderSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#333" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="12" cy="12" r="3"/></svg>');
+        const placeholderUrl = `data:image/svg+xml;charset=utf-8,${placeholderSvg}`;
+
         // Current song
         if (state.currentSong) {
+            const coverUrl = state.currentSong.tienePortada ? 
+                `/api/canciones/${state.currentSong.id}/portada?tipo=${state.currentSong.tipo}` : 
+                (state.currentSong.idAlbum ? `/api/albumes/${state.currentSong.idAlbum}/portada` : placeholderUrl);
+
             currentSongDiv.innerHTML = `
                 <div class="queue-song current">
-                    <span class="queue-song-title">${state.currentSong.tema}</span>
-                    <span class="queue-song-artist">${state.currentSong.interprete || ''}</span>
+                    <img src="${coverUrl}" class="queue-song-cover" onerror="this.src='${placeholderUrl}'">
+                    <div class="queue-song-info">
+                        <span class="queue-song-title">${state.currentSong.tema}</span>
+                        <span class="queue-song-artist">${state.currentSong.interprete || ''}</span>
+                    </div>
                 </div>
             `;
         } else {
@@ -771,42 +845,70 @@
         }
         
         // Next songs
-        nextSongsDiv.innerHTML = '';
+        let nextSongsHTML = '';
         
-        const playlist = state.shuffleMode ? state.shuffledPlaylist : state.playlist;
-        const currentIdx = state.shuffleMode ? state.shuffledIndex : state.currentIndex;
-        
-        if (playlist.length > 0 && currentIdx >= 0) {
-            // Show next 10 songs
+        if (state.playlist && state.playlist.length > 0) {
             const maxSongs = 10;
-            let count = 0;
             
-            for (let i = 1; count < maxSongs && i < playlist.length; i++) {
-                const nextIdx = (currentIdx + i) % playlist.length;
-                const song = playlist[nextIdx];
-                
-                // Stop if repeat is off and we've wrapped around
-                if (state.repeatMode === 'off' && nextIdx <= currentIdx && i > 1) {
-                    break;
+            if (state.shuffleMode) {
+                // Mostrar la cola aleatoria generada
+                // Rellenar si falta
+                while(state.randomQueue.length < maxSongs) {
+                    addRandomSongToQueue();
                 }
+
+                for (let i = 0; i < maxSongs; i++) {
+                    const song = state.randomQueue[i];
+                    if (!song) continue;
+                    
+                    const coverUrl = getCoverUrl(song) || placeholderUrl;
+
+                    nextSongsHTML += `
+                        <div class="queue-song" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
+                            <img src="${coverUrl}" class="queue-song-cover" onerror="this.src='${placeholderUrl}'">
+                            <div class="queue-song-info">
+                                <span class="queue-song-title">${song.tema}</span>
+                                <span class="queue-song-artist">${song.interprete || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Modo secuencial (loop)
+                const currentIdx = state.currentIndex;
+                let count = 0;
                 
-                nextSongsDiv.innerHTML += `
-                    <div class="queue-song">
-                        <span class="queue-song-number">${count + 1}</span>
-                        <span class="queue-song-title">${song.tema}</span>
-                        <span class="queue-song-artist">${song.interprete || ''}</span>
-                    </div>
-                `;
-                
-                count++;
+                for (let i = 1; count < maxSongs; i++) {
+                    let nextIdx = (currentIdx + i) % state.playlist.length;
+                    // Manejo seguro de índices negativos
+                    if (nextIdx < 0) nextIdx += state.playlist.length;
+                    
+                    const song = state.playlist[nextIdx];
+                    
+                    if (!song) break;
+                    
+                    const coverUrl = getCoverUrl(song) || placeholderUrl;
+
+                    nextSongsHTML += `
+                        <div class="queue-song" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
+                            <img src="${coverUrl}" class="queue-song-cover" onerror="this.src='${placeholderUrl}'">
+                            <div class="queue-song-info">
+                                <span class="queue-song-title">${song.tema}</span>
+                                <span class="queue-song-artist">${song.interprete || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    count++;
+                }
             }
-            
-            if (count === 0) {
-                nextSongsDiv.innerHTML = '<div class="queue-empty">No hay más canciones en la cola</div>';
-            }
-        } else {
-            nextSongsDiv.innerHTML = '<div class="queue-empty">No hay canciones en la cola</div>';
         }
+        
+        if (nextSongsHTML === '') {
+            nextSongsHTML = '<div class="queue-empty">No hay más canciones en la cola</div>';
+        }
+        
+        nextSongsDiv.innerHTML = nextSongsHTML;
     }
 
     /**
@@ -871,17 +973,18 @@
                 
                 if (repeatBtn) {
                     if (state.repeatMode === 'playlist') {
-                        repeatBtn.textContent = '🔁';
+                        repeatBtn.innerHTML = '<i data-lucide="repeat"></i>';
                         repeatBtn.classList.add('active');
                         repeatBtn.style.color = '#1db954';
                         repeatBtn.title = 'Repetir lista';
                     } else if (state.repeatMode === 'song') {
-                        repeatBtn.textContent = '🔂';
+                        repeatBtn.innerHTML = '<i data-lucide="repeat-1"></i>';
                         repeatBtn.classList.add('active');
                         repeatBtn.style.color = '#1db954';
                         repeatBtn.title = 'Repetir canción';
                     }
                 }
+                if (window.lucide) window.lucide.createIcons();
             }
         } catch (e) {
             console.warn('Error cargando preferencias:', e);

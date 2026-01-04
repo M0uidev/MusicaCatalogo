@@ -340,8 +340,8 @@
         .modal-versiones-contenido {
             background: white;
             border-radius: var(--radio-lg);
-            max-width: 600px;
-            width: 85%;
+            max-width: 800px;
+            width: 90%;
             max-height: 61vh;
             overflow: hidden;
             display: flex;
@@ -391,8 +391,8 @@
         }
 
         .modal-versiones-portada {
-            width: 240px;
-            height: 240px;
+            width: 120px;
+            height: 120px;
             border-radius: var(--radio);
             object-fit: cover;
             background: var(--color-fondo);
@@ -400,8 +400,8 @@
         }
 
         .modal-versiones-portada-placeholder {
-            width: 240px;
-            height: 240px;
+            width: 120px;
+            height: 120px;
             border-radius: var(--radio);
             background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             display: flex;
@@ -443,6 +443,7 @@
         .modal-versiones-body {
             padding: 1rem;
             overflow-y: auto;
+            min-height: 200px; /* Ensure space for dropdowns */
         }
 
         /* Versión de artista */
@@ -450,7 +451,7 @@
             border: 1px solid var(--color-borde);
             border-radius: var(--radio);
             margin-bottom: 0.75rem;
-            overflow: hidden;
+            /* overflow: hidden; Removed to allow dropdowns */
         }
 
         .version-artista:last-child {
@@ -464,6 +465,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 0.75rem;
+            border-top-left-radius: var(--radio);
+            border-top-right-radius: var(--radio);
         }
 
         .version-artista-nombre {
@@ -526,6 +529,233 @@
         .ubicacion-acciones {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-more {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-texto-secundario);
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-more svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-more:hover, .btn-more.active {
+            background: rgba(0,0,0,0.05);
+            color: var(--color-texto);
+            opacity: 1 !important;
+        }
+
+        .ubicacion-item:hover .btn-more,
+        .track-row:hover .btn-more {
+            opacity: 1;
+        }
+
+        /* Track List Styles */
+        .track-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .track-row {
+            display: grid;
+            grid-template-columns: 40px 48px 1fr 1fr 40px;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radio);
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--color-borde);
+        }
+        
+        .track-row:last-child {
+            border-bottom: none;
+        }
+
+        .track-row:hover {
+            background: var(--color-fondo);
+        }
+
+        .track-play {
+            display: flex;
+            justify-content: center;
+        }
+
+        .track-cover {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--color-fondo);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .track-cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .track-cover-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-texto-secundario);
+            background: #f1f5f9;
+        }
+        
+        .track-cover-placeholder svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .track-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .track-title {
+            font-weight: 500;
+            color: var(--color-texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.95rem;
+        }
+        
+        .badge-cover-inline {
+            font-size: 0.65rem;
+            background: var(--color-acento);
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        .track-artist {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-album {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+            font-size: 0.85rem;
+        }
+        
+        .track-album-name {
+            color: var(--color-texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .track-media-details {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--color-texto-secundario);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .track-media-badge {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            border: 1px solid var(--color-borde);
+            border-radius: 3px;
+            color: var(--color-texto-secundario);
+            flex-shrink: 0;
+        }
+
+        .track-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Dropdown Menu */
+        .dropdown-container {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 100;
+            min-width: 180px;
+            padding: 0.5rem 0;
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            color: var(--color-texto);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .dropdown-item:hover {
+            background: var(--color-fondo);
+        }
+
+        .dropdown-item svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .btn-ubicacion {
@@ -567,6 +797,16 @@
         .btn-play.playing {
             background: transparent;
             color: #1db954;
+        }
+
+        .btn-play:disabled, .btn-play.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-play:disabled:hover, .btn-play.disabled:hover {
+            transform: none;
+            color: #ccc;
         }
 
         .btn-editar {
@@ -982,21 +1222,109 @@
             const pc = document.getElementById('modalPortada');
             pc.innerHTML = p.idAlbum ? `<img src="/api/albumes/${p.idAlbum}/portada" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">` : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
 
-            document.getElementById('modalVersionesBody').innerHTML = p.artistas.map(a => `
-                <div class="version-artista">
-                    <div class="version-artista-header"><div class="version-artista-nombre">${escapeHtml(a.nombre)} ${a.esCover ? '<span class="badge-cover">Cover</span>' : '<span class="badge-original">Original</span>'}</div></div>
-                    <div class="version-ubicaciones">${a.instancias.map(i => `
-                        <div class="ubicacion-item ${i.archivoAudio ? 'con-audio' : ''}">
-                            <div class="ubicacion-Medio">${i.tipo === 'cassette' ? '<i data-lucide="cassette-tape"></i>' : '<i data-lucide="disc-3"></i>'}</div>
-                            <div class="ubicacion-detalle"><strong>${escapeHtml(i.numMedio)}</strong><small>${i.lado ? `Lado ${i.lado}: ${i.desde}-${i.hasta}` : `Pista ${i.ubicacion}`}</small></div>
-                            <div class="ubicacion-acciones">
-                                <button class="btn-play" data-id="${i.id}" data-tipo="${i.tipo}" onclick="togglePlayCancion(this, ${i.id}, '${i.tipo}')" title="Reproducir"><i data-lucide="play"></i></button>
-                                <button class="btn-ubicacion" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">Ver</button>
+            // Flatten instances
+            let allInstances = [];
+            p.artistas.forEach(a => {
+                a.instancias.forEach(i => {
+                    allInstances.push({
+                        ...i,
+                        artistaNombre: a.nombre,
+                        esCover: a.esCover
+                    });
+                });
+            });
+
+            const rowsHtml = allInstances.map(i => {
+                const albumName = i.albumNombre || i.album || 'Sin álbum';
+                const coverImg = (i.idAlbum && i.idAlbum > 0) 
+                    ? `/api/albumes/${i.idAlbum}/portada` 
+                    : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+                    
+                const coverHtml = coverImg 
+                    ? `<img src="${coverImg}" class="track-cover-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                    : '';
+                const placeholderHtml = `<div class="track-cover-placeholder" style="${coverImg ? 'display:none' : ''}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+
+                let mediaInfo = '';
+                if (i.tipo === 'cassette') {
+                    mediaInfo = `<span class="track-media-badge">Cassette</span> <span>${escapeHtml(i.numMedio)}</span> <span>• Lado ${i.lado} (${i.desde}-${i.hasta})</span>`;
+                } else {
+                    mediaInfo = `<span class="track-media-badge">CD</span> <span>${escapeHtml(i.numMedio)}</span> <span>• Pista ${i.ubicacion}</span>`;
+                }
+
+                const hasAudio = i.archivoAudio ? true : false;
+                const playButton = hasAudio 
+                    ? `<button class="btn-play" data-id="${i.id}" data-tipo="${i.tipo}" onclick="togglePlayCancion(this, ${i.id}, '${i.tipo}')" title="Reproducir"><i data-lucide="play"></i></button>`
+                    : `<button class="btn-play disabled" disabled title="No disponible"><i data-lucide="play"></i></button>`;
+
+                return `
+                <div class="track-row">
+                    <div class="track-play">
+                        ${playButton}
+                    </div>
+                    <div class="track-cover">
+                        ${coverHtml}
+                        ${placeholderHtml}
+                    </div>
+                    <div class="track-info">
+                        <div class="track-title ${i.esCover ? 'is-cover' : ''}">
+                            ${escapeHtml(p.tema)}
+                            ${i.esCover ? '<span class="badge-cover-inline">Cover</span>' : ''}
+                        </div>
+                        <div class="track-artist">${escapeHtml(i.artistaNombre)}</div>
+                    </div>
+                    <div class="track-album">
+                        <div class="track-album-name" title="${escapeHtml(albumName)}">${escapeHtml(albumName)}</div>
+                        <div class="track-media-details">
+                            ${mediaInfo}
+                        </div>
+                    </div>
+                    <div class="track-actions">
+                        <div class="dropdown-container">
+                            <button class="btn-more" onclick="toggleDropdown(this, event)">
+                                <i data-lucide="ellipsis"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">
+                                    <i data-lucide="music"></i> Editar Canción
+                                </button>
+                                <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">
+                                    <i data-lucide="eye"></i> Ver ${i.tipo === 'cassette' ? 'Cassette' : 'CD'}
+                                </button>
                             </div>
-                        </div>`).join('')}</div>
-                </div>`).join('');
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            document.getElementById('modalVersionesBody').innerHTML = `<div class="track-list">${rowsHtml}</div>`;
             m.classList.add('visible'); document.body.style.overflow = 'hidden';
             lucide.createIcons();
+        }
+
+        function toggleDropdown(btn, event) {
+            event.stopPropagation();
+            const menu = btn.nextElementSibling;
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu.show').forEach(d => {
+                if (d !== menu) d.classList.remove('show');
+            });
+            
+            menu.classList.toggle('show');
+            
+            // Close on click outside
+            const closeDropdown = (e) => {
+                if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                    menu.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            };
+            
+            if (menu.classList.contains('show')) {
+                setTimeout(() => document.addEventListener('click', closeDropdown), 0);
+            }
         }
 
         function cerrarModalVersiones() { document.getElementById('modalVersiones').classList.remove('visible'); document.body.style.overflow = ''; }
@@ -1004,6 +1332,30 @@
         function paginaSiguiente() { if (paginaActual < Math.ceil(perfilesFiltrados.length / cancionesPorPagina)) { paginaActual++; aplicarFiltros(); window.scrollTo(0, 0); } }
 
         let cancionActualBtn = null;
+
+        function obtenerPlaylistContexto() {
+            const playlist = [];
+            // Recorrer perfilesFiltrados para mantener el orden de la búsqueda
+            if (typeof perfilesFiltrados !== 'undefined') {
+                for (const p of perfilesFiltrados) {
+                    for (const artista of p.artistas) {
+                        for (const ins of artista.instancias) {
+                            if (ins.archivoAudio) { 
+                                playlist.push({
+                                    id: ins.id,
+                                    tipo: ins.tipo,
+                                    tema: p.tema,
+                                    interprete: artista.nombre,
+                                    idAlbum: p.idAlbum,
+                                    tieneArchivoAudio: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            return playlist;
+        }
 
         function togglePlayCancion(btn, id, tipo) {
             const audio = document.getElementById('global-audio');
@@ -1024,7 +1376,8 @@
                 
                 // Iniciar reproducción
                 if (window.reproducirCancion) {
-                    window.reproducirCancion(id, tipo);
+                    const playlist = obtenerPlaylistContexto();
+                    window.reproducirCancion(id, tipo, playlist);
                     btn.innerHTML = '<i data-lucide="pause"></i>';
                     btn.classList.add('playing');
                     cancionActualBtn = btn;

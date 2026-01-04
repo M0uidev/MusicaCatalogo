@@ -41,41 +41,88 @@
                 if (container) {
                     container.innerHTML = `
                         <div class="resumen-card">
-                            <div class="resumen-numero">${stats.totalCanciones || 0}</div>
-                            <div class="resumen-label">Canciones</div>
+                            <div class="resumen-icono">${ICONOS.iconoCassette}</div>
+                            <div class="resumen-info">
+                                <span class="resumen-numero">${this.formatearNumero(stats.totalCassettes)}</span>
+                                <span class="resumen-label">Cassettes</span>
+                            </div>
                         </div>
                         <div class="resumen-card">
-                            <div class="resumen-numero">${stats.totalInterpretes || 0}</div>
-                            <div class="resumen-label">Intérpretes</div>
+                            <div class="resumen-icono">${ICONOS.iconoCD}</div>
+                            <div class="resumen-info">
+                                <span class="resumen-numero">${this.formatearNumero(stats.totalCds)}</span>
+                                <span class="resumen-label">CDs</span>
+                            </div>
                         </div>
                         <div class="resumen-card">
-                            <div class="resumen-numero">${stats.totalCassettes || 0}</div>
-                            <div class="resumen-label">Cassettes</div>
+                            <div class="resumen-icono">${ICONOS.iconoMusica}</div>
+                            <div class="resumen-info">
+                                <span class="resumen-numero">${this.formatearNumero((stats.totalTemasCassette || 0) + (stats.totalTemasCd || 0))}</span>
+                                <span class="resumen-label">Canciones</span>
+                            </div>
                         </div>
                         <div class="resumen-card">
-                            <div class="resumen-numero">${stats.totalCds || 0}</div>
-                            <div class="resumen-label">CDs</div>
+                            <div class="resumen-icono">${ICONOS.iconoInterprete}</div>
+                            <div class="resumen-info">
+                                <span class="resumen-numero">${this.formatearNumero(stats.totalInterpretes)}</span>
+                                <span class="resumen-label">Intérpretes</span>
+                            </div>
                         </div>
                     `;
                 }
             } catch (err) {
                 console.error('Error cargando estadísticas:', err);
+                const container = document.getElementById('resumenColeccion');
+                if (container) {
+                    container.innerHTML = '<div class="error-mensaje">No se pudo cargar el resumen</div>';
+                }
             }
+        },
+
+        formatearNumero(num) {
+            return new Intl.NumberFormat('es-ES').format(num || 0);
         },
 
         /**
          * Genera código QR para acceso desde móvil
          */
-        generateQR() {
+        async generateQR() {
             const qrContainer = document.getElementById('codigoQR');
             if (qrContainer && typeof QRCode !== 'undefined') {
                 qrContainer.innerHTML = '';
-                const localUrl = window.location.origin.replace('/app.html', '');
-                new QRCode(qrContainer, {
-                    text: localUrl,
-                    width: 200,
-                    height: 200
-                });
+                
+                try {
+                    // Obtener IPs del servidor
+                    const resp = await fetch('/api/red');
+                    const data = await resp.json();
+                    
+                    // Usar la primera IP de la red local (no localhost)
+                    let url = window.location.origin;
+                    if (data.ips && data.ips.length > 0) {
+                        // Preferir IP que empiece con 192.168
+                        const ipLocal = data.ips.find(ip => ip.startsWith('192.168')) || data.ips[0];
+                        url = `http://${ipLocal}:${data.puerto}`;
+                    }
+                    
+                    new QRCode(qrContainer, {
+                        text: url,
+                        width: 180,
+                        height: 180,
+                        colorDark: '#1e293b',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (err) {
+                    // Fallback a la URL actual
+                    const url = window.location.origin;
+                    new QRCode(qrContainer, {
+                        text: url,
+                        width: 180,
+                        height: 180,
+                        colorDark: '#1e293b',
+                        colorLight: '#ffffff'
+                    });
+                }
             }
         },
 

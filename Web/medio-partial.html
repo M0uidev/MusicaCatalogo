@@ -1419,6 +1419,13 @@
                     artistaOriginal: c.artistaOriginal || c.ArtistaOriginal || ''
                 })));
 
+                let ubicacionHtml = '';
+                if (esCassette) {
+                    ubicacionHtml = `${c.desde} - ${c.hasta}`;
+                } else {
+                    ubicacionHtml = `${c.ubicacion}`;
+                }
+
                 filas += `
                     <tr data-cancion="${dataCancion}">
                         <td class="celda-portada">
@@ -1436,6 +1443,9 @@
                                 ${escapeHtml(c.interprete)}
                             </a>
                         </td>
+                        <td class="cancion-ubicacion" style="color: var(--color-texto-secundario); font-size: 0.9rem;">
+                            ${ubicacionHtml}
+                        </td>
                         <td class="acciones-celda">
                             <button class="btn-accion btn-editar" onclick="editarCancionDesdeRow(this)">✏️</button>
                             <button class="btn-accion btn-eliminar" onclick="eliminarCancionDesdeRow(this)">🗑️</button>
@@ -1444,6 +1454,8 @@
                 `;
             }
 
+            const headerUbicacion = esCassette ? 'Posición' : 'Pista';
+
             return `
                 <table class="tabla-canciones">
                     <thead>
@@ -1451,6 +1463,7 @@
                             <th class="celda-portada"></th>
                             <th>Canción</th>
                             <th>Intérprete</th>
+                            <th>${headerUbicacion}</th>
                             <th class="acciones-celda">Acciones</th>
                         </tr>
                     </thead>
