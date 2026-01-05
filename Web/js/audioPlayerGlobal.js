@@ -2,7 +2,7 @@
 // REPRODUCTOR GLOBAL PERSISTENTE - VERSIÓN SIMPLE
 // ============================================
 
-(function() {
+(function () {
     'use strict';
 
     // Estado global del reproductor
@@ -17,7 +17,8 @@
         shuffledIndex: -1,
         likedSongs: new Set(),
         queueVisible: false,
-        randomQueue: [] // Cola de canciones aleatorias
+        randomQueue: [], // Cola de canciones aleatorias
+        audioPool: [] // Pool global de todas las canciones con audio
     };
 
     /**
@@ -140,16 +141,16 @@
 
         prevBtn.addEventListener('click', () => playPrevious());
         nextBtn.addEventListener('click', () => playNext());
-        
+
         shuffleBtn.addEventListener('click', () => toggleShuffle());
         repeatBtn.addEventListener('click', () => toggleRepeat());
         likeBtn.addEventListener('click', () => toggleLike());
         queueBtn.addEventListener('click', () => toggleQueue());
         queueClose.addEventListener('click', () => toggleQueue());
-        
+
         minimizeBtn.addEventListener('click', () => {
             player.classList.toggle('minimized');
-            
+
             // Si se minimiza, cerrar la cola si está abierta
             if (player.classList.contains('minimized') && state.queueVisible) {
                 toggleQueue();
@@ -248,7 +249,7 @@
 
         // Actualizar estilo de barras al inicio
         updateVolumeBarStyle();
-        
+
         // Cargar preferencias del reproductor
         loadPlayerPreferences();
 
@@ -282,21 +283,38 @@
         // Restaurar volumen guardado
         restoreVolume();
 
-        
+
         if (window.lucide) window.lucide.createIcons();
         // Restaurar estado si existe
         restorePlayerState();
+
+        // Cargar pool global de canciones con audio
+        loadAudioPool();
     }
 
     /**
-     * Reproduce una canción
+     * Reproduce una canción (o hace toggle play/pause si ya está sonando)
+     * @param {number} idCancion 
+     * @param {string} tipo 
+     * @param {Array} contextPlaylist 
+     * @param {boolean} fromQueue - Indica si la reproducción viene de la cola automática (para no regenerarla)
      */
-    async function playSong(idCancion, tipo, contextPlaylist = null) {
+    async function playSong(idCancion, tipo, contextPlaylist = null, fromQueue = false) {
         const player = document.getElementById('global-audio-player');
         const audio = document.getElementById('global-audio');
-        
+
         if (!player || !audio) {
             console.error('Reproductor no inicializado');
+            return;
+        }
+
+        // Si es la misma canción que ya está cargada, solo toggle play/pause
+        if (state.currentSong && state.currentSong.id === idCancion && state.currentSong.tipo === tipo) {
+            if (audio.paused) {
+                audio.play().catch(err => console.error('Error al reproducir:', err));
+            } else {
+                audio.pause();
+            }
             return;
         }
 
@@ -309,7 +327,7 @@
             }
 
             const cancion = await resp.json();
-            
+
             // Actualizar estado de favorito desde la base de datos
             const songKey = `${idCancion}_${tipo}`;
             if (cancion.esFavorito) {
@@ -317,7 +335,7 @@
             } else {
                 state.likedSongs.delete(songKey);
             }
-            
+
             // Verificar que tenga archivo de audio
             if (!cancion.tieneArchivoAudio) {
                 alert('Esta canción no tiene archivo de audio');
@@ -338,9 +356,9 @@
                 // Si la canción no está en la playlist (caso raro si viene de contexto), 
                 // la agregamos o forzamos carga de medio
                 if (contextPlaylist) {
-                     // Fallback: si se pasó contexto pero la canción no está, cargar medio
-                     await loadPlaylist(cancion.numMedio, tipo);
-                     state.currentIndex = state.playlist.findIndex(c => c.id === idCancion && c.tipo === tipo);
+                    // Fallback: si se pasó contexto pero la canción no está, cargar medio
+                    await loadPlaylist(cancion.numMedio, tipo);
+                    state.currentIndex = state.playlist.findIndex(c => c.id === idCancion && c.tipo === tipo);
                 }
                 if (state.currentIndex === -1) state.currentIndex = 0;
             }
@@ -349,24 +367,39 @@
 
             // Actualizar UI
             updatePlayerUI(cancion);
-            
+
             // Actualizar botón de like
             updateLikeButton();
-            
+
+            // Generar cola automáticamente
+            if (!fromQueue) {
+                // Si NO viene de la cola (es una selección manual), regeneramos la cola nueva
+                // basada en la nueva canción (o aleatoria si es shuffle)
+                if (state.shuffleMode) {
+                    createShuffledPlaylist();
+                    generateRandomQueue();
+                } else {
+                    // Si no es shuffle, también generamos sugerencias por si acaso activa shuffle después
+                    generateRandomQueue();
+                }
+            } else {
+                // Si VIENE de la cola (playNext), solo aseguramos que esté llena
+                // (playNext ya hizo shift y push, así que aquí no obligamos a nada más, 
+                // pero si la cola estuviera vacía por error, la llenamos)
+                if (state.randomQueue.length === 0) {
+                    generateRandomQueue();
+                }
+            }
+
             // Actualizar cola si está visible
             if (state.queueVisible) {
                 updateQueue();
-            }
-            
-            // Si shuffle está activo, actualizar índice en playlist mezclada
-            if (state.shuffleMode) {
-                createShuffledPlaylist();
             }
 
             // Cargar audio
             audio.src = `/api/canciones/${idCancion}/audio?tipo=${tipo}`;
             audio.load();
-            
+
             // Mostrar reproductor
             player.style.display = 'block';
 
@@ -396,10 +429,10 @@
             // Buscar el medio
             const medioResp = await fetch(`/api/medios?tipo=${tipo}`);
             if (!medioResp.ok) return;
-            
+
             const medios = await medioResp.json();
             const medio = medios.find(m => m.num === numMedio);
-            
+
             if (!medio || !medio.canciones) return;
 
             // Filtrar solo canciones con audio
@@ -456,21 +489,21 @@
      */
     function playPrevious() {
         if (state.playlist.length === 0) return;
-        
+
         const audio = document.getElementById('global-audio');
-        
+
         // Si han pasado más de 3 segundos, reiniciar la canción actual
         if (audio && audio.currentTime > 3) {
             audio.currentTime = 0;
             return;
         }
-        
+
         // Ir a la canción anterior
         if (state.shuffleMode) {
             // En modo aleatorio infinito, "anterior" suele ser solo reiniciar o ir a una anterior en historial
             // Por simplicidad, aquí reiniciamos o vamos a una aleatoria nueva si está al principio
             // O podríamos implementar un historial. Para esta versión simple, vamos a una aleatoria.
-            playNext(); 
+            playNext();
         } else {
             state.currentIndex--;
             if (state.currentIndex < 0) {
@@ -486,23 +519,24 @@
      */
     function playNext() {
         if (state.playlist.length === 0) return;
-        
+
         if (state.shuffleMode) {
             // Modo aleatorio infinito
             if (state.randomQueue.length === 0) {
                 generateRandomQueue();
             }
-            
+
             // Tomar la siguiente de la cola aleatoria
             const nextSong = state.randomQueue.shift();
-            
+
             // Añadir una nueva al final para mantener la cola llena
             addRandomSongToQueue();
-            
+
             if (nextSong) {
                 // Actualizar currentIndex para mantener consistencia si cambiamos a modo normal
                 state.currentIndex = state.playlist.findIndex(s => s.id === nextSong.id && s.tipo === nextSong.tipo);
-                playSong(nextSong.id, nextSong.tipo);
+                // Pasar fromQueue = true para NO regenerar toda la cola
+                playSong(nextSong.id, nextSong.tipo, null, true);
             }
         } else {
             state.currentIndex = (state.currentIndex + 1) % state.playlist.length;
@@ -551,12 +585,12 @@
                 const audio = document.getElementById('global-audio');
                 const volumeBar = document.getElementById('player-volume-bar');
                 const volumeIcon = document.getElementById('player-volume-icon');
-                
+
                 if (audio && volumeBar) {
                     const volume = parseFloat(savedVolume);
                     audio.volume = volume;
                     volumeBar.value = volume * 100;
-                    
+
                     // Actualizar ícono
                     if (volume === 0) {
                         volumeIcon.innerHTML = '<i data-lucide="volume-x"></i>';
@@ -566,7 +600,7 @@
                         volumeIcon.innerHTML = '<i data-lucide="volume-2"></i>';
                     }
                     if (window.lucide) window.lucide.createIcons();
-                    
+
                     // Actualizar estilo de la barra
                     const value = volumeBar.value;
                     volumeBar.style.background = `linear-gradient(to right, white 0%, white ${value}%, rgba(255,255,255,0.2) ${value}%, rgba(255,255,255,0.2) 100%)`;
@@ -586,7 +620,7 @@
             if (!saved) return;
 
             const savedState = JSON.parse(saved);
-            
+
             // Expirar después de 24 horas
             if (Date.now() - savedState.timestamp > 24 * 60 * 60 * 1000) {
                 clearPlayerState();
@@ -627,58 +661,77 @@
      */
     function toggleShuffle() {
         state.shuffleMode = !state.shuffleMode;
-        
+
         const shuffleBtn = document.getElementById('player-shuffle');
         if (state.shuffleMode) {
             shuffleBtn.classList.add('active');
             shuffleBtn.style.color = '#1db954'; // Spotify green
-            
+
             // Generar cola aleatoria inicial
             generateRandomQueue();
         } else {
             shuffleBtn.classList.remove('active');
             shuffleBtn.style.color = '';
+
+            // Si desactivamos shuffle, asegurarnos de que el índice actual sea correcto en la playlist
+            if (state.currentSong && state.playlist.length > 0) {
+                state.currentIndex = state.playlist.findIndex(s => s.id === state.currentSong.id && s.tipo === state.currentSong.tipo);
+            }
+            // Si no hay playlist (ej: inicio puro), usar pool global
+            else if (state.currentSong && state.playlist.length === 0 && state.audioPool.length > 0) {
+                state.playlist = [...state.audioPool];
+                state.playlist.sort((a, b) => a.interprete.localeCompare(b.interprete) || a.tema.localeCompare(b.tema));
+                state.currentIndex = state.playlist.findIndex(s => s.id === state.currentSong.id && s.tipo === state.currentSong.tipo);
+            }
+
+            // Mantener randomQueue vacía pero regenerar si se vuelve a activar
             state.randomQueue = [];
         }
-        
+
         updateQueue();
         savePlayerPreferences();
     }
 
     /**
-     * Genera una cola de canciones aleatorias
+     * Genera una cola de 20 canciones aleatorias desde el pool global
      */
     function generateRandomQueue() {
         state.randomQueue = [];
-        if (state.playlist.length === 0) return;
 
-        // Generar 10 canciones aleatorias
-        for (let i = 0; i < 10; i++) {
-            addRandomSongToQueue();
+        // Usar pool global si está disponible, sino usar playlist del medio
+        const sourcePool = state.audioPool.length > 0 ? state.audioPool : state.playlist;
+
+        if (sourcePool.length === 0) return;
+
+        // Generar 20 canciones aleatorias
+        for (let i = 0; i < 20; i++) {
+            addRandomSongToQueue(sourcePool);
         }
     }
 
     /**
-     * Añade una canción aleatoria a la cola
+     * Añade una canción aleatoria a la cola desde el pool especificado
      */
-    function addRandomSongToQueue() {
-        if (state.playlist.length === 0) return;
-        
+    function addRandomSongToQueue(sourcePool = null) {
+        // Priorizar playlist actual si existe, sino usar pool global
+        const pool = sourcePool || (state.playlist.length > 0 ? state.playlist : state.audioPool);
+        if (pool.length === 0) return;
+
         let nextIndex;
         // Intentar no repetir la última canción añadida (o la actual si la cola está vacía)
         const lastSong = state.randomQueue.length > 0 ? state.randomQueue[state.randomQueue.length - 1] : state.currentSong;
-        
-        if (state.playlist.length > 1) {
+
+        if (pool.length > 1) {
             let attempts = 0;
             do {
-                nextIndex = Math.floor(Math.random() * state.playlist.length);
+                nextIndex = Math.floor(Math.random() * pool.length);
                 attempts++;
-            } while (lastSong && state.playlist[nextIndex].id === lastSong.id && attempts < 5);
+            } while (lastSong && pool[nextIndex].id === lastSong.id && attempts < 5);
         } else {
             nextIndex = 0;
         }
-        
-        state.randomQueue.push(state.playlist[nextIndex]);
+
+        state.randomQueue.push(pool[nextIndex]);
     }
 
     /**
@@ -694,7 +747,7 @@
      */
     function toggleRepeat() {
         const repeatBtn = document.getElementById('player-repeat');
-        
+
         if (state.repeatMode === 'off') {
             state.repeatMode = 'playlist';
             repeatBtn.innerHTML = '<i data-lucide="repeat"></i>';
@@ -714,7 +767,7 @@
             repeatBtn.style.color = '';
             repeatBtn.title = 'Repetir';
         }
-        
+
         savePlayerPreferences();
         if (window.lucide) window.lucide.createIcons();
     }
@@ -724,11 +777,11 @@
      */
     async function toggleLike() {
         if (!state.currentSong) return;
-        
+
         const songKey = `${state.currentSong.id}_${state.currentSong.tipo}`;
         const likeBtn = document.getElementById('player-like');
         const esFavorito = !state.likedSongs.has(songKey);
-        
+
         try {
             // Actualizar en el servidor
             const response = await fetch(`/api/canciones/${state.currentSong.id}/favorito?tipo=${state.currentSong.tipo}`, {
@@ -736,7 +789,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ esFavorito })
             });
-            
+
             if (response.ok) {
                 if (esFavorito) {
                     state.likedSongs.add(songKey);
@@ -749,7 +802,7 @@
                     likeBtn.classList.remove('active');
                     likeBtn.style.color = '';
                 }
-                
+
                 if (window.lucide) window.lucide.createIcons();
                 saveLikedSongs();
             }
@@ -763,10 +816,10 @@
      */
     function updateLikeButton() {
         if (!state.currentSong) return;
-        
+
         const songKey = `${state.currentSong.id}_${state.currentSong.tipo}`;
         const likeBtn = document.getElementById('player-like');
-        
+
         if (state.likedSongs.has(songKey)) {
             likeBtn.innerHTML = '<i data-lucide="heart" fill="currentColor"></i>';
             likeBtn.classList.add('active');
@@ -786,7 +839,7 @@
         const queuePanel = document.getElementById('player-queue-panel');
         const queueBtn = document.getElementById('player-queue');
         state.queueVisible = !state.queueVisible;
-        
+
         if (state.queueVisible) {
             queuePanel.style.display = 'flex';
             // Forzar reflow para que la animación funcione
@@ -814,9 +867,9 @@
     function updateQueue() {
         const currentSongDiv = document.getElementById('queue-current-song');
         const nextSongsDiv = document.getElementById('queue-next-songs');
-        
+
         if (!currentSongDiv || !nextSongsDiv) return;
-        
+
         const getCoverUrl = (song) => {
             if (song.idAlbum) return `/api/albumes/${song.idAlbum}/portada`;
             return null; // Placeholder handled by onerror
@@ -827,8 +880,8 @@
 
         // Current song
         if (state.currentSong) {
-            const coverUrl = state.currentSong.tienePortada ? 
-                `/api/canciones/${state.currentSong.id}/portada?tipo=${state.currentSong.tipo}` : 
+            const coverUrl = state.currentSong.tienePortada ?
+                `/api/canciones/${state.currentSong.id}/portada?tipo=${state.currentSong.tipo}` :
                 (state.currentSong.idAlbum ? `/api/albumes/${state.currentSong.idAlbum}/portada` : placeholderUrl);
 
             currentSongDiv.innerHTML = `
@@ -843,24 +896,33 @@
         } else {
             currentSongDiv.innerHTML = '<div class="queue-empty">No hay canción reproduciéndose</div>';
         }
-        
+
         // Next songs
         let nextSongsHTML = '';
-        
-        if (state.playlist && state.playlist.length > 0) {
-            const maxSongs = 10;
-            
-            if (state.shuffleMode) {
-                // Mostrar la cola aleatoria generada
-                // Rellenar si falta
-                while(state.randomQueue.length < maxSongs) {
+
+        // Determinar qué lista mostrar:
+        // 1. Si shuffle está activo: mostrar randomQueue
+        // 2. Si hay playlist activa y NO shuffle: mostrar playlist secuencial
+        // 3. Si no hay playlist activa (inicio): mostrar randomQueue (sugerencias)
+
+        const showRandom = state.shuffleMode || state.playlist.length === 0;
+
+        if (showRandom) {
+            if (state.randomQueue && state.randomQueue.length > 0) {
+                const maxSongs = 20;
+
+                // Rellenar hasta 20 si hace falta
+                while (state.randomQueue.length < maxSongs) {
+                    // Si no hay más canciones disponibles para agregar, romper ciclo
+                    const poolSize = state.playlist.length > 0 ? state.playlist.length : state.audioPool.length;
+                    if (poolSize === 0) break;
                     addRandomSongToQueue();
                 }
 
-                for (let i = 0; i < maxSongs; i++) {
+                for (let i = 0; i < Math.min(maxSongs, state.randomQueue.length); i++) {
                     const song = state.randomQueue[i];
                     if (!song) continue;
-                    
+
                     const coverUrl = getCoverUrl(song) || placeholderUrl;
 
                     nextSongsHTML += `
@@ -869,24 +931,32 @@
                             <div class="queue-song-info">
                                 <span class="queue-song-title">${song.tema}</span>
                                 <span class="queue-song-artist">${song.interprete || ''}</span>
+                            </div>
+                            <div class="queue-song-details">
+                                <a href="medio.html?num=${encodeURIComponent(song.numMedio)}&cancion=${song.id}&tipo=${song.tipo}" class="queue-source-badge ${song.tipo}" data-spa-link onclick="event.stopPropagation(); event.preventDefault(); if(window.SPARouter) window.SPARouter.navigateTo(this.getAttribute('href')); return false;" title="Ver medio">
+                                    <i data-lucide="${song.tipo === 'cd' ? 'disc-3' : 'cassette-tape'}"></i>
+                                    ${song.numMedio || (song.tipo === 'cd' ? 'CD' : 'CS')}
+                                </a>
+                                <div class="queue-pos-badge">${song.posicion}</div>
                             </div>
                         </div>
                     `;
                 }
-            } else {
-                // Modo secuencial (loop)
+            }
+        } else {
+            // Modo secuencial (loop) usando state.playlist
+            if (state.playlist && state.playlist.length > 0) {
+                const maxSongs = 20;
                 const currentIdx = state.currentIndex;
                 let count = 0;
-                
+
                 for (let i = 1; count < maxSongs; i++) {
                     let nextIdx = (currentIdx + i) % state.playlist.length;
-                    // Manejo seguro de índices negativos
                     if (nextIdx < 0) nextIdx += state.playlist.length;
-                    
+
                     const song = state.playlist[nextIdx];
-                    
                     if (!song) break;
-                    
+
                     const coverUrl = getCoverUrl(song) || placeholderUrl;
 
                     nextSongsHTML += `
@@ -896,19 +966,28 @@
                                 <span class="queue-song-title">${song.tema}</span>
                                 <span class="queue-song-artist">${song.interprete || ''}</span>
                             </div>
+                            <div class="queue-song-details">
+                                <div class="queue-source-badge ${song.tipo}" onclick="event.stopPropagation(); window.location.href='medio.html?num=${encodeURIComponent(song.numMedio)}&cancion=${song.id}&tipo=${song.tipo}'" title="Ver medio" style="cursor: pointer;">
+                                    <i data-lucide="${song.tipo === 'cd' ? 'disc-3' : 'cassette-tape'}"></i>
+                                    ${song.numMedio || (song.tipo === 'cd' ? 'CD' : 'CS')}
+                                </div>
+                                <div class="queue-pos-badge">${song.posicion}</div>
+                            </div>
                         </div>
                     `;
-                    
+
                     count++;
                 }
             }
         }
-        
+
         if (nextSongsHTML === '') {
             nextSongsHTML = '<div class="queue-empty">No hay más canciones en la cola</div>';
         }
-        
+
         nextSongsDiv.innerHTML = nextSongsHTML;
+
+        if (window.lucide) window.lucide.createIcons();
     }
 
     /**
@@ -961,16 +1040,16 @@
                 const prefs = JSON.parse(saved);
                 state.shuffleMode = prefs.shuffleMode || false;
                 state.repeatMode = prefs.repeatMode || 'off';
-                
+
                 // Update UI
                 const shuffleBtn = document.getElementById('player-shuffle');
                 const repeatBtn = document.getElementById('player-repeat');
-                
+
                 if (state.shuffleMode && shuffleBtn) {
                     shuffleBtn.classList.add('active');
                     shuffleBtn.style.color = '#1db954';
                 }
-                
+
                 if (repeatBtn) {
                     if (state.repeatMode === 'playlist') {
                         repeatBtn.innerHTML = '<i data-lucide="repeat"></i>';
@@ -988,6 +1067,49 @@
             }
         } catch (e) {
             console.warn('Error cargando preferencias:', e);
+        }
+    }
+
+    /**
+     * Carga el pool global de canciones con audio
+     */
+    async function loadAudioPool() {
+        try {
+            const response = await fetch('/api/canciones/con-audio');
+            if (response.ok) {
+                const canciones = await response.json();
+                state.audioPool = canciones.map(c => ({
+                    id: c.id,
+                    tipo: c.tipo,
+                    tema: c.tema,
+                    interprete: c.interprete,
+                    idAlbum: c.idAlbum,
+                    nombreAlbum: c.nombreAlbum,
+                    numMedio: c.numMedio,
+                    posicion: c.posicion,
+                    rutaArchivo: c.rutaArchivo,
+                    tienePortada: c.tienePortada,
+                    tienePortadaAlbum: c.tienePortadaAlbum
+                }));
+                console.log(`Pool de audio cargado: ${state.audioPool.length} canciones`);
+
+                if (state.audioPool.length > 0) {
+                    // Si no hay playlist activa, usar el pool como playlist base
+                    if (state.playlist.length === 0) {
+                        state.playlist = [...state.audioPool];
+                        // Ordenar por artista y tema por defecto
+                        state.playlist.sort((a, b) => a.interprete.localeCompare(b.interprete) || a.tema.localeCompare(b.tema));
+                    }
+
+                    generateRandomQueue();
+                    if (state.queueVisible) {
+                        updateQueue();
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Error cargando pool de audio:', error);
+            state.audioPool = [];
         }
     }
 

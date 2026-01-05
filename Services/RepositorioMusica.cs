@@ -3212,5 +3212,82 @@ public class RepositorioMusica
             }).ToList();
         }
     }
+
+    /// <summary>
+    /// Obtiene todas las canciones que tienen archivo de audio (para el pool del reproductor)
+    /// </summary>
+    public async Task<List<CancionConAudio>> ObtenerCancionesConAudioAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        var canciones = new List<CancionConAudio>();
+
+        // Obtener cassettes con audio
+        var cassettes = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id, 'cassette' as tipo, t.tema, i.nombre as interprete,
+                t.id_album, a.nombre as nombreAlbum,
+                t.num_formato as numMedio, t.lado, t.desde, t.hasta,
+                t.archivo_audio,
+                CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortada,
+                CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortadaAlbum
+            FROM temas t
+            INNER JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE t.archivo_audio IS NOT NULL AND t.archivo_audio != ''
+            """);
+
+        foreach (var c in cassettes)
+        {
+            canciones.Add(new CancionConAudio
+            {
+                Id = (int)(long)c.id,
+                Tipo = "cassette",
+                Tema = (string)c.tema,
+                Interprete = (string)c.interprete,
+                IdAlbum = c.id_album != null ? (int?)(long)c.id_album : null,
+                NombreAlbum = (string?)c.nombreAlbum,
+                numMedio = (string)c.numMedio,
+                Posicion = $"{c.lado}: {c.desde}-{c.hasta}",
+                RutaArchivo = (string)c.archivo_audio,
+                TienePortada = c.tienePortada != null && (long)c.tienePortada == 1,
+                TienePortadaAlbum = c.tienePortadaAlbum != null && (long)c.tienePortadaAlbum == 1
+            });
+        }
+
+        // Obtener CDs con audio
+        var cds = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id, 'cd' as tipo, t.tema, i.nombre as interprete,
+                t.id_album, a.nombre as nombreAlbum,
+                t.num_formato as numMedio, t.ubicacion,
+                t.archivo_audio,
+                CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortada,
+                CASE WHEN a.portada IS NOT NULL THEN 1 ELSE 0 END as tienePortadaAlbum
+            FROM temas_cd t
+            INNER JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE t.archivo_audio IS NOT NULL AND t.archivo_audio != ''
+            """);
+
+        foreach (var c in cds)
+        {
+            canciones.Add(new CancionConAudio
+            {
+                Id = (int)(long)c.id,
+                Tipo = "cd",
+                Tema = (string)c.tema,
+                Interprete = (string)c.interprete,
+                IdAlbum = c.id_album != null ? (int?)(long)c.id_album : null,
+                NombreAlbum = (string?)c.nombreAlbum,
+                numMedio = (string)c.numMedio,
+                Posicion = $"Track {c.ubicacion}",
+                RutaArchivo = (string)c.archivo_audio,
+                TienePortada = c.tienePortada != null && (long)c.tienePortada == 1,
+                TienePortadaAlbum = c.tienePortadaAlbum != null && (long)c.tienePortadaAlbum == 1
+            });
+        }
+
+        return canciones;
+    }
 }
 

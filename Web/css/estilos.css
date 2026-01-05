@@ -1363,7 +1363,7 @@ footer p {
     width: 100px;
     height: 4px;
     border-radius: 2px;
-    background: linear-gradient(to right, white 0%, white 100%, rgba(255,255,255,0.2) 100%, rgba(255,255,255,0.2) 100%);
+    background: linear-gradient(to right, white 0%, white 100%, rgba(255, 255, 255, 0.2) 100%, rgba(255, 255, 255, 0.2) 100%);
     outline: none;
     cursor: pointer;
     -webkit-appearance: none;
@@ -1427,15 +1427,18 @@ footer p {
     bottom: 90px;
     right: 20px;
     width: 400px;
-    max-height: calc(100vh - 120px);
-    background: #181818; /* Spotify dark */
+    max-height: 50vh;
+    background: #181818;
+    /* Spotify dark */
     border-radius: 8px 8px 0 0;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 9998; /* Detrás del player (9999) */
-    transform: translateY(120%); /* Escondido abajo */
+    z-index: 9998;
+    /* Detrás del player (9999) */
+    transform: translateY(120%);
+    /* Escondido abajo */
     pointer-events: none;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1565,6 +1568,59 @@ footer p {
     white-space: nowrap;
 }
 
+.queue-song-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 0.7rem;
+    color: #aaa;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+.queue-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    color: #ddd;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.queue-source-badge:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.queue-source-badge.cassette {
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.queue-source-badge.cd {
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.queue-source-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
+.queue-pos-badge {
+    opacity: 0.7;
+    font-family: monospace;
+}
+
 .queue-empty {
     padding: 2rem 1.25rem;
     text-align: center;
@@ -1627,7 +1683,8 @@ footer p {
     }
 
     .player-right {
-        display: none; /* Ocultar controles secundarios en móvil por ahora o ajustar */
+        display: none;
+        /* Ocultar controles secundarios en móvil por ahora o ajustar */
     }
 
     .player-progress {
@@ -1791,33 +1848,34 @@ footer p {
         right: 10px;
         width: auto;
     }
-    
+
     .audio-player-global.visible {
         bottom: 10px;
     }
-    
+
     .player-main {
         grid-template-columns: 60px 1fr;
         gap: 0.75rem;
     }
-    
+
     .player-cover-container {
         width: 60px;
         height: 60px;
     }
-    
+
     .player-controls {
         grid-column: 1 / -1;
         justify-content: center;
         margin-top: 0.5rem;
     }
-    
+
     /* Queue panel responsive */
     .player-queue-panel {
         width: 100%;
         max-width: calc(100vw - 20px);
     }
 }
+
 /* Lucide Icons */
 .lucide {
     vertical-align: middle;

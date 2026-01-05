@@ -1,43 +1,44 @@
 <main class="container">
-<main class="container">
-    <!-- Resumen rápido -->
-    <section class="resumen-principal">
-        <h2>Resumen de la Colección</h2>
-        <div class="resumen-grid" id="resumenColeccion">
-            <div class="resumen-card cargando">Cargando...</div>
-        </div>
-    </section>
+    <section class="seccion">
+        <!-- Resumen rápido -->
+        <section class="resumen-principal">
+            <h2>Resumen</h2>
+            <div class="resumen-grid" id="resumenColeccion">
+                <div class="resumen-card cargando">Cargando...</div>
+            </div>
+        </section>
 
-    <!-- Acceso rápido -->
-    <section class="acceso-rapido">
-        <h2>🚀 Acceso Rápido</h2>
-        <div class="botones-acceso">
-            <a href="buscar.html" class="boton-grande" data-spa-link>
-                <span class="boton-icono">🔍</span>
-                <span class="boton-texto">Buscar Canciones</span>
-                <span class="boton-desc">Encuentra cualquier canción</span>
-            </a>
-            <a href="medios.html" class="boton-grande" data-spa-link>
-                <span class="boton-icono">📼</span>
-                <span class="boton-texto">Ver Cassettes y CDs</span>
-                <span class="boton-desc">Explora toda la colección</span>
-            </a>
-            <a href="interpretes.html" class="boton-grande" data-spa-link>
-                <span class="boton-icono">🎤</span>
-                <span class="boton-texto">Ver Intérpretes</span>
-                <span class="boton-desc">Busca por artista o banda</span>
-            </a>
-        </div>
-    </section>
+        <!-- Acceso rápido -->
+        <section class="acceso-rapido">
+            <h2>Acceso rápido</h2>
+            <div class="botones-acceso">
+                <a href="buscar.html" class="boton-grande" data-spa-link>
+                    <span class="boton-icono">🔍</span>
+                    <span class="boton-texto">Buscar Canciones</span>
+                    <span class="boton-desc">Encuentra cualquier canción</span>
+                </a>
+                <a href="medios.html" class="boton-grande" data-spa-link>
+                    <span class="boton-icono">📼</span>
+                    <span class="boton-texto">Ver Cassettes y CDs</span>
+                    <span class="boton-desc">Explora toda la colección</span>
+                </a>
+                <a href="interpretes.html" class="boton-grande" data-spa-link>
+                    <span class="boton-icono">🎤</span>
+                    <span class="boton-texto">Ver Intérpretes</span>
+                    <span class="boton-desc">Busca por artista o banda</span>
+                </a>
+            </div>
+        </section>
 
-    <!-- Sección QR siempre visible -->
-    <section class="qr-section">
-        <h2>📱 Acceso desde tu Celular</h2>
-        <p>Escanea el código QR con la cámara de tu teléfono</p>
-        <div class="qr-container">
-            <div id="codigoQR"></div>
-        </div>
-        <p class="qr-instructions">💡 Asegúrate de estar conectado a la misma red WiFi</p>
+        <!-- Sección QR siempre visible -->
+        <section class="qr-section">
+            <h2>📱 Acceso desde tu Celular</h2>
+            <p>Escanea el código QR con la cámara de tu teléfono</p>
+            <div class="qr-container">
+                <div id="codigoQR"></div>
+            </div>
+            <p class="qr-instructions">💡 Asegúrate de estar conectado a la misma red WiFi</p>
+        </section>
     </section>
 </main>
 
@@ -51,17 +52,17 @@
         text-align: center;
         margin-top: 2rem;
     }
-    
+
     .qr-section h2 {
         color: white;
         margin-bottom: 1rem;
     }
-    
+
     .qr-section p {
         opacity: 0.9;
         margin-bottom: 1.5rem;
     }
-    
+
     .qr-container {
         background: white;
         padding: 1rem;
@@ -69,9 +70,9 @@
         display: inline-block;
         margin-bottom: 1rem;
     }
-    
+
     .qr-url {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
         padding: 0.75rem 1.5rem;
         border-radius: var(--radio);
         font-family: monospace;
@@ -79,17 +80,18 @@
         display: inline-block;
         word-break: break-all;
     }
-    
+
     .qr-instructions {
         margin-top: 1rem;
         font-size: 0.9rem;
         opacity: 0.8;
     }
-    
+
     @media (max-width: 600px) {
         .qr-section {
             padding: 1.5rem 1rem;
         }
+
         .qr-url {
             font-size: 0.9rem;
             padding: 0.5rem 1rem;
@@ -104,7 +106,7 @@
             const resp = await fetch('/api/estadisticas');
             if (!resp.ok) throw new Error('Error cargando estadísticas');
             const stats = await resp.json();
-            
+
             document.getElementById('resumenColeccion').innerHTML = `
                 <div class="resumen-card">
                     <div class="resumen-icono">${ICONOS.iconoCassette}</div>
@@ -146,7 +148,7 @@
             // Obtener IPs del servidor
             const resp = await fetch('/api/red');
             const data = await resp.json();
-            
+
             // Usar la primera IP de la red local (no localhost)
             let url = window.location.origin;
             if (data.ips && data.ips.length > 0) {
@@ -154,7 +156,7 @@
                 const ipLocal = data.ips.find(ip => ip.startsWith('192.168')) || data.ips[0];
                 url = `http://${ipLocal}:${data.puerto}`;
             }
-            
+
             new QRCode(document.getElementById('codigoQR'), {
                 text: url,
                 width: 180,
@@ -181,5 +183,3 @@
     // cargarResumen();
     // generarQR();
 </script>
-
-</main>

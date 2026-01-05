@@ -657,6 +657,22 @@ public class UbicacionCancion
     public string? ArchivoAudio { get; set; }
 }
 
+/// <summary>DTO para canción con audio (pool del reproductor)</summary>
+public class CancionConAudio
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = ""; // "cassette" o "cd"
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public int? IdAlbum { get; set; }
+    public string? NombreAlbum { get; set; }
+    public string numMedio { get; set; } = "";
+    public string? Posicion { get; set; }
+    public string? RutaArchivo { get; set; }
+    public bool TienePortada { get; set; }
+    public bool TienePortadaAlbum { get; set; }
+}
+
 /// <summary>Artista sugerido para marcar como original en covers</summary>
 public class ArtistaParaCover
 {

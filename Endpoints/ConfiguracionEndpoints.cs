@@ -658,6 +658,26 @@ public static class ConfiguracionEndpoints
         .WithTags("Temas");
 
         // ==========================================
+        // REPRODUCTOR - POOL DE CANCIONES CON AUDIO
+        // ==========================================
+
+        app.MapGet("/api/canciones/con-audio", async () =>
+        {
+            try
+            {
+                var canciones = await repo.ObtenerCancionesConAudioAsync();
+                return Results.Ok(canciones);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] /api/canciones/con-audio: {ex.Message}");
+                return Results.Problem(ex.Message);
+            }
+        })
+        .WithName("ObtenerCancionesConAudio")
+        .WithTags("Reproductor");
+
+        // ==========================================
         // MANTENIMIENTO
         // ==========================================
 

@@ -2,14 +2,14 @@
 // ROUTER SPA - Sistema de navegación sin recargas
 // ============================================
 
-(function() {
+(function () {
     'use strict';
 
     const SPARouter = {
         currentPage: null,
         currentCleanup: null,
         mutationObserver: null,
-        
+
         /**
          * Inicializa el router SPA
          */
@@ -19,6 +19,7 @@
                 const link = e.target.closest('[data-spa-link]');
                 if (link && link.href) {
                     e.preventDefault();
+                    e.stopPropagation(); // Evitar que el evento se propague a padres con onclick
                     const url = new URL(link.href);
                     const fullPath = url.pathname + url.search;
                     this.navigateTo(fullPath);
@@ -43,10 +44,10 @@
             }
 
             // Cargar página inicial según la URL actual
-            const initialPath = window.location.pathname === '/' || window.location.pathname === '/app.html' 
-                ? '/index.html' 
+            const initialPath = window.location.pathname === '/' || window.location.pathname === '/app.html'
+                ? '/index.html'
                 : window.location.pathname + window.location.search;
-            
+
             this.loadPage(initialPath, true);
         },
 
@@ -54,6 +55,13 @@
          * Navega a una nueva página
          */
         navigateTo(path) {
+            // Agregar feedback visual instantáneo
+            const mainContainer = document.getElementById('app-main');
+            if (mainContainer) {
+                mainContainer.style.opacity = '0.7';
+                mainContainer.style.transform = 'scale(0.98)';
+            }
+
             this.loadPage(path, true);
         },
 
@@ -69,6 +77,9 @@
 
             // Evitar recargar la misma página
             if (this.currentPage === path && pushState) {
+                // Restaurar opacidad si intentamos ir a la misma página
+                mainContainer.style.opacity = '1';
+                mainContainer.style.transform = 'scale(1)';
                 return;
             }
 
@@ -114,11 +125,17 @@
                 // Limpiar scripts de página anterior (async)
                 setTimeout(() => this.cleanupPageScripts(), 0);
 
-                // Actualizar contenido
+                // Actualizar contenido instantáneamente
                 mainContainer.innerHTML = html;
 
-                // Ejecutar operaciones pesadas de forma async para no bloquear
-                setTimeout(() => {
+                // Restaurar opacidad y escala inmediatamente después de actualizar contenido
+                requestAnimationFrame(() => {
+                    mainContainer.style.opacity = '1';
+                    mainContainer.style.transform = 'scale(1)';
+                });
+
+                // Ejecutar operaciones de inicialización de forma prioritaria pero async
+                requestAnimationFrame(() => {
                     // Ejecutar scripts inline que puedan estar en el contenido
                     this.executeScripts(mainContainer);
 
@@ -130,7 +147,12 @@
 
                     // Re-attachear event listeners para links dinámicos
                     this.attachDynamicListeners(mainContainer);
-                }, 0);
+
+                    // Re-crear iconos de Lucide si está disponible
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                });
 
                 // Scroll al inicio (inmediato pero no bloqueante)
                 requestAnimationFrame(() => window.scrollTo(0, 0));
@@ -144,7 +166,8 @@
                         <button onclick="SPARouter.navigateTo('/index.html')" class="btn">Volver al inicio</button>
                     </div>
                 `;
-                // mainContainer.style.opacity = '1'; // No necesario
+                mainContainer.style.opacity = '1';
+                mainContainer.style.transform = 'scale(1)';
             }
         },
 
@@ -162,10 +185,10 @@
             const doc = parser.parseFromString(html, 'text/html');
 
             // Buscar el contenedor principal o el body
-            const main = doc.querySelector('main.container') || 
-                         doc.querySelector('.container') || 
-                         doc.querySelector('main') ||
-                         doc.body;
+            const main = doc.querySelector('main.container') ||
+                doc.querySelector('.container') ||
+                doc.querySelector('main') ||
+                doc.body;
 
             if (!main) return html;
 
@@ -210,7 +233,7 @@
             // Remover scripts temporales de páginas previas
             const oldScripts = document.querySelectorAll('script[data-page-script]');
             oldScripts.forEach(script => script.remove());
-            
+
             // Lista de funciones globales que las páginas pueden crear
             // Se limpian para evitar conflictos al recargar la misma página
             const pageFunctions = [
@@ -231,7 +254,7 @@
                 // interprete.html
                 'cargarInterprete'
             ];
-            
+
             // Limpiar funciones globales de la página anterior
             // Usar try-catch porque algunas propiedades pueden no ser configurables
             pageFunctions.forEach(funcName => {
@@ -259,11 +282,11 @@
 
                 try {
                     const scriptContent = oldScript.textContent;
-                    
+
                     // Crear nuevo elemento script
                     const newScript = document.createElement('script');
                     newScript.setAttribute('data-page-script', 'true');
-                    
+
                     // Envolver el contenido en una IIFE para aislar el scope
                     // PERO: permitir que las funciones globales se expongan
                     // Reemplazar declaraciones let/const por var para evitar errores de redeclaración
@@ -272,12 +295,12 @@
                         .replace(/(\s|^|;|\{)let\s+/g, '$1var ')
                         // Reemplazar const al inicio de línea o después de ; { o espacio
                         .replace(/(\s|^|;|\{)const\s+/g, '$1var ');
-                    
+
                     newScript.textContent = wrappedContent;
-                    
+
                     // Insertarlo en el body (no head) para poder limpiarlo después
                     document.body.appendChild(newScript);
-                    
+
                     // Remover el script original del contenedor
                     oldScript.remove();
                 } catch (err) {
@@ -292,7 +315,7 @@
         initializePage(path) {
             // Obtener nombre de la página sin query string
             const pageName = path.split('?')[0].replace('/', '').replace('.html', '');
-            
+
             // Buscar inicializador en window.PageInitializers
             if (window.PageInitializers && window.PageInitializers[pageName]) {
                 try {
@@ -319,12 +342,12 @@
             // Procesar todo el documento, no solo el contenedor
             // Esto asegura que modales y contenido fuera de #app-main también se procesen
             const targetContainer = container || document;
-            
+
             // Buscar todos los links dentro del contenedor
             const links = targetContainer.querySelectorAll('a[href]');
             links.forEach(link => {
                 const href = link.getAttribute('href');
-                
+
                 // Si es link interno (empieza con / o es relativo .html)
                 if (href && (href.startsWith('/') || href.endsWith('.html'))) {
                     // No tiene target blank ni download
@@ -382,7 +405,7 @@
          */
         processLink(link) {
             const href = link.getAttribute('href');
-            
+
             // Si es link interno (empieza con / o es relativo .html)
             if (href && (href.startsWith('/') || href.endsWith('.html'))) {
                 // No tiene target blank ni download

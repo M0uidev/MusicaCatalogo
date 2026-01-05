@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +13,19 @@
         /* Estilos para el contenedor SPA */
         #app-main {
             min-height: calc(100vh - 200px);
-            padding-bottom: 120px; /* Espacio para el reproductor */
+            padding-bottom: 120px;
+            /* Espacio para el reproductor */
         }
-        
-        /* Transición suave al cambiar contenido */
+
+        /* Transición súper rápida y suave para sensación nativa */
         #app-main {
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, transform;
         }
     </style>
 </head>
+
 <body>
     <!-- Header persistente -->
     <header>
@@ -32,7 +37,7 @@
             <a href="/medios.html" data-spa-link>Medios</a>
             <a href="/interpretes.html" data-spa-link>Intérpretes</a>
             <a href="/estadisticas.html" data-spa-link>Estadísticas</a>
-            
+
             <div class="notif-container">
                 <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
                     🔔
@@ -40,7 +45,9 @@
                 </button>
                 <div id="notifDropdown" class="notif-dropdown">
                     <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
+                    <div id="notifList" class="notif-list">
+                        <div class="notif-empty">Cargando...</div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -77,4 +84,5 @@
         });
     </script>
 </body>
+
 </html>
