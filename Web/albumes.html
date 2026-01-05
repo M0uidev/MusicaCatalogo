@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Álbumes - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+<main class="container">
     <style>
         .album-grid {
             display: grid;
@@ -848,18 +839,13 @@
             font-size: 0.85rem;
         }
     </style>
-</head>
-
-<body>
-    <div class="toast-container" id="toastContainer"></div>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
 
     <main class="container">
         <div id="contenido">
             <p class="cargando">Cargando...</p>
         </div>
     </main>
+
 
     <!-- Contenedor de notificaciones toast -->
     <div id="notificaciones-component"></div>
@@ -1000,125 +986,126 @@
 
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
-    <script src="js/components.js"></script>
-    <script src="js/audioPlayerGlobal.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        
-        function mostrarToast(mensaje, tipo = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${tipo}`;
-            toast.textContent = mensaje;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'slideIn 0.3s ease reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
+        // Envolver en IIFE para evitar contaminación de scope global
+        (function () {
+            'use strict';
 
-        let albumesData = [];
-        let albumActual = null;
-        let ordenActual = 'nombre';
-        let filtroTipo = 'todos'; // 'todos', 'albumes', 'singles'
+            function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-        // Obtener canciones únicas por tema, priorizando originales
-        function obtenerCancionesUnicas(canciones) {
-            const grupos = new Map();
-
-            // Agrupar por tema normalizado (sin considerar intérprete para agrupar versiones)
-            canciones.forEach(c => {
-                const temaNorm = (c.tema || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-
-                if (!grupos.has(temaNorm)) {
-                    grupos.set(temaNorm, []);
-                }
-                grupos.get(temaNorm).push(c);
-            });
-
-            const unicas = [];
-            grupos.forEach(grupo => {
-                // Si hay varios, buscar original
-                // Prioridad: esOriginal=true > esCover=false > primero
-                let candidato = grupo.find(c => c.esOriginal === true || c.EsOriginal === true);
-
-                if (!candidato) {
-                    candidato = grupo.find(c => c.esCover === false || c.EsCover === false);
-                }
-
-                if (!candidato) {
-                    candidato = grupo[0];
-                }
-
-                unicas.push(candidato);
-            });
-
-            return unicas;
-        }
-
-        const params = new URLSearchParams(window.location.search);
-        const idAlbum = params.get('id');
-
-        async function cargarAlbumes(filtro = '') {
-            try {
-                const url = filtro
-                    ? `/api/albumes?filtro=${encodeURIComponent(filtro)}&limite=200`
-                    : '/api/albumes?limite=200';
-                const resp = await fetch(url);
-                albumesData = await resp.json();
-                renderizarLista();
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar álbumes</p>';
-            }
-        }
-
-        async function cargarDetalleAlbum(id) {
-            try {
-                const resp = await fetch(`/api/albumes/${id}`);
-                if (!resp.ok) {
-                    document.getElementById('contenido').innerHTML = '<p class="error">Álbum no encontrado</p>';
-                    return;
-                }
-                albumActual = await resp.json();
-                renderizarDetalle();
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar el álbum</p>';
-            }
-        }
-
-        function renderizarLista() {
-            // Filtrar por tipo
-            let albumesFiltrados = [...albumesData];
-            if (filtroTipo === 'albumes') {
-                albumesFiltrados = albumesFiltrados.filter(a => !a.esSingle);
-            } else if (filtroTipo === 'singles') {
-                albumesFiltrados = albumesFiltrados.filter(a => a.esSingle);
+            function mostrarToast(mensaje, tipo = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${tipo}`;
+                toast.textContent = mensaje;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.animation = 'slideIn 0.3s ease reverse';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
             }
 
-            // Ordenar
-            let albumesOrdenados = [...albumesFiltrados];
-            switch (ordenActual) {
-                case 'nombre':
-                    albumesOrdenados.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                    break;
-                case 'artista':
-                    albumesOrdenados.sort((a, b) => (a.interprete || '').localeCompare(b.interprete || ''));
-                    break;
-                case 'canciones':
-                    albumesOrdenados.sort((a, b) => b.totalCanciones - a.totalCanciones);
-                    break;
-                case 'anio':
-                    albumesOrdenados.sort((a, b) => (b.anio || '').localeCompare(a.anio || ''));
-                    break;
+            let albumesData = [];
+            let albumActual = null;
+            let ordenActual = 'nombre';
+            let filtroTipo = 'todos'; // 'todos', 'albumes', 'singles'
+
+            // Obtener canciones únicas por tema, priorizando originales
+            function obtenerCancionesUnicas(canciones) {
+                const grupos = new Map();
+
+                // Agrupar por tema normalizado (sin considerar intérprete para agrupar versiones)
+                canciones.forEach(c => {
+                    const temaNorm = (c.tema || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+                    if (!grupos.has(temaNorm)) {
+                        grupos.set(temaNorm, []);
+                    }
+                    grupos.get(temaNorm).push(c);
+                });
+
+                const unicas = [];
+                grupos.forEach(grupo => {
+                    // Si hay varios, buscar original
+                    // Prioridad: esOriginal=true > esCover=false > primero
+                    let candidato = grupo.find(c => c.esOriginal === true || c.EsOriginal === true);
+
+                    if (!candidato) {
+                        candidato = grupo.find(c => c.esCover === false || c.EsCover === false);
+                    }
+
+                    if (!candidato) {
+                        candidato = grupo[0];
+                    }
+
+                    unicas.push(candidato);
+                });
+
+                return unicas;
             }
 
-            const totalAlbumes = albumesData.filter(a => !a.esSingle).length;
-            const totalSingles = albumesData.filter(a => a.esSingle).length;
+            const params = new URLSearchParams(window.location.search);
+            const idAlbum = params.get('id');
 
-            document.getElementById('contenido').innerHTML = `
+            async function cargarAlbumes(filtro = '') {
+                try {
+                    const url = filtro
+                        ? `/api/albumes?filtro=${encodeURIComponent(filtro)}&limite=200`
+                        : '/api/albumes?limite=200';
+                    const resp = await fetch(url);
+                    albumesData = await resp.json();
+                    renderizarLista();
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar álbumes</p>';
+                }
+            }
+
+            async function cargarDetalleAlbum(id) {
+                try {
+                    const resp = await fetch(`/api/albumes/${id}`);
+                    if (!resp.ok) {
+                        document.getElementById('contenido').innerHTML = '<p class="error">Álbum no encontrado</p>';
+                        return;
+                    }
+                    albumActual = await resp.json();
+                    renderizarDetalle();
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar el álbum</p>';
+                }
+            }
+
+            function renderizarLista() {
+                // Filtrar por tipo
+                let albumesFiltrados = [...albumesData];
+                if (filtroTipo === 'albumes') {
+                    albumesFiltrados = albumesFiltrados.filter(a => !a.esSingle);
+                } else if (filtroTipo === 'singles') {
+                    albumesFiltrados = albumesFiltrados.filter(a => a.esSingle);
+                }
+
+                // Ordenar
+                let albumesOrdenados = [...albumesFiltrados];
+                switch (ordenActual) {
+                    case 'nombre':
+                        albumesOrdenados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                        break;
+                    case 'artista':
+                        albumesOrdenados.sort((a, b) => (a.interprete || '').localeCompare(b.interprete || ''));
+                        break;
+                    case 'canciones':
+                        albumesOrdenados.sort((a, b) => b.totalCanciones - a.totalCanciones);
+                        break;
+                    case 'anio':
+                        albumesOrdenados.sort((a, b) => (b.anio || '').localeCompare(a.anio || ''));
+                        break;
+                }
+
+                const totalAlbumes = albumesData.filter(a => !a.esSingle).length;
+                const totalSingles = albumesData.filter(a => a.esSingle).length;
+
+                document.getElementById('contenido').innerHTML = `
                 <section class="seccion">
                     <h2>💿 Álbumes y Singles</h2>
                     <p class="seccion-descripcion">Explora tu colección de música</p>
@@ -1160,9 +1147,9 @@
                             ${albumesOrdenados.map(a => `
                                 <div class="album-card" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html?id=${a.id}')}else{window.location.href='albumes.html?id=${a.id}'}" style="cursor: pointer;">
                                     ${a.tienePortada
-                    ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
-                    : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
-                }
+                        ? `<img src="/api/albumes/${a.id}/portada" class="album-portada" alt="${escapeHtml(a.nombre)}">`
+                        : `<div class="album-portada-placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
+                    }
                                     <div class="album-info">
                                         <div class="album-nombre">
                                             ${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}
@@ -1179,32 +1166,32 @@
                     `}
                 </section>
             `;
-        }
+            }
 
-        function cambiarFiltroTipo(tipo) {
-            filtroTipo = tipo;
-            renderizarLista();
-        }
+            function cambiarFiltroTipo(tipo) {
+                filtroTipo = tipo;
+                renderizarLista();
+            }
 
-        function renderizarDetalle() {
-            const a = albumActual;
-            const cancionesUnicas = obtenerCancionesUnicas(a.canciones);
+            function renderizarDetalle() {
+                const a = albumActual;
+                const cancionesUnicas = obtenerCancionesUnicas(a.canciones);
 
-            document.getElementById('contenido').innerHTML = `
+                document.getElementById('contenido').innerHTML = `
                 <div class="btn-volver" onclick="if(window.SPARouter){SPARouter.navigateTo('albumes.html')}else{window.location.href='albumes.html'}" style="cursor: pointer;">← Volver a álbumes</div>
                 
                 <section class="seccion">
                     <div class="album-detalle-header">
                         <div class="album-detalle-portada">
                             ${a.tienePortada
-                    ? `<img src="/api/albumes/${a.id}/portada" alt="${escapeHtml(a.nombre)}">`
-                    : `<div class="placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
-                }
+                        ? `<img src="/api/albumes/${a.id}/portada" alt="${escapeHtml(a.nombre)}">`
+                        : `<div class="placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
+                    }
                             <button class="btn-subir-portada" onclick="subirPortada()">📷 Cambiar</button>
                         </div>
                         <div class="album-detalle-info">
                             <h2>${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}</h2>
-                            ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}" data-spa-link>${escapeHtml(a.interprete)}</a></div>` : ''}
+                            ${a.interprete ? `<div class="artista">🎤 <a href="interprete.html?nombre=${encodeURIComponent(a.interprete)}">${escapeHtml(a.interprete)}</a></div>` : ''}
                             <div class="meta">
                                 ${a.anio ? `📅 ${a.anio} • ` : ''}
                                 ${a.esSingle ? '🎵' : '💿'} ${cancionesUnicas.length} canción${cancionesUnicas.length !== 1 ? 'es' : ''}
@@ -1251,209 +1238,201 @@
                     </div>
                 </section>
             `;
-        }
-
-        function buscarAlbumes() {
-            const filtro = document.getElementById('inputBuscar').value.trim();
-            cargarAlbumes(filtro);
-        }
-
-        function cambiarOrden(orden) {
-            ordenActual = orden;
-            renderizarLista();
-        }
-
-        function abrirModal() {
-            // Limpiar valores
-            document.getElementById('nuevoNombre').value = '';
-            document.getElementById('nuevoArtista').value = '';
-            document.getElementById('nuevoAnio').value = '';
-            document.getElementById('nuevoEsSingle').checked = false;
-            actualizarBotonArtistaNuevo('');
-
-            document.getElementById('modalNuevoAlbum').classList.add('activo');
-            document.getElementById('nuevoNombre').focus();
-
-            // Cargar artistas
-            cargarArtistasNuevo('');
-        }
-
-        function cerrarModal() {
-            document.getElementById('modalNuevoAlbum').classList.remove('activo');
-            document.getElementById('nuevoArtistaDropdown').classList.remove('visible');
-            document.getElementById('nuevoNombre').value = '';
-            document.getElementById('nuevoArtista').value = '';
-            document.getElementById('nuevoAnio').value = '';
-            document.getElementById('nuevoEsSingle').checked = false;
-            actualizarBotonArtistaNuevo('');
-        }
-
-        async function crearAlbum() {
-            const nombre = document.getElementById('nuevoNombre').value.trim();
-            const artista = document.getElementById('nuevoArtista').value.trim();
-            const anio = document.getElementById('nuevoAnio').value.trim();
-            const esSingle = document.getElementById('nuevoEsSingle').checked;
-
-            if (!nombre) {
-                alert('El nombre es obligatorio');
-                return;
             }
 
-            try {
-                const resp = await fetch('/api/albumes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nombre,
-                        nombreInterprete: artista || null,
-                        anio: anio || null,
-                        esSingle: esSingle
-                    })
-                });
+            function buscarAlbumes() {
+                const filtro = document.getElementById('inputBuscar').value.trim();
+                cargarAlbumes(filtro);
+            }
 
-                const result = await resp.json();
-                if (result.exito) {
-                    cerrarModal();
-                    // Ir al detalle del nuevo álbum
-                    if (window.SPARouter) {
-                        SPARouter.navigateTo(`albumes.html?id=${result.idCreado}`);
+            function cambiarOrden(orden) {
+                ordenActual = orden;
+                renderizarLista();
+            }
+
+            function abrirModal() {
+                // Limpiar valores
+                document.getElementById('nuevoNombre').value = '';
+                document.getElementById('nuevoArtista').value = '';
+                document.getElementById('nuevoAnio').value = '';
+                document.getElementById('nuevoEsSingle').checked = false;
+                actualizarBotonArtistaNuevo('');
+
+                document.getElementById('modalNuevoAlbum').classList.add('activo');
+                document.getElementById('nuevoNombre').focus();
+
+                // Cargar artistas
+                cargarArtistasNuevo('');
+            }
+
+            function cerrarModal() {
+                document.getElementById('modalNuevoAlbum').classList.remove('activo');
+                document.getElementById('nuevoArtistaDropdown').classList.remove('visible');
+                document.getElementById('nuevoNombre').value = '';
+                document.getElementById('nuevoArtista').value = '';
+                document.getElementById('nuevoAnio').value = '';
+                document.getElementById('nuevoEsSingle').checked = false;
+                actualizarBotonArtistaNuevo('');
+            }
+
+            async function crearAlbum() {
+                const nombre = document.getElementById('nuevoNombre').value.trim();
+                const artista = document.getElementById('nuevoArtista').value.trim();
+                const anio = document.getElementById('nuevoAnio').value.trim();
+                const esSingle = document.getElementById('nuevoEsSingle').checked;
+
+                if (!nombre) {
+                    alert('El nombre es obligatorio');
+                    return;
+                }
+
+                try {
+                    const resp = await fetch('/api/albumes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre,
+                            nombreInterprete: artista || null,
+                            anio: anio || null,
+                            esSingle: esSingle
+                        })
+                    });
+
+                    const result = await resp.json();
+                    if (result.exito) {
+                        cerrarModal();
+                        // Ir al detalle del nuevo álbum
+                        window.SPARouter.navigate(`albumes.html?id=${result.idCreado}`);
                     } else {
-                        window.location.href = `albumes.html?id=${result.idCreado}`;
+                        alert('Error: ' + result.mensaje);
                     }
-                } else {
-                    alert('Error: ' + result.mensaje);
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al crear el álbum');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al crear el álbum');
-            }
-        }
-
-        async function eliminarAlbum(id) {
-            if (!confirm('¿Eliminar este álbum? Las canciones no se eliminarán, solo se desvinculan.')) {
-                return;
             }
 
-            try {
-                const resp = await fetch(`/api/albumes/${id}`, { method: 'DELETE' });
-                const result = await resp.json();
-                if (result.exito) {
-                    if (window.SPARouter) {
-                        SPARouter.navigateTo('albumes.html');
+            async function eliminarAlbum(id) {
+                if (!confirm('¿Eliminar este álbum? Las canciones no se eliminarán, solo se desvinculan.')) {
+                    return;
+                }
+
+                try {
+                    const resp = await fetch(`/api/albumes/${id}`, { method: 'DELETE' });
+                    const result = await resp.json();
+                    if (result.exito) {
+                        window.SPARouter.navigate('albumes.html');
                     } else {
-                        window.location.href = 'albumes.html';
+                        alert('Error: ' + result.mensaje);
                     }
-                } else {
-                    alert('Error: ' + result.mensaje);
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el álbum');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al eliminar el álbum');
             }
-        }
 
-        function subirPortada() {
-            document.getElementById('inputPortada').click();
-        }
+            function subirPortada() {
+                document.getElementById('inputPortada').click();
+            }
 
-        document.getElementById('inputPortada').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file || !albumActual) return;
+            document.getElementById('inputPortada').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file || !albumActual) return;
 
-            const formData = new FormData();
-            formData.append('file', file);
+                const formData = new FormData();
+                formData.append('file', file);
 
-            try {
-                const resp = await fetch(`/api/albumes/${albumActual.id}/portada`, {
-                    method: 'POST',
-                    body: formData
-                });
+                try {
+                    const resp = await fetch(`/api/albumes/${albumActual.id}/portada`, {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                const result = await resp.json();
-                if (result.exito) {
-                    cargarDetalleAlbum(albumActual.id);
-                } else {
-                    alert('Error: ' + result.mensaje);
+                    const result = await resp.json();
+                    if (result.exito) {
+                        cargarDetalleAlbum(albumActual.id);
+                    } else {
+                        alert('Error: ' + result.mensaje);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al subir la portada');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al subir la portada');
-            }
-        });
-
-        // ============ Funciones para agregar/quitar canciones del álbum ============
-        let cancionesDisponibles = [];
-        let cancionesSeleccionadas = new Set();
-        let timeoutBusqueda = null;
-
-        async function abrirModalAgregarCanciones() {
-            cancionesSeleccionadas.clear();
-            document.getElementById('modalAgregarCanciones').classList.add('activo');
-            document.getElementById('inputBuscarCancion').value = '';
-            document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Cargando canciones...</p>';
-
-            // Cargar canciones iniciales (sin filtro)
-            await buscarCancionesEnServidor('');
-        }
-
-        async function buscarCancionesEnServidor(filtro) {
-            try {
-                document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Buscando...</p>';
-
-                const params = new URLSearchParams();
-                if (filtro) params.append('filtro', filtro);
-                if (albumActual?.id) params.append('excluirAlbumId', albumActual.id);
-                params.append('limite', '200');
-                params.append('soloSinAlbum', 'true'); // Solo mostrar canciones sin álbum asignado
-
-                const resp = await fetch(`/api/canciones/disponibles?${params}`);
-                cancionesDisponibles = await resp.json();
-                renderizarCancionesDisponibles();
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('listaCancionesDisponibles').innerHTML =
-                    '<p style="color: var(--color-peligro);">Error al cargar canciones</p>';
-            }
-        }
-
-        function cerrarModalCanciones() {
-            document.getElementById('modalAgregarCanciones').classList.remove('activo');
-            cancionesSeleccionadas.clear();
-        }
-
-        function filtrarCancionesDisponibles() {
-            // Debounce: esperar 300ms después de que el usuario deje de escribir
-            clearTimeout(timeoutBusqueda);
-            const filtro = document.getElementById('inputBuscarCancion').value.trim();
-
-            timeoutBusqueda = setTimeout(() => {
-                buscarCancionesEnServidor(filtro);
-            }, 300);
-        }
-
-        function renderizarCancionesDisponibles() {
-            const lista = document.getElementById('listaCancionesDisponibles');
-
-            // Filtrar canciones que ya están en el álbum (por si acaso)
-            const idsEnAlbum = new Set((albumActual?.canciones || []).map(c => `${c.tipo}-${c.id}`));
-            let cancionesFiltradas = cancionesDisponibles.filter(c => {
-                const clave = `${c.tipo}-${c.id}`;
-                return !idsEnAlbum.has(clave);
             });
 
-            if (cancionesFiltradas.length === 0) {
-                const filtro = document.getElementById('inputBuscarCancion').value.trim();
-                lista.innerHTML = filtro
-                    ? `<p class="sin-canciones">No se encontraron canciones con "${escapeHtml(filtro)}"</p>`
-                    : '<p class="sin-canciones">No hay más canciones disponibles</p>';
-                actualizarContadorSeleccion();
-                return;
+            // ============ Funciones para agregar/quitar canciones del álbum ============
+            let cancionesDisponibles = [];
+            let cancionesSeleccionadas = new Set();
+            let timeoutBusqueda = null;
+
+            async function abrirModalAgregarCanciones() {
+                cancionesSeleccionadas.clear();
+                document.getElementById('modalAgregarCanciones').classList.add('activo');
+                document.getElementById('inputBuscarCancion').value = '';
+                document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Cargando canciones...</p>';
+
+                // Cargar canciones iniciales (sin filtro)
+                await buscarCancionesEnServidor('');
             }
 
-            lista.innerHTML = cancionesFiltradas.map(c => {
-                const clave = `${c.tipo}-${c.id}`;
-                const seleccionada = cancionesSeleccionadas.has(clave);
-                return `
+            async function buscarCancionesEnServidor(filtro) {
+                try {
+                    document.getElementById('listaCancionesDisponibles').innerHTML = '<p class="cargando">Buscando...</p>';
+
+                    const params = new URLSearchParams();
+                    if (filtro) params.append('filtro', filtro);
+                    if (albumActual?.id) params.append('excluirAlbumId', albumActual.id);
+                    params.append('limite', '200');
+                    params.append('soloSinAlbum', 'true'); // Solo mostrar canciones sin álbum asignado
+
+                    const resp = await fetch(`/api/canciones/disponibles?${params}`);
+                    cancionesDisponibles = await resp.json();
+                    renderizarCancionesDisponibles();
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('listaCancionesDisponibles').innerHTML =
+                        '<p style="color: var(--color-peligro);">Error al cargar canciones</p>';
+                }
+            }
+
+            function cerrarModalCanciones() {
+                document.getElementById('modalAgregarCanciones').classList.remove('activo');
+                cancionesSeleccionadas.clear();
+            }
+
+            function filtrarCancionesDisponibles() {
+                // Debounce: esperar 300ms después de que el usuario deje de escribir
+                clearTimeout(timeoutBusqueda);
+                const filtro = document.getElementById('inputBuscarCancion').value.trim();
+
+                timeoutBusqueda = setTimeout(() => {
+                    buscarCancionesEnServidor(filtro);
+                }, 300);
+            }
+
+            function renderizarCancionesDisponibles() {
+                const lista = document.getElementById('listaCancionesDisponibles');
+
+                // Filtrar canciones que ya están en el álbum (por si acaso)
+                const idsEnAlbum = new Set((albumActual?.canciones || []).map(c => `${c.tipo}-${c.id}`));
+                let cancionesFiltradas = cancionesDisponibles.filter(c => {
+                    const clave = `${c.tipo}-${c.id}`;
+                    return !idsEnAlbum.has(clave);
+                });
+
+                if (cancionesFiltradas.length === 0) {
+                    const filtro = document.getElementById('inputBuscarCancion').value.trim();
+                    lista.innerHTML = filtro
+                        ? `<p class="sin-canciones">No se encontraron canciones con "${escapeHtml(filtro)}"</p>`
+                        : '<p class="sin-canciones">No hay más canciones disponibles</p>';
+                    actualizarContadorSeleccion();
+                    return;
+                }
+
+                lista.innerHTML = cancionesFiltradas.map(c => {
+                    const clave = `${c.tipo}-${c.id}`;
+                    const seleccionada = cancionesSeleccionadas.has(clave);
+                    return `
                     <label class="cancion-seleccionable ${seleccionada ? 'seleccionada' : ''}" onclick="toggleCancionSeleccion('${clave}')">
                         <input type="checkbox" ${seleccionada ? 'checked' : ''} onclick="event.stopPropagation()">
                         <div class="cancion-sel-info">
@@ -1465,190 +1444,190 @@
                         </div>
                     </label>
                 `;
-            }).join('');
+                }).join('');
 
-            if (cancionesFiltradas.length >= 200) {
-                lista.innerHTML += `<p style="text-align: center; padding: 0.5rem; color: var(--color-texto-secundario); font-size: 0.85rem;">
+                if (cancionesFiltradas.length >= 200) {
+                    lista.innerHTML += `<p style="text-align: center; padding: 0.5rem; color: var(--color-texto-secundario); font-size: 0.85rem;">
                     Mostrando primeros 200 resultados. Usa el buscador para encontrar más.
                 </p>`;
+                }
+
+                actualizarContadorSeleccion();
             }
 
-            actualizarContadorSeleccion();
-        }
-
-        function toggleCancionSeleccion(clave) {
-            if (cancionesSeleccionadas.has(clave)) {
-                cancionesSeleccionadas.delete(clave);
-            } else {
-                cancionesSeleccionadas.add(clave);
-            }
-            renderizarCancionesDisponibles();
-        }
-
-        function actualizarContadorSeleccion() {
-            const count = cancionesSeleccionadas.size;
-            document.getElementById('contadorSeleccion').textContent =
-                `${count} canción${count !== 1 ? 'es' : ''} seleccionada${count !== 1 ? 's' : ''}`;
-        }
-
-        async function asignarCancionesSeleccionadas() {
-            if (cancionesSeleccionadas.size === 0) {
-                alert('Selecciona al menos una canción');
-                return;
+            function toggleCancionSeleccion(clave) {
+                if (cancionesSeleccionadas.has(clave)) {
+                    cancionesSeleccionadas.delete(clave);
+                } else {
+                    cancionesSeleccionadas.add(clave);
+                }
+                renderizarCancionesDisponibles();
             }
 
-            const canciones = Array.from(cancionesSeleccionadas).map(clave => {
-                const [tipo, id] = clave.split('-');
-                return { id: parseInt(id), tipo };
-            });
+            function actualizarContadorSeleccion() {
+                const count = cancionesSeleccionadas.size;
+                document.getElementById('contadorSeleccion').textContent =
+                    `${count} canción${count !== 1 ? 'es' : ''} seleccionada${count !== 1 ? 's' : ''}`;
+            }
 
-            try {
-                const resp = await fetch(`/api/albumes/${albumActual.id}/canciones`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ canciones })
-                });
-
-                if (!resp.ok) {
-                    const errorText = await resp.text();
-                    console.error('Error HTTP:', resp.status, errorText);
-                    alert('Error del servidor: ' + resp.status);
+            async function asignarCancionesSeleccionadas() {
+                if (cancionesSeleccionadas.size === 0) {
+                    alert('Selecciona al menos una canción');
                     return;
                 }
 
-                const result = await resp.json();
-                console.log('Respuesta asignar:', result);
-
-                // Verificar tanto 'exito' como 'Exito' por si acaso
-                if (result.exito || result.Exito) {
-                    cerrarModalCanciones();
-                    mostrarToast(`Se agregaron ${canciones.length} canción(es) al álbum`, 'exito');
-                    cargarDetalleAlbum(albumActual.id);
-                } else {
-                    alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
-                }
-            } catch (error) {
-                console.error('Error en fetch:', error);
-                alert('Error al asignar canciones: ' + error.message);
-            }
-        }
-
-        async function quitarCancionDelAlbum(idCancion, tipo) {
-            if (!confirm('¿Quitar esta canción del álbum?')) {
-                return;
-            }
-
-            try {
-                const resp = await fetch(`/api/albumes/${albumActual.id}/canciones/${idCancion}?tipo=${tipo}`, {
-                    method: 'DELETE'
+                const canciones = Array.from(cancionesSeleccionadas).map(clave => {
+                    const [tipo, id] = clave.split('-');
+                    return { id: parseInt(id), tipo };
                 });
 
-                const result = await resp.json();
-                if (result.exito || result.Exito) {
-                    mostrarToast('Canción quitada del álbum', 'exito');
-                    cargarDetalleAlbum(albumActual.id);
-                } else {
-                    alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
+                try {
+                    const resp = await fetch(`/api/albumes/${albumActual.id}/canciones`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ canciones })
+                    });
+
+                    if (!resp.ok) {
+                        const errorText = await resp.text();
+                        console.error('Error HTTP:', resp.status, errorText);
+                        alert('Error del servidor: ' + resp.status);
+                        return;
+                    }
+
+                    const result = await resp.json();
+                    console.log('Respuesta asignar:', result);
+
+                    // Verificar tanto 'exito' como 'Exito' por si acaso
+                    if (result.exito || result.Exito) {
+                        cerrarModalCanciones();
+                        mostrarToast(`Se agregaron ${canciones.length} canción(es) al álbum`, 'exito');
+                        cargarDetalleAlbum(albumActual.id);
+                    } else {
+                        alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error en fetch:', error);
+                    alert('Error al asignar canciones: ' + error.message);
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al quitar la canción: ' + error.message);
-            }
-        }
-
-        // ============ Funciones para editar álbum ============
-        function abrirModalEditarAlbum() {
-            if (!albumActual) return;
-
-            document.getElementById('editarNombre').value = albumActual.nombre || '';
-            document.getElementById('editarAnio').value = albumActual.anio || '';
-            document.getElementById('editarEsSingle').checked = albumActual.esSingle || false;
-
-            // Configurar selector de artista
-            const artista = albumActual.interprete || '';
-            document.getElementById('editarArtista').value = artista;
-            actualizarBotonArtistaEditar(artista);
-
-            document.getElementById('modalEditarAlbum').classList.add('activo');
-            document.getElementById('editarNombre').focus();
-
-            // Cargar artistas
-            cargarArtistasEditar();
-        }
-
-        function cerrarModalEditar() {
-            document.getElementById('modalEditarAlbum').classList.remove('activo');
-            document.getElementById('editarArtistaDropdown').classList.remove('visible');
-        }
-
-        async function guardarEdicionAlbum() {
-            const nombre = document.getElementById('editarNombre').value.trim();
-            const artista = document.getElementById('editarArtista').value.trim();
-            const anio = document.getElementById('editarAnio').value.trim();
-            const esSingle = document.getElementById('editarEsSingle').checked;
-
-            if (!nombre) {
-                alert('El nombre es obligatorio');
-                return;
             }
 
-            try {
-                const resp = await fetch(`/api/albumes/${albumActual.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nombre,
-                        nombreInterprete: artista || null,
-                        anio: anio || null,
-                        esSingle
-                    })
-                });
-
-                const result = await resp.json();
-                if (result.exito || result.Exito) {
-                    cerrarModalEditar();
-                    mostrarToast('Álbum actualizado correctamente', 'exito');
-                    cargarDetalleAlbum(albumActual.id);
-                } else {
-                    alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
+            async function quitarCancionDelAlbum(idCancion, tipo) {
+                if (!confirm('¿Quitar esta canción del álbum?')) {
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al actualizar el álbum');
-            }
-        }
 
-        // ============ Selector de Artistas ============
-        let artistasDisponiblesNuevo = [];
-        let artistasDisponiblesEditar = [];
-        let timeoutBusquedaArtista = null;
+                try {
+                    const resp = await fetch(`/api/albumes/${albumActual.id}/canciones/${idCancion}?tipo=${tipo}`, {
+                        method: 'DELETE'
+                    });
 
-        // --- Modal Nuevo Álbum ---
-        async function cargarArtistasNuevo(filtro = '') {
-            try {
-                const params = new URLSearchParams();
-                if (filtro) params.append('filtro', filtro);
-                params.append('limite', '50');
-
-                const resp = await fetch(`/api/interpretes?${params}`);
-                artistasDisponiblesNuevo = await resp.json();
-                renderizarArtistasNuevo(filtro);
-            } catch (e) {
-                console.error('Error cargando artistas:', e);
-            }
-        }
-
-        function renderizarArtistasNuevo(filtro = '') {
-            const lista = document.getElementById('listaArtistasNuevo');
-            const artistaActual = document.getElementById('nuevoArtista').value;
-
-            if (artistasDisponiblesNuevo.length === 0) {
-                lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
-                if (filtro) mostrarInputNuevoArtistaNuevo(filtro);
-                return;
+                    const result = await resp.json();
+                    if (result.exito || result.Exito) {
+                        mostrarToast('Canción quitada del álbum', 'exito');
+                        cargarDetalleAlbum(albumActual.id);
+                    } else {
+                        alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al quitar la canción: ' + error.message);
+                }
             }
 
-            lista.innerHTML = artistasDisponiblesNuevo.map(a => `
+            // ============ Funciones para editar álbum ============
+            function abrirModalEditarAlbum() {
+                if (!albumActual) return;
+
+                document.getElementById('editarNombre').value = albumActual.nombre || '';
+                document.getElementById('editarAnio').value = albumActual.anio || '';
+                document.getElementById('editarEsSingle').checked = albumActual.esSingle || false;
+
+                // Configurar selector de artista
+                const artista = albumActual.interprete || '';
+                document.getElementById('editarArtista').value = artista;
+                actualizarBotonArtistaEditar(artista);
+
+                document.getElementById('modalEditarAlbum').classList.add('activo');
+                document.getElementById('editarNombre').focus();
+
+                // Cargar artistas
+                cargarArtistasEditar();
+            }
+
+            function cerrarModalEditar() {
+                document.getElementById('modalEditarAlbum').classList.remove('activo');
+                document.getElementById('editarArtistaDropdown').classList.remove('visible');
+            }
+
+            async function guardarEdicionAlbum() {
+                const nombre = document.getElementById('editarNombre').value.trim();
+                const artista = document.getElementById('editarArtista').value.trim();
+                const anio = document.getElementById('editarAnio').value.trim();
+                const esSingle = document.getElementById('editarEsSingle').checked;
+
+                if (!nombre) {
+                    alert('El nombre es obligatorio');
+                    return;
+                }
+
+                try {
+                    const resp = await fetch(`/api/albumes/${albumActual.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre,
+                            nombreInterprete: artista || null,
+                            anio: anio || null,
+                            esSingle
+                        })
+                    });
+
+                    const result = await resp.json();
+                    if (result.exito || result.Exito) {
+                        cerrarModalEditar();
+                        mostrarToast('Álbum actualizado correctamente', 'exito');
+                        cargarDetalleAlbum(albumActual.id);
+                    } else {
+                        alert('Error: ' + (result.mensaje || result.Mensaje || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al actualizar el álbum');
+                }
+            }
+
+            // ============ Selector de Artistas ============
+            let artistasDisponiblesNuevo = [];
+            let artistasDisponiblesEditar = [];
+            let timeoutBusquedaArtista = null;
+
+            // --- Modal Nuevo Álbum ---
+            async function cargarArtistasNuevo(filtro = '') {
+                try {
+                    const params = new URLSearchParams();
+                    if (filtro) params.append('filtro', filtro);
+                    params.append('limite', '50');
+
+                    const resp = await fetch(`/api/interpretes?${params}`);
+                    artistasDisponiblesNuevo = await resp.json();
+                    renderizarArtistasNuevo(filtro);
+                } catch (e) {
+                    console.error('Error cargando artistas:', e);
+                }
+            }
+
+            function renderizarArtistasNuevo(filtro = '') {
+                const lista = document.getElementById('listaArtistasNuevo');
+                const artistaActual = document.getElementById('nuevoArtista').value;
+
+                if (artistasDisponiblesNuevo.length === 0) {
+                    lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
+                    if (filtro) mostrarInputNuevoArtistaNuevo(filtro);
+                    return;
+                }
+
+                lista.innerHTML = artistasDisponiblesNuevo.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaActual ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtistaNuevo('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
                     <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
@@ -1657,95 +1636,95 @@
                 </div>
             `).join('');
 
-            // Mostrar input nuevo si el filtro no coincide exactamente
-            const coincideExacto = artistasDisponiblesNuevo.some(a => a.interprete.toLowerCase() === filtro.toLowerCase());
-            if (filtro && !coincideExacto) {
-                mostrarInputNuevoArtistaNuevo(filtro);
-            } else {
-                ocultarInputNuevoArtistaNuevo();
-            }
-        }
-
-        function toggleSelectorArtistaNuevo() {
-            const dropdown = document.getElementById('nuevoArtistaDropdown');
-            const isVisible = dropdown.classList.contains('visible');
-
-            // Cerrar otros dropdowns
-            document.getElementById('editarArtistaDropdown')?.classList.remove('visible');
-
-            if (isVisible) {
-                dropdown.classList.remove('visible');
-            } else {
-                dropdown.classList.add('visible');
-                document.getElementById('buscarArtistaNuevo').value = '';
-                document.getElementById('buscarArtistaNuevo').focus();
-                cargarArtistasNuevo('');
-            }
-        }
-
-        function filtrarArtistasNuevo() {
-            clearTimeout(timeoutBusquedaArtista);
-            const filtro = document.getElementById('buscarArtistaNuevo').value.trim();
-            timeoutBusquedaArtista = setTimeout(() => cargarArtistasNuevo(filtro), 300);
-        }
-
-        function seleccionarArtistaNuevo(nombre) {
-            document.getElementById('nuevoArtista').value = nombre;
-            actualizarBotonArtistaNuevo(nombre);
-            document.getElementById('nuevoArtistaDropdown').classList.remove('visible');
-        }
-
-        function actualizarBotonArtistaNuevo(nombre) {
-            const texto = document.getElementById('nuevoArtistaTexto');
-            if (nombre) {
-                texto.textContent = nombre;
-                texto.classList.remove('sin-artista');
-            } else {
-                texto.textContent = 'Seleccionar artista...';
-                texto.classList.add('sin-artista');
-            }
-        }
-
-        function mostrarInputNuevoArtistaNuevo(nombre) {
-            document.getElementById('artistaNuevoInlineNuevo').style.display = 'flex';
-            document.getElementById('inputNuevoArtistaNuevo').value = nombre;
-        }
-
-        function ocultarInputNuevoArtistaNuevo() {
-            document.getElementById('artistaNuevoInlineNuevo').style.display = 'none';
-        }
-
-        function usarNuevoArtistaNuevo() {
-            const nombre = document.getElementById('inputNuevoArtistaNuevo').value.trim();
-            if (nombre) seleccionarArtistaNuevo(nombre);
-        }
-
-        // --- Modal Editar Álbum ---
-        async function cargarArtistasEditar(filtro = '') {
-            try {
-                const params = new URLSearchParams();
-                if (filtro) params.append('filtro', filtro);
-                params.append('limite', '50');
-
-                const resp = await fetch(`/api/interpretes?${params}`);
-                artistasDisponiblesEditar = await resp.json();
-                renderizarArtistasEditar(filtro);
-            } catch (e) {
-                console.error('Error cargando artistas:', e);
-            }
-        }
-
-        function renderizarArtistasEditar(filtro = '') {
-            const lista = document.getElementById('listaArtistasEditar');
-            const artistaActual = document.getElementById('editarArtista').value;
-
-            if (artistasDisponiblesEditar.length === 0) {
-                lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
-                if (filtro) mostrarInputNuevoArtistaEditar(filtro);
-                return;
+                // Mostrar input nuevo si el filtro no coincide exactamente
+                const coincideExacto = artistasDisponiblesNuevo.some(a => a.interprete.toLowerCase() === filtro.toLowerCase());
+                if (filtro && !coincideExacto) {
+                    mostrarInputNuevoArtistaNuevo(filtro);
+                } else {
+                    ocultarInputNuevoArtistaNuevo();
+                }
             }
 
-            lista.innerHTML = artistasDisponiblesEditar.map(a => `
+            function toggleSelectorArtistaNuevo() {
+                const dropdown = document.getElementById('nuevoArtistaDropdown');
+                const isVisible = dropdown.classList.contains('visible');
+
+                // Cerrar otros dropdowns
+                document.getElementById('editarArtistaDropdown')?.classList.remove('visible');
+
+                if (isVisible) {
+                    dropdown.classList.remove('visible');
+                } else {
+                    dropdown.classList.add('visible');
+                    document.getElementById('buscarArtistaNuevo').value = '';
+                    document.getElementById('buscarArtistaNuevo').focus();
+                    cargarArtistasNuevo('');
+                }
+            }
+
+            function filtrarArtistasNuevo() {
+                clearTimeout(timeoutBusquedaArtista);
+                const filtro = document.getElementById('buscarArtistaNuevo').value.trim();
+                timeoutBusquedaArtista = setTimeout(() => cargarArtistasNuevo(filtro), 300);
+            }
+
+            function seleccionarArtistaNuevo(nombre) {
+                document.getElementById('nuevoArtista').value = nombre;
+                actualizarBotonArtistaNuevo(nombre);
+                document.getElementById('nuevoArtistaDropdown').classList.remove('visible');
+            }
+
+            function actualizarBotonArtistaNuevo(nombre) {
+                const texto = document.getElementById('nuevoArtistaTexto');
+                if (nombre) {
+                    texto.textContent = nombre;
+                    texto.classList.remove('sin-artista');
+                } else {
+                    texto.textContent = 'Seleccionar artista...';
+                    texto.classList.add('sin-artista');
+                }
+            }
+
+            function mostrarInputNuevoArtistaNuevo(nombre) {
+                document.getElementById('artistaNuevoInlineNuevo').style.display = 'flex';
+                document.getElementById('inputNuevoArtistaNuevo').value = nombre;
+            }
+
+            function ocultarInputNuevoArtistaNuevo() {
+                document.getElementById('artistaNuevoInlineNuevo').style.display = 'none';
+            }
+
+            function usarNuevoArtistaNuevo() {
+                const nombre = document.getElementById('inputNuevoArtistaNuevo').value.trim();
+                if (nombre) seleccionarArtistaNuevo(nombre);
+            }
+
+            // --- Modal Editar Álbum ---
+            async function cargarArtistasEditar(filtro = '') {
+                try {
+                    const params = new URLSearchParams();
+                    if (filtro) params.append('filtro', filtro);
+                    params.append('limite', '50');
+
+                    const resp = await fetch(`/api/interpretes?${params}`);
+                    artistasDisponiblesEditar = await resp.json();
+                    renderizarArtistasEditar(filtro);
+                } catch (e) {
+                    console.error('Error cargando artistas:', e);
+                }
+            }
+
+            function renderizarArtistasEditar(filtro = '') {
+                const lista = document.getElementById('listaArtistasEditar');
+                const artistaActual = document.getElementById('editarArtista').value;
+
+                if (artistasDisponiblesEditar.length === 0) {
+                    lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
+                    if (filtro) mostrarInputNuevoArtistaEditar(filtro);
+                    return;
+                }
+
+                lista.innerHTML = artistasDisponiblesEditar.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaActual ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtistaEditar('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
                     <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
@@ -1754,83 +1733,102 @@
                 </div>
             `).join('');
 
-            const coincideExacto = artistasDisponiblesEditar.some(a => a.interprete.toLowerCase() === filtro.toLowerCase());
-            if (filtro && !coincideExacto) {
-                mostrarInputNuevoArtistaEditar(filtro);
-            } else {
-                ocultarInputNuevoArtistaEditar();
+                const coincideExacto = artistasDisponiblesEditar.some(a => a.interprete.toLowerCase() === filtro.toLowerCase());
+                if (filtro && !coincideExacto) {
+                    mostrarInputNuevoArtistaEditar(filtro);
+                } else {
+                    ocultarInputNuevoArtistaEditar();
+                }
             }
-        }
 
-        function toggleSelectorArtistaEditar() {
-            const dropdown = document.getElementById('editarArtistaDropdown');
-            const isVisible = dropdown.classList.contains('visible');
+            function toggleSelectorArtistaEditar() {
+                const dropdown = document.getElementById('editarArtistaDropdown');
+                const isVisible = dropdown.classList.contains('visible');
 
-            // Cerrar otros dropdowns
-            document.getElementById('nuevoArtistaDropdown')?.classList.remove('visible');
-
-            if (isVisible) {
-                dropdown.classList.remove('visible');
-            } else {
-                dropdown.classList.add('visible');
-                document.getElementById('buscarArtistaEditar').value = '';
-                document.getElementById('buscarArtistaEditar').focus();
-                cargarArtistasEditar('');
-            }
-        }
-
-        function filtrarArtistasEditar() {
-            clearTimeout(timeoutBusquedaArtista);
-            const filtro = document.getElementById('buscarArtistaEditar').value.trim();
-            timeoutBusquedaArtista = setTimeout(() => cargarArtistasEditar(filtro), 300);
-        }
-
-        function seleccionarArtistaEditar(nombre) {
-            document.getElementById('editarArtista').value = nombre;
-            actualizarBotonArtistaEditar(nombre);
-            document.getElementById('editarArtistaDropdown').classList.remove('visible');
-        }
-
-        function actualizarBotonArtistaEditar(nombre) {
-            const texto = document.getElementById('editarArtistaTexto');
-            if (nombre) {
-                texto.textContent = nombre;
-                texto.classList.remove('sin-artista');
-            } else {
-                texto.textContent = 'Seleccionar artista...';
-                texto.classList.add('sin-artista');
-            }
-        }
-
-        function mostrarInputNuevoArtistaEditar(nombre) {
-            document.getElementById('artistaNuevoInlineEditar').style.display = 'flex';
-            document.getElementById('inputNuevoArtistaEditar').value = nombre;
-        }
-
-        function ocultarInputNuevoArtistaEditar() {
-            document.getElementById('artistaNuevoInlineEditar').style.display = 'none';
-        }
-
-        function usarNuevoArtistaEditar() {
-            const nombre = document.getElementById('inputNuevoArtistaEditar').value.trim();
-            if (nombre) seleccionarArtistaEditar(nombre);
-        }
-
-        // Cerrar dropdowns al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.artista-selector')) {
+                // Cerrar otros dropdowns
                 document.getElementById('nuevoArtistaDropdown')?.classList.remove('visible');
-                document.getElementById('editarArtistaDropdown')?.classList.remove('visible');
+
+                if (isVisible) {
+                    dropdown.classList.remove('visible');
+                } else {
+                    dropdown.classList.add('visible');
+                    document.getElementById('buscarArtistaEditar').value = '';
+                    document.getElementById('buscarArtistaEditar').focus();
+                    cargarArtistasEditar('');
+                }
             }
-        });
 
-        // Inicializar
-        if (idAlbum) {
-            cargarDetalleAlbum(idAlbum);
-        } else {
-            cargarAlbumes();
-        }
+            function filtrarArtistasEditar() {
+                clearTimeout(timeoutBusquedaArtista);
+                const filtro = document.getElementById('buscarArtistaEditar').value.trim();
+                timeoutBusquedaArtista = setTimeout(() => cargarArtistasEditar(filtro), 300);
+            }
+
+            function seleccionarArtistaEditar(nombre) {
+                document.getElementById('editarArtista').value = nombre;
+                actualizarBotonArtistaEditar(nombre);
+                document.getElementById('editarArtistaDropdown').classList.remove('visible');
+            }
+
+            function actualizarBotonArtistaEditar(nombre) {
+                const texto = document.getElementById('editarArtistaTexto');
+                if (nombre) {
+                    texto.textContent = nombre;
+                    texto.classList.remove('sin-artista');
+                } else {
+                    texto.textContent = 'Seleccionar artista...';
+                    texto.classList.add('sin-artista');
+                }
+            }
+
+            function mostrarInputNuevoArtistaEditar(nombre) {
+                document.getElementById('artistaNuevoInlineEditar').style.display = 'flex';
+                document.getElementById('inputNuevoArtistaEditar').value = nombre;
+            }
+
+            function ocultarInputNuevoArtistaEditar() {
+                document.getElementById('artistaNuevoInlineEditar').style.display = 'none';
+            }
+
+            function usarNuevoArtistaEditar() {
+                const nombre = document.getElementById('inputNuevoArtistaEditar').value.trim();
+                if (nombre) seleccionarArtistaEditar(nombre);
+            }
+
+            // Cerrar dropdowns al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.artista-selector')) {
+                    document.getElementById('nuevoArtistaDropdown')?.classList.remove('visible');
+                    document.getElementById('editarArtistaDropdown')?.classList.remove('visible');
+                }
+            });
+
+            // Inicializar
+            if (idAlbum) {
+                cargarDetalleAlbum(idAlbum);
+            } else {
+                cargarAlbumes();
+            }
+
+            // Exponer funciones necesarias para onclick globalmente
+            window.cerrarModal = cerrarModal;
+            window.toggleSelectorArtistaNuevo = toggleSelectorArtistaNuevo;
+            window.usarNuevoArtistaNuevo = usarNuevoArtistaNuevo;
+            window.crearAlbum = crearAlbum;
+            window.cerrarModalCanciones = cerrarModalCanciones;
+            window.asignarCancionesSeleccionadas = asignarCancionesSeleccionadas;
+            window.cerrarModalEditar = cerrarModalEditar;
+            window.toggleSelectorArtistaEditar = toggleSelectorArtistaEditar;
+            window.usarNuevoArtistaEditar = usarNuevoArtistaEditar;
+            window.guardarEdicionAlbum = guardarEdicionAlbum;
+            window.abrirModal = abrirModal;
+            window.cambiarFiltroTipo = cambiarFiltroTipo;
+            window.subirPortada = subirPortada;
+            window.abrirModalEditarAlbum = abrirModalEditarAlbum;
+            window.eliminarAlbum = eliminarAlbum;
+            window.abrirModalAgregarCanciones = abrirModalAgregarCanciones;
+
+        })(); // Fin de IIFE
     </script>
-</body>
 
-</html>
+</main>

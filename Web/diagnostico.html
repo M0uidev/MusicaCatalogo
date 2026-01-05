@@ -1,19 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnóstico - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-
-<body>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
-
+<main class="container">
     <main class="principal">
         <div class="contenedor">
             <section>
@@ -57,23 +42,23 @@
         </div>
     </main>
 
+
     <!-- Contenedor de notificaciones toast -->
     <div id="notificaciones-component"></div>
 
     <!-- Footer generado dinámicamente -->
     <div id="footer-component"></div>
 
-    <script src="js/components.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             await Promise.all([
                 cargarDiagnostico(),
                 cargarInfoRed()
             ]);
 
             document.getElementById('btnReimportar').addEventListener('click', reimportar);
-        });
+        })();
 
         async function cargarDiagnostico() {
             try {
@@ -215,6 +200,5 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
     </script>
-</body>
 
-</html>
+</main>

@@ -1,19 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intérpretes - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-
-<body>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
-
+<main class="container">
     <main class="container">
         <section class="seccion">
             <h2>🎤 Intérpretes</h2>
@@ -36,17 +21,16 @@
         </section>
     </main>
 
+
     <!-- Contenedor de notificaciones toast -->
     <div id="notificaciones-component"></div>
 
     <!-- Footer generado dinámicamente -->
     <div id="footer-component"></div>
 
-    <script src="js/components.js"></script>
-    <script src="js/audioPlayerGlobal.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             await cargarInterpretes();
 
             const filtro = document.getElementById('filtroInterprete');
@@ -66,7 +50,7 @@
                     }
                 }, 500);
             });
-        });
+        })();
 
         async function cargarInterpretes(filtro = '') {
             const lista = document.getElementById('listaInterpretes');
@@ -103,6 +87,5 @@
             }
         }
     </script>
-</body>
 
-</html>
+</main>

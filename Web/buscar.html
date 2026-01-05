@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canciones - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+<main class="container">
     <style>
         .buscador-container {
             max-width: 500px;
@@ -323,10 +314,11 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             z-index: 1000;
             padding: 1rem;
+            padding-top: 5rem;
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s;
@@ -363,31 +355,6 @@
             align-items: center;
             gap: 1rem;
             flex: 1;
-        }
-
-        .modal-header-actions {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .btn-editar-modal {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: var(--radio);
-            background: #1db954;
-            color: white;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-editar-modal:hover {
-            background: #1ed760;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
         }
 
         .modal-versiones-portada {
@@ -826,20 +793,7 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
         }
-
-        .ubicacion-item.con-audio .btn-play {
-            display: inline-flex;
-        }
-
-        .ubicacion-item:not(.con-audio) .btn-play {
-            display: none;
-        }
     </style>
-</head>
-
-<body>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
 
     <main class="container">
         <section class="seccion">
@@ -852,19 +806,19 @@
 
             <div class="filtros-container">
                 <div class="filtro-grupo">
-                    <label for="selectArtista">Intérprete</label>
+                    <label>Intérprete</label>
                     <select id="selectArtista" class="filtro-select">
                         <option value="todos">Todos los artistas</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label for="selectAnio">Año</label>
+                    <label>Año</label>
                     <select id="selectAnio" class="filtro-select">
                         <option value="todos">Todos los años</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label for="selectAlbum">Álbum</label>
+                    <label>Álbum</label>
                     <select id="selectAlbum" class="filtro-select">
                         <option value="todos">Todos</option>
                         <option value="con-album">Con álbum</option>
@@ -872,7 +826,7 @@
                     </select>
                 </div>
                 <div class="filtro-grupo">
-                    <label for="selectOrden">Ordenar por</label>
+                    <label>Ordenar por</label>
                     <select id="selectOrden" class="filtro-select">
                         <option value="tema">Nombre de canción</option>
                         <option value="artista">Artista</option>
@@ -906,6 +860,7 @@
         </section>
     </main>
 
+
     <!-- Contenedor de notificaciones toast -->
     <div id="notificaciones-component"></div>
 
@@ -933,10 +888,10 @@
         </div>
     </div>
 
-    <script src="js/components.js"></script>
-    <script src="js/audioPlayerGlobal.js"></script>
-    <script src="js/app.js"></script>
     <script>
+        // Envolver en IIFE para evitar contaminación de scope global
+        (function() {
+        'use strict';
         let todasLasCanciones = [];
         let perfilesUnicos = [];
         let perfilesFiltrados = [];
@@ -1160,9 +1115,9 @@
                 return `
                     <div class="cancion-card" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
                         ${p.totalArtistas > 1 ? `<div class="badge-multi-artista"><i data-lucide="mic-2"></i> ${p.totalArtistas} ver.</div>` : ''}
-                        <button class="btn-editar-cancion" onclick="event.stopPropagation(); if(window.SPARouter){SPARouter.navigateTo('${editUrl}')}else{window.location.href='${editUrl}'}">
+                        <a href="${editUrl}" class="btn-editar-cancion" data-spa-link onclick="event.stopPropagation();">
                             <i data-lucide="pencil"></i>
-                        </button>
+                        </a>
                         ${imgUrl ? `<img src="${imgUrl}" class="cancion-portada" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%2394a3b8%22><path d=%22M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z%22/></svg>'">` : '<div class="cancion-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>'}
                         <div class="cancion-info">
                             <div class="cancion-titulo" title="${p.tema}">${escapeHtml(p.tema)}</div>
@@ -1174,7 +1129,7 @@
                     </div>`;
             }).join('');
 
-            lucide.createIcons();
+            if (window.lucide) window.lucide.createIcons();
 
             document.getElementById('paginacion').style.display = totalPaginas > 1 ? 'flex' : 'none';
             document.getElementById('infoPagina').textContent = `Página ${paginaActual} de ${totalPaginas}`;
@@ -1185,40 +1140,7 @@
         function abrirModalVersiones(idx) {
             const p = perfilesFiltrados[idx]; if (!p) return;
             const m = document.getElementById('modalVersiones');
-            
-            // Determinar URL de edición
-            const ins = p.artistas[0].instancias[0];
-            const editUrl = (p.totalArtistas > 1 || p.totalInstancias > 1)
-                ? `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`
-                : `cancion.html?id=${ins.id}&tipo=${ins.tipo}`;
-            
             document.getElementById('modalVersionesTitulo').innerHTML = `${escapeHtml(p.tema)} <small>${escapeHtml(p.interprete)}</small>`;
-            
-            // Agregar botón editar al header
-            const existingActions = document.querySelector('.modal-header-actions');
-            if (!existingActions) {
-                const header = document.querySelector('.modal-versiones-header');
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'modal-header-actions';
-                actionsDiv.innerHTML = `
-                    <button class="btn-editar-modal" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('${editUrl}')}else{window.location.href='${editUrl}'}"><i data-lucide="pencil"></i> Editar</button>
-                    <button class="btn-cerrar-modal" onclick="cerrarModalVersiones()"><i data-lucide="x"></i></button>
-                `;
-                // Remover el botón cerrar existente si está
-                const oldCloseBtn = header.querySelector('.btn-cerrar-modal');
-                if (oldCloseBtn) oldCloseBtn.remove();
-                header.appendChild(actionsDiv);
-            } else {
-                existingActions.querySelector('.btn-editar-modal').onclick = function() {
-                    document.body.style.overflow = '';
-                    if (window.SPARouter) {
-                        SPARouter.navigateTo(editUrl);
-                    } else {
-                        window.location.href = editUrl;
-                    }
-                };
-            }
-            
             const pc = document.getElementById('modalPortada');
             pc.innerHTML = p.idAlbum ? `<img src="/api/albumes/${p.idAlbum}/portada" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">` : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
 
@@ -1300,31 +1222,7 @@
 
             document.getElementById('modalVersionesBody').innerHTML = `<div class="track-list">${rowsHtml}</div>`;
             m.classList.add('visible'); document.body.style.overflow = 'hidden';
-            lucide.createIcons();
-        }
-
-        function toggleDropdown(btn, event) {
-            event.stopPropagation();
-            const menu = btn.nextElementSibling;
-            
-            // Close all other dropdowns
-            document.querySelectorAll('.dropdown-menu.show').forEach(d => {
-                if (d !== menu) d.classList.remove('show');
-            });
-            
-            menu.classList.toggle('show');
-            
-            // Close on click outside
-            const closeDropdown = (e) => {
-                if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                    menu.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            };
-            
-            if (menu.classList.contains('show')) {
-                setTimeout(() => document.addEventListener('click', closeDropdown), 0);
-            }
+            if (window.lucide) window.lucide.createIcons();
         }
 
         function cerrarModalVersiones() { document.getElementById('modalVersiones').classList.remove('visible'); document.body.style.overflow = ''; }
@@ -1366,7 +1264,7 @@
                 audio.pause();
                 btn.innerHTML = '<i data-lucide="play"></i>';
                 btn.classList.remove('playing');
-                lucide.createIcons();
+                if (window.lucide) window.lucide.createIcons();
             } else {
                 // Reproducir nueva canción
                 if (cancionActualBtn && cancionActualBtn !== btn) {
@@ -1381,13 +1279,10 @@
                     btn.innerHTML = '<i data-lucide="pause"></i>';
                     btn.classList.add('playing');
                     cancionActualBtn = btn;
-                    lucide.createIcons();
+                    if (window.lucide) window.lucide.createIcons();
                 }
             }
         }
-
-        // Exponer funciones globalmente para onclick
-        window.togglePlayCancion = togglePlayCancion;
 
         // Sincronizar con el estado del player global
         document.addEventListener('DOMContentLoaded', function() {
@@ -1397,7 +1292,7 @@
                     if (cancionActualBtn) {
                         cancionActualBtn.innerHTML = '<i data-lucide="play"></i>';
                         cancionActualBtn.classList.remove('playing');
-                        lucide.createIcons();
+                        if (window.lucide) window.lucide.createIcons();
                     }
                 });
                 
@@ -1405,7 +1300,7 @@
                     if (cancionActualBtn) {
                         cancionActualBtn.innerHTML = '<i data-lucide="pause"></i>';
                         cancionActualBtn.classList.add('playing');
-                        lucide.createIcons();
+                        if (window.lucide) window.lucide.createIcons();
                     }
                 });
             }
@@ -1422,6 +1317,39 @@
             aplicarFiltros();
         }
 
+        function toggleDropdown(btn, event) {
+            event.stopPropagation();
+            const menu = btn.nextElementSibling;
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu.show').forEach(d => {
+                if (d !== menu) d.classList.remove('show');
+            });
+            
+            menu.classList.toggle('show');
+            
+            // Close on click outside
+            const closeDropdown = (e) => {
+                if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                    menu.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            };
+            
+            if (menu.classList.contains('show')) {
+                setTimeout(() => document.addEventListener('click', closeDropdown), 0);
+            }
+        }
+
+        // Exponer funciones necesarias para onclick globalmente
+        window.toggleDropdown = toggleDropdown;
+        window.abrirModalVersiones = abrirModalVersiones;
+        window.cerrarModalVersiones = cerrarModalVersiones;
+        window.paginaAnterior = paginaAnterior;
+        window.paginaSiguiente = paginaSiguiente;
+        window.limpiarFiltros = limpiarFiltros;
+        window.togglePlayCancion = togglePlayCancion;
+
         document.getElementById('inputBusqueda').addEventListener('input', e => {
             filtros.busqueda = e.target.value; clearTimeout(timeoutBusqueda);
             timeoutBusqueda = setTimeout(aplicarFiltros, 300);
@@ -1436,7 +1364,7 @@
 
         inicializarFiltrosDesdeURL();
         cargarCanciones();
+        })(); // Fin de IIFE
     </script>
-</body>
 
-</html>
+</main>

@@ -244,29 +244,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Middleware para detectar requests AJAX y servir vistas parciales
-app.Use(async (context, next) =>
-{
-    var isAjaxRequest = context.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-    var path = context.Request.Path.Value ?? "";
-    
-    // Si es request AJAX y pide un .html, intentar servir versión parcial
-    if (isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
-    {
-        var partialPath = path.Replace(".html", "-partial.html");
-        var rutaCompleta = Path.Combine(rutaWeb, partialPath.TrimStart('/'));
-        
-        // Si existe la versión parcial, servirla
-        if (File.Exists(rutaCompleta))
-        {
-            context.Request.Path = partialPath;
-        }
-        // Si no, servir el HTML completo (el router del cliente extraerá el contenido)
-    }
-    
-    await next();
-});
-
 // Servir archivos estáticos desde la carpeta Web
 if (Directory.Exists(rutaWeb))
 {

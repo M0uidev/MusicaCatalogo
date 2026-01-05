@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil de Canción - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+<main class="container">
     <style>
         .perfil-cancion {
             max-width: 900px;
@@ -585,36 +576,24 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
     </style>
-</head>
 
-<body>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
+    <nav class="breadcrumb">
+        <a href="index.html" data-spa-link>Inicio</a>
+        <span class="separador">›</span>
+        <a href="buscar.html" data-spa-link>Canciones</a>
+        <span class="separador">›</span>
+        <span class="actual" id="breadcrumbActual">Perfil de Canción</span>
+    </nav>
 
-    <main class="container">
-        <nav class="breadcrumb">
-            <a href="index.html">Inicio</a>
-            <span class="separador">›</span>
-            <a href="buscar.html">Canciones</a>
-            <span class="separador">›</span>
-            <span class="actual" id="breadcrumbActual">Perfil de Canción</span>
-        </nav>
-
-        <div id="contenido" class="perfil-cancion">
-            <div class="cargando">
-                <div class="spinner"></div>
-                <p>Cargando perfil de canción...</p>
-            </div>
+    <div id="contenido" class="perfil-cancion">
+        <div class="cargando">
+            <div class="spinner"></div>
+            <p>Cargando perfil de canción...</p>
         </div>
-    </main>
+    </div>
 
-    <!-- Contenedor de notificaciones toast -->
-    <div id="notificaciones-component"></div>
 
-    <div id="footer-component"></div>
 
-    <script src="js/components.js"></script>
-    <script src="js/app.js"></script>
     <script>
         // Obtener parámetros de URL
         const params = new URLSearchParams(window.location.search);
@@ -1079,6 +1058,5 @@
             cargarPerfil();
         }
     </script>
-</body>
 
-</html>
+</main>

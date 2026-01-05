@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de Medio - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="css/componentes.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+<main class="container">
     <style>
         .lados-grid {
             display: grid;
@@ -689,14 +680,10 @@
             grid-column: 1 / -1;
         }
     </style>
-</head>
-
-<body>
-    <!-- Header generado dinámicamente por components.js -->
-    <div id="header-component"></div>
 
     <main class="container">
-        <a href="medios.html" class="btn btn-primario" style="margin-bottom: 1.5rem; display: inline-flex;">
+        <a href="medios.html" class="btn btn-primario" data-spa-link
+            style="margin-bottom: 1.5rem; display: inline-flex;">
             ← Volver a la lista
         </a>
 
@@ -714,6 +701,7 @@
             <div id="listaCanciones"></div>
         </section>
     </main>
+
 
     <!-- Modal Editar Medio -->
     <div id="modalMedio" class="modal">
@@ -958,9 +946,6 @@
     <!-- Footer generado dinámicamente -->
     <div id="footer-component"></div>
 
-    <script src="js/components.js"></script>
-    <script src="js/audioPlayerGlobal.js"></script>
-    <script src="js/app.js"></script>
     <script>
         // Variables globales
         let MedioActual = null;
@@ -969,7 +954,8 @@
         let interpretesLista = [];
         let albumesLista = [];
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             const params = new URLSearchParams(window.location.search);
             const numMedio = params.get('num');
             const cancionId = params.get('cancion'); // ID de canción a destacar
@@ -992,7 +978,7 @@
             if (cancionId) {
                 destacarCancion(parseInt(cancionId));
             }
-        });
+        })();
 
         function destacarCancion(cancionId) {
             // Buscar la fila con el ID de canción
@@ -1278,9 +1264,10 @@
                 MedioActual = await MedioResp.json();
                 const canciones = await cancionesResp.json();
 
-                tipoMedioActual = esCassette(numMedio) ? 'cassette' : 'cd';
+                // Usar el tipo de medio del backend en lugar de inferirlo del número
+                tipoMedioActual = (MedioActual.tipoMedio || '').toLowerCase() === 'cassette' ? 'cassette' : 'cd';
                 const icono = obtenerIconoMedio(numMedio, MedioActual.bias, tipoMedioActual === 'cassette');
-                const claseTipo = obtenerClaseTipo(numMedio, MedioActual.bias);
+                const claseTipo = obtenerClaseTipo(numMedio, MedioActual.bias, tipoMedioActual === 'cassette');
                 const nombreTipo = tipoMedioActual === 'cassette' ? obtenerNombreTipoCinta(MedioActual.bias) : 'CD';
 
                 document.getElementById('detalleMedio').innerHTML = `
@@ -1439,7 +1426,7 @@
                 if (esCassette) {
                     ubicacionHtml = `${c.desde} - ${c.hasta}`;
                 } else {
-                    ubicacionHtml = `${c.ubicacion}`;
+                    ubicacionHtml = `${c.ubicacion || '-'}`;
                 }
 
                 filas += `
@@ -1936,6 +1923,5 @@
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
-</body>
 
-</html>
+</main>
