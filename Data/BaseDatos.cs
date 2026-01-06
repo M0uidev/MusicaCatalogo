@@ -128,6 +128,15 @@ public class BaseDatos
             fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS composiciones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo_canonico TEXT NOT NULL,
+            compositor TEXT,
+            anio_original TEXT,
+            notas TEXT,
+            fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE INDEX IF NOT EXISTS idx_albumes_interprete ON albumes(id_interprete);
         CREATE INDEX IF NOT EXISTS idx_albumes_nombre ON albumes(nombre);
 
@@ -368,6 +377,28 @@ public class BaseDatos
             await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_favorito INTEGER DEFAULT 0");
             Console.WriteLine("[BaseDatos] Columna es_favorito agregada a temas_cd");
         }
+        
+        // Agregar columna id_composicion a temas (para agrupar versiones/covers)
+        if (!listaColumnasTemas.Contains("id_composicion"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN id_composicion INTEGER");
+            Console.WriteLine("[BaseDatos] Columna id_composicion agregada a temas");
+        }
+        
+        // Agregar columna id_composicion a temas_cd
+        if (!listaColumnasTemasCd.Contains("id_composicion"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN id_composicion INTEGER");
+            Console.WriteLine("[BaseDatos] Columna id_composicion agregada a temas_cd");
+        }
+        
+        // Crear índices para id_composicion
+        try
+        {
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_temas_composicion ON temas(id_composicion)");
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_temascd_composicion ON temas_cd(id_composicion)");
+        }
+        catch { /* Índice ya existe */ }
         
         // Crear carpetas para archivos de audio si no existen
         var directorioBase = AppContext.BaseDirectory;

@@ -230,6 +230,9 @@
          * Limpia los scripts de la página anterior
          */
         cleanupPageScripts() {
+            // Remover modales huérfanos que se movieron al body
+            document.querySelectorAll('.modal-versiones-moved, .modal-moved').forEach(m => m.remove());
+
             // Remover scripts temporales de páginas previas
             const oldScripts = document.querySelectorAll('script[data-page-script]');
             oldScripts.forEach(script => script.remove());

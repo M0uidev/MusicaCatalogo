@@ -87,6 +87,7 @@ public record Tema
     public int? DuracionSegundos { get; init; }
     public string? FormatoAudio { get; init; }
     public bool EsFavorito { get; init; }
+    public int? IdComposicion { get; init; }
 }
 
 public record TemaCd
@@ -106,6 +107,7 @@ public record TemaCd
     public int? DuracionSegundos { get; init; }
     public string? FormatoAudio { get; init; }
     public bool EsFavorito { get; init; }
+    public int? IdComposicion { get; init; }
 }
 
 // ============================================
@@ -154,6 +156,7 @@ public record TemaEnMedio
     public string? NombreAlbum { get; init; }
     public string? LinkExterno { get; init; }
     public bool TienePortada { get; init; }
+    public bool TieneArchivoAudio { get; init; }
     public bool EsCover { get; init; }
     public bool EsOriginal { get; init; }
     public string? ArtistaOriginal { get; init; }
@@ -591,6 +594,7 @@ public class CancionDuplicada
     public bool EsOriginal { get; set; }
     public string? ArtistaOriginal { get; set; }
     public string? ArchivoAudio { get; set; }
+    public int? IdComposicion { get; set; }
 }
 
 /// <summary>Estadísticas de duplicados</summary>
@@ -601,6 +605,56 @@ public class EstadisticasDuplicados
     public int GruposMixtos { get; set; } // CD + Cassette
     public int GruposSoloCassette { get; set; }
     public int GruposSoloCd { get; set; }
+}
+
+// ============================================
+// DTOs PARA COMPOSICIONES
+// ============================================
+
+/// <summary>Tabla de composiciones - representa una obra musical única</summary>
+public record Composicion
+{
+    public int Id { get; init; }
+    public required string TituloCanonico { get; init; }
+    public string? Compositor { get; init; }
+    public string? AnioOriginal { get; init; }
+    public string? Notas { get; init; }
+    public DateTime? FechaCreacion { get; init; }
+}
+
+/// <summary>DTO para crear o actualizar una composición</summary>
+public record ComposicionRequest
+{
+    public required string TituloCanonico { get; init; }
+    public string? Compositor { get; init; }
+    public string? AnioOriginal { get; init; }
+    public string? Notas { get; init; }
+}
+
+/// <summary>Request para separar una canción de su composición (hacerla independiente)</summary>
+public record SepararCancionRequest
+{
+    public int IdCancion { get; init; }
+    public required string Tipo { get; init; } // "cassette" o "cd"
+}
+
+/// <summary>Request para unir canciones a una misma composición</summary>
+public record UnirCancionesRequest
+{
+    public required List<CancionRef> Canciones { get; init; }
+    public int? IdComposicionExistente { get; init; } // NULL = crear nueva composición
+    public string? TituloNuevaComposicion { get; init; } // Obligatorio si IdComposicionExistente es NULL
+}
+
+/// <summary>Resumen de composición con sus versiones</summary>
+public class ComposicionResumen
+{
+    public int Id { get; set; }
+    public string TituloCanonico { get; set; } = "";
+    public string? Compositor { get; set; }
+    public string? AnioOriginal { get; set; }
+    public int TotalVersiones { get; set; }
+    public int TotalArtistas { get; set; }
 }
 
 // ============================================

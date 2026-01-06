@@ -426,25 +426,42 @@
      */
     async function loadPlaylist(numMedio, tipo) {
         try {
-            // Buscar el medio
-            const medioResp = await fetch(`/api/medios?tipo=${tipo}`);
-            if (!medioResp.ok) return;
+            // Usar el endpoint correcto para obtener temas del medio
+            const resp = await fetch(`/api/medios/${encodeURIComponent(numMedio)}/temas`);
+            if (!resp.ok) return;
 
-            const medios = await medioResp.json();
-            const medio = medios.find(m => m.num === numMedio);
+            const temas = await resp.json();
+            if (!temas || temas.length === 0) return;
 
-            if (!medio || !medio.canciones) return;
+            // Filtrar solo canciones con audio y mapear con todos los campos necesarios
+            state.playlist = temas
+                .filter(c => c.archivoAudio || c.tieneArchivoAudio)
+                .map(c => {
+                    // Construir posicion basada en el tipo
+                    let posicion = '';
+                    if (tipo === 'cd') {
+                        posicion = c.ubicacion ? `Track ${c.ubicacion}` : '';
+                    } else {
+                        // Cassette: formato "Lado: desde-hasta"
+                        if (c.lado && c.desde !== undefined) {
+                            posicion = `${c.lado}: ${String(c.desde).padStart(3, '0')}-${String(c.hasta || c.desde).padStart(3, '0')}`;
+                        }
+                    }
 
-            // Filtrar solo canciones con audio
-            state.playlist = medio.canciones
-                .filter(c => c.tieneArchivoAudio)
-                .map(c => ({
-                    id: c.id,
-                    tipo: tipo,
-                    tema: c.tema,
-                    interprete: c.interprete,
-                    idAlbum: c.idAlbum
-                }));
+                    return {
+                        id: c.id,
+                        tipo: tipo,
+                        tema: c.tema,
+                        interprete: c.interprete,
+                        idAlbum: c.idAlbum,
+                        numMedio: numMedio,
+                        posicion: posicion,
+                        lado: c.lado,
+                        desde: c.desde,
+                        hasta: c.hasta,
+                        ubicacion: c.ubicacion
+                    };
+                });
 
         } catch (error) {
             console.error('Error cargando playlist:', error);

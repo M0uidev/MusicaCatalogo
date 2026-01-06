@@ -268,6 +268,7 @@ public class RepositorioMusica
                        ) AS NombreAlbum,
                        t.link_externo AS LinkExterno,
                        CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                       CASE WHEN t.archivo_audio IS NOT NULL AND t.archivo_audio != '' THEN 1 ELSE 0 END AS TieneArchivoAudio,
                        COALESCE(t.es_cover, 0) AS EsCover, COALESCE(t.es_original, 0) AS EsOriginal, t.artista_original AS ArtistaOriginal
                 FROM temas t
                 JOIN interpretes i ON t.id_interprete = i.id
@@ -340,6 +341,7 @@ public class RepositorioMusica
                    ) AS NombreAlbum,
                    t.link_externo AS LinkExterno,
                    CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                   CASE WHEN t.archivo_audio IS NOT NULL AND t.archivo_audio != '' THEN 1 ELSE 0 END AS TieneArchivoAudio,
                    COALESCE(t.es_cover, 0) AS EsCover, COALESCE(t.es_original, 0) AS EsOriginal, t.artista_original AS ArtistaOriginal
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
@@ -3289,5 +3291,329 @@ public class RepositorioMusica
 
         return canciones;
     }
+
+    // ==========================================
+    // GESTIÓN DE COMPOSICIONES (Agrupar versiones/covers)
+    // ==========================================
+
+    /// <summary>
+    /// Crea una nueva composición
+    /// </summary>
+    public async Task<CrudResponse> CrearComposicionAsync(ComposicionRequest request)
+    {
+        try
+        {
+            using var conn = _db.ObtenerConexion();
+            
+            var id = await conn.QuerySingleAsync<int>("""
+                INSERT INTO composiciones (titulo_canonico, compositor, anio_original, notas)
+                VALUES (@TituloCanonico, @Compositor, @AnioOriginal, @Notas);
+                SELECT last_insert_rowid();
+                """, request);
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = "Composición creada correctamente",
+                IdCreado = id
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>
+    /// Lista todas las composiciones con conteo de versiones
+    /// </summary>
+    public async Task<List<ComposicionResumen>> ListarComposicionesAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        var composiciones = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                c.id,
+                c.titulo_canonico,
+                c.compositor,
+                c.anio_original,
+                (SELECT COUNT(*) FROM temas WHERE id_composicion = c.id) +
+                (SELECT COUNT(*) FROM temas_cd WHERE id_composicion = c.id) as total_versiones
+            FROM composiciones c
+            ORDER BY c.titulo_canonico
+            """);
+        
+        var resultado = new List<ComposicionResumen>();
+        
+        foreach (var c in composiciones)
+        {
+            // Contar artistas únicos
+            var artistasCassette = await conn.QueryAsync<int>(
+                "SELECT DISTINCT id_interprete FROM temas WHERE id_composicion = @id",
+                new { id = (int)(long)c.id });
+            var artistasCd = await conn.QueryAsync<int>(
+                "SELECT DISTINCT id_interprete FROM temas_cd WHERE id_composicion = @id",
+                new { id = (int)(long)c.id });
+            
+            var todosArtistas = artistasCassette.Concat(artistasCd).Distinct().Count();
+            
+            resultado.Add(new ComposicionResumen
+            {
+                Id = (int)(long)c.id,
+                TituloCanonico = (string)c.titulo_canonico,
+                Compositor = (string?)c.compositor,
+                AnioOriginal = (string?)c.anio_original,
+                TotalVersiones = (int)(long)c.total_versiones,
+                TotalArtistas = todosArtistas
+            });
+        }
+        
+        return resultado;
+    }
+
+    /// <summary>
+    /// Separa una canción de su composición (la hace independiente)
+    /// </summary>
+    public async Task<CrudResponse> SepararDeComposicionAsync(SepararCancionRequest request)
+    {
+        try
+        {
+            using var conn = _db.ObtenerConexion();
+            var tabla = request.Tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+            
+            // Verificar que la canción existe y tiene composición
+            var idComposicionActual = await conn.QueryFirstOrDefaultAsync<int?>(
+                $"SELECT id_composicion FROM {tabla} WHERE id = @id",
+                new { id = request.IdCancion });
+            
+            if (idComposicionActual == null)
+            {
+                return new CrudResponse { Exito = false, Mensaje = "La canción ya es independiente" };
+            }
+            
+            // Quitar la canción de la composición
+            await conn.ExecuteAsync(
+                $"UPDATE {tabla} SET id_composicion = NULL WHERE id = @id",
+                new { id = request.IdCancion });
+            
+            // Verificar si la composición quedó vacía
+            var restantesCassette = await conn.QueryFirstAsync<int>(
+                "SELECT COUNT(*) FROM temas WHERE id_composicion = @id",
+                new { id = idComposicionActual });
+            var restantesCd = await conn.QueryFirstAsync<int>(
+                "SELECT COUNT(*) FROM temas_cd WHERE id_composicion = @id",
+                new { id = idComposicionActual });
+            
+            // Si solo queda 1 canción o menos, desagrupar esa también y eliminar la composición
+            if (restantesCassette + restantesCd <= 1)
+            {
+                await conn.ExecuteAsync(
+                    "UPDATE temas SET id_composicion = NULL WHERE id_composicion = @id",
+                    new { id = idComposicionActual });
+                await conn.ExecuteAsync(
+                    "UPDATE temas_cd SET id_composicion = NULL WHERE id_composicion = @id",
+                    new { id = idComposicionActual });
+                await conn.ExecuteAsync(
+                    "DELETE FROM composiciones WHERE id = @id",
+                    new { id = idComposicionActual });
+            }
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = "Canción separada correctamente. Ahora es independiente." 
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>
+    /// Une canciones a una misma composición (agrupa como versiones de la misma obra)
+    /// </summary>
+    public async Task<CrudResponse> UnirAComposicionAsync(UnirCancionesRequest request)
+    {
+        try
+        {
+            using var conn = _db.ObtenerConexion();
+            
+            int idComposicion;
+            
+            if (request.IdComposicionExistente.HasValue)
+            {
+                // Usar composición existente
+                idComposicion = request.IdComposicionExistente.Value;
+                
+                // Verificar que existe
+                var existe = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM composiciones WHERE id = @id",
+                    new { id = idComposicion });
+                
+                if (existe == null)
+                {
+                    return new CrudResponse { Exito = false, Mensaje = "La composición especificada no existe" };
+                }
+            }
+            else
+            {
+                // Crear nueva composición
+                if (string.IsNullOrEmpty(request.TituloNuevaComposicion))
+                {
+                    // Obtener el nombre de la primera canción como título
+                    var primeraCancion = request.Canciones.FirstOrDefault();
+                    if (primeraCancion != null)
+                    {
+                        var tabla = primeraCancion.Tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+                        var nombreTema = await conn.QueryFirstOrDefaultAsync<string>(
+                            $"SELECT tema FROM {tabla} WHERE id = @id",
+                            new { id = primeraCancion.Id });
+                        request = request with { TituloNuevaComposicion = nombreTema ?? "Sin título" };
+                    }
+                    else
+                    {
+                        return new CrudResponse { Exito = false, Mensaje = "Debe proporcionar al menos una canción" };
+                    }
+                }
+                
+                idComposicion = await conn.QuerySingleAsync<int>("""
+                    INSERT INTO composiciones (titulo_canonico)
+                    VALUES (@Titulo);
+                    SELECT last_insert_rowid();
+                    """, new { Titulo = request.TituloNuevaComposicion });
+            }
+            
+            // Actualizar todas las canciones con el id de composición
+            int actualizadas = 0;
+            foreach (var cancion in request.Canciones)
+            {
+                var tabla = cancion.Tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
+                var filas = await conn.ExecuteAsync(
+                    $"UPDATE {tabla} SET id_composicion = @idComp WHERE id = @id",
+                    new { idComp = idComposicion, id = cancion.Id });
+                actualizadas += filas;
+            }
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = $"{actualizadas} canciones agrupadas correctamente",
+                IdCreado = idComposicion
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>
+    /// Obtiene todas las canciones de una composición específica
+    /// </summary>
+    public async Task<List<CancionDuplicada>> ObtenerCancionesDeComposicionAsync(int idComposicion)
+    {
+        using var conn = _db.ObtenerConexion();
+        var canciones = new List<CancionDuplicada>();
+        
+        // Obtener de cassettes
+        var temasCassette = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cassette' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.id_interprete AS IdInterprete,
+                t.num_formato AS numMedio,
+                t.lado || ': ' || t.desde || '-' || t.hasta AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno,
+                COALESCE(t.es_cover, 0) AS EsCover,
+                COALESCE(t.es_original, 0) AS EsOriginal,
+                t.artista_original AS ArtistaOriginal,
+                t.archivo_audio AS ArchivoAudio,
+                t.id_composicion AS IdComposicion
+            FROM temas t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE t.id_composicion = @idComp
+            """, new { idComp = idComposicion });
+        
+        foreach (var t in temasCassette)
+        {
+            canciones.Add(new CancionDuplicada
+            {
+                Id = (int)(long)t.Id,
+                Tipo = "cassette",
+                Tema = (string)(t.Tema ?? ""),
+                Interprete = (string)(t.Interprete ?? ""),
+                IdInterprete = (int)(long)t.IdInterprete,
+                numMedio = (string)(t.numMedio ?? ""),
+                Posicion = (string?)t.Posicion,
+                IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                NombreAlbum = (string?)t.NombreAlbum,
+                TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                LinkExterno = (string?)t.LinkExterno,
+                EsCover = t.EsCover != null && (long)t.EsCover == 1,
+                EsOriginal = t.EsOriginal != null && (long)t.EsOriginal == 1,
+                ArtistaOriginal = (string?)t.ArtistaOriginal,
+                ArchivoAudio = (string?)t.ArchivoAudio,
+                IdComposicion = t.IdComposicion != null ? (int?)(long)t.IdComposicion : null
+            });
+        }
+        
+        // Obtener de CDs
+        var temasCd = await conn.QueryAsync<dynamic>("""
+            SELECT 
+                t.id AS Id,
+                'cd' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.id_interprete AS IdInterprete,
+                t.num_formato AS numMedio,
+                'Track ' || t.ubicacion AS Posicion,
+                t.id_album AS IdAlbum,
+                a.nombre AS NombreAlbum,
+                CASE WHEN t.portada IS NOT NULL AND LENGTH(t.portada) > 0 THEN 1 ELSE 0 END AS TienePortada,
+                t.link_externo AS LinkExterno,
+                COALESCE(t.es_cover, 0) AS EsCover,
+                COALESCE(t.es_original, 0) AS EsOriginal,
+                t.artista_original AS ArtistaOriginal,
+                t.archivo_audio AS ArchivoAudio,
+                t.id_composicion AS IdComposicion
+            FROM temas_cd t
+            JOIN interpretes i ON t.id_interprete = i.id
+            LEFT JOIN albumes a ON t.id_album = a.id
+            WHERE t.id_composicion = @idComp
+            """, new { idComp = idComposicion });
+        
+        foreach (var t in temasCd)
+        {
+            canciones.Add(new CancionDuplicada
+            {
+                Id = (int)(long)t.Id,
+                Tipo = "cd",
+                Tema = (string)(t.Tema ?? ""),
+                Interprete = (string)(t.Interprete ?? ""),
+                IdInterprete = (int)(long)t.IdInterprete,
+                numMedio = (string)(t.numMedio ?? ""),
+                Posicion = (string?)t.Posicion,
+                IdAlbum = t.IdAlbum != null ? (int?)(long)t.IdAlbum : null,
+                NombreAlbum = (string?)t.NombreAlbum,
+                TienePortada = t.TienePortada != null && (long)t.TienePortada == 1,
+                LinkExterno = (string?)t.LinkExterno,
+                EsCover = t.EsCover != null && (long)t.EsCover == 1,
+                EsOriginal = t.EsOriginal != null && (long)t.EsOriginal == 1,
+                ArtistaOriginal = (string?)t.ArtistaOriginal,
+                ArchivoAudio = (string?)t.ArchivoAudio,
+                IdComposicion = t.IdComposicion != null ? (int?)(long)t.IdComposicion : null
+            });
+        }
+        
+        return canciones.OrderBy(c => c.EsCover).ThenBy(c => c.Interprete).ToList();
+    }
 }
+
 

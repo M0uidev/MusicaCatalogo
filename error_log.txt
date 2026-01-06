@@ -1,6 +1,0 @@
-02/01/2026 17:01:53: Error parsing column 12 (Ubicacion=172 - Int64)
-   at Dapper.SqlMapper.ThrowDataException(Exception ex, Int32 index, IDataReader reader, Object value) in /_/Dapper/SqlMapper.cs:line 3925
-   at Deserialize78676121-e641-46fb-8a08-60b2f1adaeea(DbDataReader)
-   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 454
-   at MusicaCatalogo.Services.RepositorioMusica.ObtenerTodasCancionesAsync()
-   at MusicaCatalogo.Endpoints.ConfiguracionEndpoints.<>c__DisplayClass2_0.<<MapearEndpoints>b__31>d.MoveNext()

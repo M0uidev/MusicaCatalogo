@@ -688,5 +688,54 @@ public static class ConfiguracionEndpoints
         })
         .WithName("SincronizarAlbumes")
         .WithTags("Sistema");
+
+        // ==========================================
+        // COMPOSICIONES (Agrupar versiones/covers)
+        // ==========================================
+
+        // Crear nueva composición
+        app.MapPost("/api/composiciones", async (ComposicionRequest request) =>
+        {
+            var resultado = await repo.CrearComposicionAsync(request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("CrearComposicion")
+        .WithTags("Composiciones");
+
+        // Listar composiciones
+        app.MapGet("/api/composiciones", async () =>
+        {
+            var composiciones = await repo.ListarComposicionesAsync();
+            return Results.Ok(composiciones);
+        })
+        .WithName("ListarComposiciones")
+        .WithTags("Composiciones");
+
+        // Obtener canciones de una composición
+        app.MapGet("/api/composiciones/{id:int}/canciones", async (int id) =>
+        {
+            var canciones = await repo.ObtenerCancionesDeComposicionAsync(id);
+            return Results.Ok(canciones);
+        })
+        .WithName("ObtenerCancionesDeComposicion")
+        .WithTags("Composiciones");
+
+        // Separar canción de su composición (hacerla independiente)
+        app.MapPost("/api/composiciones/separar", async (SepararCancionRequest request) =>
+        {
+            var resultado = await repo.SepararDeComposicionAsync(request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SepararDeComposicion")
+        .WithTags("Composiciones");
+
+        // Unir canciones a una composición
+        app.MapPost("/api/composiciones/unir", async (UnirCancionesRequest request) =>
+        {
+            var resultado = await repo.UnirAComposicionAsync(request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("UnirAComposicion")
+        .WithTags("Composiciones");
     }
 }

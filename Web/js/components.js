@@ -29,10 +29,10 @@ function getPaginaActual() {
  */
 function generarHeader() {
     const paginaActual = getPaginaActual();
-    
+
     const navLinks = NAV_ITEMS.map(item => {
-        const isActivo = paginaActual === item.href || 
-                        (paginaActual === '' && item.href === 'index.html');
+        const isActivo = paginaActual === item.href ||
+            (paginaActual === '' && item.href === 'index.html');
         return `<a href="${item.href}" class="${isActivo ? 'activo' : ''}" data-spa-link><i data-lucide="${item.icon}"></i> ${item.label}</a>`;
     }).join('\n            ');
 
@@ -79,6 +79,9 @@ function generarNotificacionesContainer() {
  * Debe llamarse al cargar el DOM
  */
 function initComponents() {
+    // Limpiar modales huérfanos de navegaciones SPA anteriores
+    document.querySelectorAll('.modal-versiones-moved').forEach(m => m.remove());
+
     // Buscar marcadores de posición y reemplazarlos
     const headerPlaceholder = document.getElementById('header-component');
     const footerPlaceholder = document.getElementById('footer-component');
@@ -88,36 +91,29 @@ function initComponents() {
         headerPlaceholder.outerHTML = generarHeader();
     }
 
+    // Eliminar footer-component si existe (ya no se usa)
     if (footerPlaceholder) {
-        footerPlaceholder.outerHTML = generarFooter();
+        footerPlaceholder.remove();
     }
 
     if (notifPlaceholder) {
         notifPlaceholder.outerHTML = generarNotificacionesContainer();
     }
 
-    // Si no hay marcadores, insertar automáticamente
+    // Si no hay marcadores, insertar header automáticamente
     if (!headerPlaceholder && !document.querySelector('header')) {
         document.body.insertAdjacentHTML('afterbegin', generarHeader());
     }
 
-    if (!footerPlaceholder && !document.querySelector('footer')) {
-        // Insertar antes del último script o al final del body
+    // Ya no insertamos footer automáticamente
+
+    if (!notifPlaceholder && !document.getElementById('notificaciones')) {
         const main = document.querySelector('main');
         if (main) {
-            main.insertAdjacentHTML('afterend', generarFooter());
-        } else {
-            document.body.insertAdjacentHTML('beforeend', generarFooter());
+            main.insertAdjacentHTML('afterend', generarNotificacionesContainer());
         }
     }
 
-    if (!notifPlaceholder && !document.getElementById('notificaciones')) {
-        const footer = document.querySelector('footer');
-        if (footer) {
-            footer.insertAdjacentHTML('beforebegin', generarNotificacionesContainer());
-        }
-    }
-    
     if (window.lucide) window.lucide.createIcons();
 }
 
@@ -127,7 +123,7 @@ function initComponents() {
  */
 function generarBreadcrumbs(items) {
     if (!items || items.length === 0) return '';
-    
+
     const crumbs = items.map((item, index) => {
         const isLast = index === items.length - 1;
         if (isLast || !item.href) {
@@ -191,7 +187,7 @@ const COMPONENT_STYLES = `
  */
 function injectComponentStyles() {
     if (document.getElementById('component-styles')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'component-styles';
     style.textContent = COMPONENT_STYLES;

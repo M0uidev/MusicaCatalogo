@@ -575,6 +575,27 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
+
+        /* Botón separar canción */
+        .btn-separar {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radio);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-separar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
     </style>
 
     <nav class="breadcrumb">
@@ -965,6 +986,9 @@
                         </div>
                         <span class="ubicacion-mini-arrow">›</span>
                     </a>
+                    <button class="btn-separar" onclick="event.stopPropagation(); separarCancion(${u.id || u.Id}, '${tipo}')" title="Separar esta canción del grupo">
+                        ✂️ Separar
+                    </button>
                 `;
             }).join('');
 
@@ -1029,6 +1053,31 @@
 
                 if (result.exito || result.Exito) {
                     // Recargar el perfil
+                    location.reload();
+                } else {
+                    alert('Error: ' + (result.mensaje || result.Mensaje));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function separarCancion(idCancion, tipo) {
+            if (!confirm('¿Separar esta canción del grupo? Ya no se considerará versión de las demás.')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/composiciones/separar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idCancion, tipo })
+                });
+
+                const result = await resp.json();
+
+                if (result.exito || result.Exito) {
+                    alert('Canción separada correctamente. Ahora es independiente.');
                     location.reload();
                 } else {
                     alert('Error: ' + (result.mensaje || result.Mensaje));
