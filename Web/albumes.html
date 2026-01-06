@@ -1813,15 +1813,19 @@
                 cargarAlbumes();
             }
 
-            // Exponer funciones necesarias para onclick globalmente
+            // Exponer funciones necesarias para onclick/oninput globalmente
             window.cerrarModal = cerrarModal;
             window.toggleSelectorArtistaNuevo = toggleSelectorArtistaNuevo;
+            window.filtrarArtistasNuevo = filtrarArtistasNuevo;
+            window.seleccionarArtistaNuevo = seleccionarArtistaNuevo;
             window.usarNuevoArtistaNuevo = usarNuevoArtistaNuevo;
             window.crearAlbum = crearAlbum;
             window.cerrarModalCanciones = cerrarModalCanciones;
             window.asignarCancionesSeleccionadas = asignarCancionesSeleccionadas;
             window.cerrarModalEditar = cerrarModalEditar;
             window.toggleSelectorArtistaEditar = toggleSelectorArtistaEditar;
+            window.filtrarArtistasEditar = filtrarArtistasEditar;
+            window.seleccionarArtistaEditar = seleccionarArtistaEditar;
             window.usarNuevoArtistaEditar = usarNuevoArtistaEditar;
             window.guardarEdicionAlbum = guardarEdicionAlbum;
             window.abrirModal = abrirModal;
@@ -1830,6 +1834,13 @@
             window.abrirModalEditarAlbum = abrirModalEditarAlbum;
             window.eliminarAlbum = eliminarAlbum;
             window.abrirModalAgregarCanciones = abrirModalAgregarCanciones;
+            // Funciones usadas en HTML dinámico
+            window.buscarAlbumes = buscarAlbumes;
+            window.cambiarOrden = cambiarOrden;
+            window.filtrarCancionesDisponibles = filtrarCancionesDisponibles;
+            window.toggleCancion = toggleCancion;
+            window.quitarCancionDelAlbum = quitarCancionDelAlbum;
+            window.cargarAlbum = cargarDetalleAlbum;
 
             // Mover modales al body para asegurar que cubran toda la pantalla
             ['modalNuevoAlbum', 'modalAgregarCanciones', 'modalEditarAlbum'].forEach(id => {

@@ -1039,11 +1039,19 @@
                                        <span>Sin portada</span>
                                    </div>`
                 }
-                            ${c.idAlbum
-                    ? `<span class="badge-portada-info" style="display:inline-block; margin-top:0.5rem; font-size:0.8rem; color:var(--color-texto-secundario); background:var(--color-fondo); padding:0.2rem 0.5rem; border-radius:4px; border:1px solid var(--color-borde);">💿 Heredada del álbum</span>`
+                            ${c.tienePortada
+                    ? `<div style="position:absolute; bottom:0.75rem; right:0.75rem; display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end;">
+                           <button class="btn-cambiar-portada" onclick="eliminarPortada()" style="position:static; background:rgba(220,38,38,0.85);" title="Restaurar portada original">
+                               🗑️ Restaurar
+                           </button>
+                           <button class="btn-cambiar-portada" onclick="cambiarPortada()" style="position:static;">
+                               📷 Cambiar
+                           </button>
+                       </div>`
                     : `<button class="btn-cambiar-portada" onclick="cambiarPortada()">
-                                    📷 Cambiar
-                                   </button>`
+                                    📷 ${c.tienePortadaAlbum ? 'Cambiar personalizada' : 'Subir portada'}
+                                   </button>
+                        ${c.idAlbum && !c.tienePortada ? `<span class="badge-portada-info" style="position:absolute; top:0.75rem; left:0.75rem; font-size:0.75rem; color:white; background:rgba(0,0,0,0.6); padding:0.2rem 0.5rem; border-radius:4px; backdrop-filter:blur(4px);">💿 Del Álbum</span>` : ''}`
                 }
                         </div>
                         
@@ -1819,7 +1827,11 @@
                 const result = await resp.json();
                 if (result.exito) {
                     alert('Cambios guardados correctamente');
-                    cargarCancion();
+                    if (window.SPARouter) {
+                        SPARouter.navigateTo('buscar.html');
+                    } else {
+                        window.location.href = 'buscar.html';
+                    }
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1858,6 +1870,28 @@
             }
         });
 
+        async function eliminarPortada() {
+            if (!confirm('¿Deseas eliminar la portada personalizada? Se usará la imagen del álbum o del original si existe.')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/canciones/${idCancion}/portada?tipo=${tipoCancion}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    cargarCancion();
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la portada');
+            }
+        }
+
         // Funciones para gestión de audio
         async function subirAudio() {
             const input = document.getElementById('inputArchivoAudio');
@@ -1892,7 +1926,7 @@
 
             try {
                 const xhr = new XMLHttpRequest();
-                
+
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
                         const porcentaje = Math.round((e.loaded / e.total) * 100);

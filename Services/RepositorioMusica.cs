@@ -1766,7 +1766,8 @@ public class RepositorioMusica
                    {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
                    t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
-                   t.archivo_audio AS ArchivoAudio
+                   t.archivo_audio AS ArchivoAudio,
+                   (CASE WHEN t.portada IS NOT NULL AND length(t.portada) > 0 THEN 1 ELSE 0 END) AS TienePortada
             FROM temas t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id
@@ -1778,7 +1779,8 @@ public class RepositorioMusica
                    {esSingleCol} AS EsAlbumSingle, a.anio AS Anio,
                    COALESCE(t.es_cover, 0) AS EsCover, t.artista_original AS ArtistaOriginal,
                    NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
-                   t.archivo_audio AS ArchivoAudio
+                   t.archivo_audio AS ArchivoAudio,
+                   (CASE WHEN t.portada IS NOT NULL AND length(t.portada) > 0 THEN 1 ELSE 0 END) AS TienePortada
             FROM temas_cd t
             JOIN interpretes i ON t.id_interprete = i.id
             LEFT JOIN albumes a ON t.id_album = a.id

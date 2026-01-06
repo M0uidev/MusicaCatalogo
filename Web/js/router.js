@@ -52,17 +52,48 @@
         },
 
         /**
-         * Navega a una nueva página
+         * Espera a que termine una animación con fallback de timeout
          */
-        navigateTo(path) {
-            // Agregar feedback visual instantáneo
-            const mainContainer = document.getElementById('app-main');
-            if (mainContainer) {
-                mainContainer.style.opacity = '0.7';
-                mainContainer.style.transform = 'scale(0.98)';
-            }
+        waitAnimation(el, timeoutMs) {
+            return new Promise((resolve) => {
+                let done = false;
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    el.removeEventListener('animationend', finish);
+                    resolve();
+                };
+                el.addEventListener('animationend', finish, { once: true });
+                setTimeout(finish, timeoutMs);
+            });
+        },
 
-            this.loadPage(path, true);
+        isNavigating: false,
+
+        /**
+         * Navega a una nueva página con transición de zoom
+         */
+        async navigateTo(path) {
+            if (this.isNavigating) return;
+
+            const mainContainer = document.getElementById('app-main');
+            if (!mainContainer) return;
+
+            // Evitar navegar a la misma página
+            if (this.currentPage === path) return;
+
+            this.isNavigating = true;
+
+            // Bloquear interacciones durante la transición
+            mainContainer.style.pointerEvents = 'none';
+
+            // Animación OUT (zoom out)
+            mainContainer.classList.remove('page-in');
+            mainContainer.classList.add('page-out');
+            await this.waitAnimation(mainContainer, 220);
+
+            // Cargar nueva página
+            await this.loadPage(path, true);
         },
 
         /**
@@ -75,25 +106,14 @@
                 return;
             }
 
-            // Evitar recargar la misma página
-            if (this.currentPage === path && pushState) {
-                // Restaurar opacidad si intentamos ir a la misma página
-                mainContainer.style.opacity = '1';
-                mainContainer.style.transform = 'scale(1)';
-                return;
-            }
-
             try {
-                // Ejecutar cleanup de la página anterior (async para no bloquear)
+                // Ejecutar cleanup de la página anterior
                 if (this.currentCleanup && typeof this.currentCleanup === 'function') {
-                    const cleanup = this.currentCleanup;
-                    setTimeout(() => {
-                        try {
-                            cleanup();
-                        } catch (err) {
-                            console.warn('Error en cleanup:', err);
-                        }
-                    }, 0);
+                    try {
+                        this.currentCleanup();
+                    } catch (err) {
+                        console.warn('Error en cleanup:', err);
+                    }
                     this.currentCleanup = null;
                 }
 
@@ -113,8 +133,7 @@
                 // Si el servidor devolvió la página completa, extraer solo el contenido
                 html = this.extractMainContent(html);
 
-                // Actualizar historial ANTES de actualizar contenido y ejecutar scripts
-                // Esto asegura que window.location.search tenga los parámetros correctos
+                // Actualizar historial ANTES de actualizar contenido
                 if (pushState) {
                     window.history.pushState({ path }, '', path);
                 }
@@ -122,52 +141,50 @@
                 // Actualizar página actual
                 this.currentPage = path;
 
-                // Limpiar scripts de página anterior (async)
-                setTimeout(() => this.cleanupPageScripts(), 0);
+                // Limpiar scripts de página anterior
+                this.cleanupPageScripts();
 
-                // Actualizar contenido instantáneamente
+                // Swap del contenido
                 mainContainer.innerHTML = html;
 
-                // Restaurar opacidad y escala inmediatamente después de actualizar contenido
-                requestAnimationFrame(() => {
-                    mainContainer.style.opacity = '1';
-                    mainContainer.style.transform = 'scale(1)';
-                });
+                // Animación IN (zoom in)
+                mainContainer.classList.remove('page-out');
+                mainContainer.classList.add('page-in');
+                await this.waitAnimation(mainContainer, 280);
 
-                // Ejecutar operaciones de inicialización de forma prioritaria pero async
-                requestAnimationFrame(() => {
-                    // Ejecutar scripts inline que puedan estar en el contenido
-                    this.executeScripts(mainContainer);
+                // Limpiar clases de animación
+                mainContainer.classList.remove('page-in');
 
-                    // Actualizar título de la página
-                    this.updateTitle(path);
+                // Ejecutar scripts inline que puedan estar en el contenido
+                this.executeScripts(mainContainer);
 
-                    // Ejecutar inicializador de la página si existe
-                    this.initializePage(path);
+                // Actualizar título de la página
+                this.updateTitle(path);
 
-                    // Re-attachear event listeners para links dinámicos
-                    this.attachDynamicListeners(mainContainer);
+                // Ejecutar inicializador de la página si existe
+                this.initializePage(path);
 
-                    // Re-crear iconos de Lucide si está disponible
-                    if (window.lucide) {
-                        window.lucide.createIcons();
-                    }
-                });
+                // Re-attachear event listeners para links dinámicos
+                this.attachDynamicListeners(mainContainer);
 
-                // Scroll al inicio (inmediato pero no bloqueante)
-                requestAnimationFrame(() => window.scrollTo(0, 0));
+                // Re-crear iconos de Lucide si está disponible
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+
+                // Scroll al inicio
+                window.scrollTo(0, 0);
 
             } catch (error) {
                 console.error('Error cargando página:', error);
-                mainContainer.innerHTML = `
-                    <div style="text-align: center; padding: 4rem 2rem;">
-                        <h2>❌ Error</h2>
-                        <p>No se pudo cargar la página</p>
-                        <button onclick="SPARouter.navigateTo('/index.html')" class="btn">Volver al inicio</button>
-                    </div>
-                `;
-                mainContainer.style.opacity = '1';
-                mainContainer.style.transform = 'scale(1)';
+                // Fallback: navegación tradicional
+                location.href = path;
+                return;
+            } finally {
+                // SIEMPRE restaurar interactividad
+                mainContainer.classList.remove('page-out', 'page-in');
+                mainContainer.style.pointerEvents = '';
+                this.isNavigating = false;
             }
         },
 

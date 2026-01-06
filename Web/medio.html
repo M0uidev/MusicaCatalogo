@@ -1,9 +1,14 @@
 <main class="container">
     <style>
+        /* Override para hacer la vista un 30% más ancha (1100px * 1.3 ≈ 1430px) */
+        .container {
+            max-width: 1450px !important;
+        }
+
         .lados-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
             margin-top: 1.5rem;
         }
 
@@ -1403,7 +1408,14 @@
             }
         }
 
-        function generarPortadaMini(c) {
+        function generarPortadaMini(c, tipoMedio) {
+            // Prioridad: Portada propia > Portada álbum > Placeholder
+            if (c.tienePortada) {
+                // Si no se pasa tipoMedio explícito, intentamos inferirlo
+                const tipo = tipoMedio || (c.lado ? 'cassette' : 'cd');
+                return `<img src="/api/canciones/${c.id}/portada?tipo=${tipo}" class="cancion-portada-mini" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder-mini\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`;
+            }
+
             if (c.idAlbum && c.idAlbum > 0) {
                 return `<img src="/api/albumes/${c.idAlbum}/portada" class="cancion-portada-mini" alt="" onerror="this.outerHTML='<div class=\\'cancion-placeholder-mini\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`;
             }
@@ -1415,7 +1427,7 @@
             let filas = '';
 
             for (const c of canciones) {
-                const portadaHtml = generarPortadaMini(c);
+                const portadaHtml = generarPortadaMini(c, tipoMedio);
                 const dataCancion = btoa(encodeURIComponent(JSON.stringify({
                     id: c.id,
                     tema: c.tema,

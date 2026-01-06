@@ -417,6 +417,7 @@
             transform: scale(0.95);
             transition: transform 0.2s;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: modalEntrada 0.2s ease;
         }
 
         .modal-versiones.visible .modal-versiones-contenido {
@@ -902,7 +903,7 @@
 
     <main class="container">
         <section class="seccion">
-            <h2><i data-lucide="music"></i> Canciones</h2>
+            <h2>Canciones</h2>
             <p class="seccion-descripcion">Explora tu colección de canciones</p>
 
             <div class="buscador-container">
@@ -1116,6 +1117,7 @@
                         if (c.tipo === 'cassette') perfil.tieneCassette = true;
                         if (c.tipo === 'cd') perfil.tieneCd = true;
                         if (c.archivoAudio) perfil.tieneAudio = true;
+                        // No necesitamos guardar portada propia a nivel de Agrupación global, sino por artista (ver abajo)
 
                         if (c.idAlbum && c.idAlbum > 0) {
                             if (!perfil.idAlbum || c.tipo === 'cd' || c.esCover === 0) {
@@ -1154,6 +1156,7 @@
                             let anioArtista = null;
                             let esAlbumSingleArtista = false;
                             let tieneAudioArtista = false;
+                            let portadaPropiaArtista = null;
                             let tieneCassetteArtista = false;
                             let tieneCdArtista = false;
 
@@ -1165,6 +1168,7 @@
                                     esAlbumSingleArtista = inst.esAlbumSingle;
                                 }
                                 if (inst.archivoAudio) tieneAudioArtista = true;
+                                if (inst.tienePortada) portadaPropiaArtista = { id: inst.id, tipo: inst.tipo };
                                 if (inst.tipo === 'cassette') tieneCassetteArtista = true;
                                 if (inst.tipo === 'cd') tieneCdArtista = true;
                             }
@@ -1182,6 +1186,7 @@
                                 tieneCassette: tieneCassetteArtista,
                                 tieneCd: tieneCdArtista,
                                 tieneAudio: tieneAudioArtista,
+                                portadaPropia: portadaPropiaArtista,
                                 esCover: esCover,
                                 artistaOriginalMarcado: esCover ? (artista.artistaOriginal || artistaOriginalNombre) : null,
                                 totalVersionesGlobal: artistasArray.length // Para saber cuántas versiones hay en total
@@ -1283,7 +1288,10 @@
                 }
 
                 grid.innerHTML = pagina.map((p, idx) => {
-                    const imgUrl = p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null;
+                    const imgUrl = p.portadaPropia
+                        ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
+                        : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+
                     const ins = p.artistas[0].instancias[0];
                     const editUrl = (p.totalArtistas > 1 || p.totalInstancias > 1)
                         ? `perfil-cancion.html?tema=${encodeURIComponent(p.tema)}&artista=${encodeURIComponent(p.interprete)}`
@@ -1330,7 +1338,15 @@
                 const m = document.getElementById('modalVersiones');
                 document.getElementById('modalVersionesTitulo').innerHTML = `${escapeHtml(p.tema)} <small>${escapeHtml(p.interprete)}</small>`;
                 const pc = document.getElementById('modalPortada');
-                pc.innerHTML = p.idAlbum ? `<img src="/api/albumes/${p.idAlbum}/portada" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">` : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
+
+                // Determinar imagen de cabecera (prioridad: portada propia > portada álbum > placeholder)
+                const headerImgUrl = p.portadaPropia
+                    ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
+                    : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+
+                pc.innerHTML = headerImgUrl
+                    ? `<img src="${headerImgUrl}" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`
+                    : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
 
                 // Flatten instances
                 let allInstances = [];
@@ -1345,10 +1361,17 @@
                 });
 
                 const rowsHtml = allInstances.map(i => {
-                    const albumName = i.albumNombre || i.album || 'Sin álbum';
-                    const coverImg = (i.idAlbum && i.idAlbum > 0)
-                        ? `/api/albumes/${i.idAlbum}/portada`
-                        : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+                    let albumName = i.albumNombre || i.album;
+                    if (!albumName) {
+                        albumName = i.esCover ? '' : '';
+                    }
+
+                    // Prioridad: Portada propia de la instancia > Portada del álbum de la instancia > Portada del perfil principal
+                    const coverImg = (i.tienePortada)
+                        ? `/api/canciones/${i.id}/portada?tipo=${i.tipo}`
+                        : ((i.idAlbum && i.idAlbum > 0)
+                            ? `/api/albumes/${i.idAlbum}/portada`
+                            : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null));
 
                     const coverHtml = coverImg
                         ? `<img src="${coverImg}" class="track-cover-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`

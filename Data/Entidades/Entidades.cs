@@ -517,6 +517,7 @@ public class CancionGaleria
     public long? Ubicacion { get; set; }
     public string? Anio { get; set; }
     public string? ArchivoAudio { get; set; }
+    public bool TienePortada { get; set; }
 }
 
 /// <summary>DTO para obtener canciones disponibles para asignar</summary>
