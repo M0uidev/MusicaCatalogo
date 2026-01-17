@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medios - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
+<main class="container">
     <style>
         .filtros-container {
             background: var(--color-fondo);
@@ -12,15 +6,15 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .filtros-grupo {
             margin-bottom: 1rem;
         }
-        
+
         .filtros-grupo:last-child {
             margin-bottom: 0;
         }
-        
+
         .filtros-titulo {
             font-size: 0.9rem;
             font-weight: 600;
@@ -30,13 +24,13 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .filtros-opciones {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
-        
+
         .filtro-chip {
             background: white;
             border: 2px solid var(--color-borde);
@@ -49,34 +43,34 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .filtro-chip:hover {
             border-color: var(--color-primario);
             background: #f0f9ff;
         }
-        
+
         .filtro-chip.activo {
             background: var(--color-primario);
             border-color: var(--color-primario);
             color: white;
         }
-        
+
         .filtro-chip .chip-icono {
             width: 20px;
             height: 20px;
         }
-        
+
         .filtro-chip .chip-count {
-            background: rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.1);
             padding: 0.1rem 0.5rem;
             border-radius: 1rem;
             font-size: 0.8rem;
         }
-        
+
         .filtro-chip.activo .chip-count {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .resultados-header {
             display: flex;
             justify-content: space-between;
@@ -85,7 +79,7 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
+
         .ordenar-select {
             padding: 0.5rem 1rem;
             border: 2px solid var(--color-borde);
@@ -94,36 +88,36 @@
             background: white;
             cursor: pointer;
         }
-        
+
         @media (max-width: 600px) {
             .filtro-chip {
                 padding: 0.4rem 0.8rem;
                 font-size: 0.9rem;
             }
         }
-        
+
         /* Buscador de Medios */
         .buscador-Medios {
             position: relative;
             max-width: 500px;
             margin-bottom: 1.5rem;
         }
-        
+
         .buscador-Medios input {
             width: 100%;
             padding: 1rem 1.25rem 1rem 3rem;
-            font-size: 1.1rem;
-            border: 2px solid var(--color-borde);
-            border-radius: var(--radio-grande);
+            font-size: 1rem;
+            border: 1px solid var(--color-borde);
+            border-radius: 2rem;
             background: white;
         }
-        
+
         .buscador-Medios input:focus {
             outline: none;
             border-color: var(--color-primario);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
-        
+
         .buscador-Medios .icono-buscar {
             position: absolute;
             left: 1rem;
@@ -132,7 +126,7 @@
             color: var(--color-texto-secundario);
             pointer-events: none;
         }
-        
+
         .buscador-Medios .btn-limpiar {
             position: absolute;
             right: 0.75rem;
@@ -150,15 +144,15 @@
             font-size: 1.1rem;
             color: var(--color-texto-secundario);
         }
-        
+
         .buscador-Medios .btn-limpiar:hover {
             background: #e5e7eb;
         }
-        
+
         .buscador-Medios.tiene-valor .btn-limpiar {
             display: flex;
         }
-        
+
         .sugerencias-Medios {
             position: absolute;
             top: 100%;
@@ -174,11 +168,11 @@
             box-shadow: var(--sombra-grande);
             display: none;
         }
-        
+
         .sugerencias-Medios.visible {
             display: block;
         }
-        
+
         .sugerencia-Medio {
             padding: 0.875rem 1rem;
             border-bottom: 1px solid var(--color-borde);
@@ -187,98 +181,211 @@
             align-items: center;
             gap: 0.875rem;
         }
-        
-        .sugerencia-Medio:hover, .sugerencia-Medio.activa {
+
+        .sugerencia-Medio:hover,
+        .sugerencia-Medio.activa {
             background: var(--color-fondo);
         }
-        
+
         .sugerencia-Medio:last-child {
             border-bottom: none;
         }
-        
+
         .sugerencia-Medio .sf-icono {
             width: 36px;
             height: 36px;
             flex-shrink: 0;
         }
-        
+
         .sugerencia-Medio .sf-contenido {
             flex: 1;
             min-width: 0;
         }
-        
+
         .sugerencia-Medio .sf-nombre {
             font-weight: 600;
             color: var(--color-texto);
         }
-        
+
         .sugerencia-Medio .sf-detalles {
             font-size: 0.85rem;
             color: var(--color-texto-secundario);
         }
-        
+
         .sugerencia-Medio .sf-badge {
             padding: 0.25rem 0.5rem;
             border-radius: var(--radio);
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .resaltado {
             background: #fef08a;
             padding: 0 2px;
             border-radius: 2px;
         }
+
+        /* GRID DE MEDIOS */
+        .grid-medios {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+        }
+
+        .card-medio {
+            background: var(--color-fondo-card);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio-lg);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-medio:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--sombra-lg);
+            border-color: var(--color-primario-claro);
+        }
+
+        .card-medio::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color-borde);
+            transition: background 0.3s;
+        }
+
+        .card-medio:hover::before {
+            background: var(--color-primario);
+        }
+
+        .card-medio.tipo-cassette:hover::before {
+            background: var(--color-warning);
+        }
+
+        .card-medio.tipo-cd:hover::before {
+            background: var(--color-cd);
+        }
+
+        .card-medio .medio-icono {
+            width: 90px;
+            height: 90px;
+            margin: 1rem 0 1.25rem;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        .card-medio:hover .medio-icono {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .card-medio .medio-titulo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            color: var(--color-texto);
+            letter-spacing: -0.5px;
+        }
+
+        .card-medio .medio-marca {
+            font-size: 0.95rem;
+            color: var(--color-texto-secundario);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .card-medio .medio-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: auto;
+            width: 100%;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-fondo);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--color-texto-claro);
+        }
+
+        .stat-valor {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--color-texto);
+        }
+
+        .card-medio .medio-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--color-fondo);
+            color: var(--color-texto-secundario);
+            border: 1px solid var(--color-borde);
+        }
+
+        .card-medio.tipo-cassette .medio-badge {
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fcd34d;
+        }
+
+        .card-medio.tipo-cd .medio-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
     </style>
-</head>
-<body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="medios.html" class="activo">Medios</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
 
     <main class="container">
         <section class="seccion">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
                 <div>
-                    <h2 style="margin: 0;">📼 Cassettes y CDs</h2>
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i
+                            data-lucide="cassette-tape" style="width:24px;height:24px;"></i> Cassettes y CDs</h2>
                     <p class="seccion-descripcion" style="margin: 0.5rem 0 0;">Explora la colección de grabaciones.</p>
                 </div>
-                <button class="btn btn-acento" onclick="abrirModalNuevoMedio()" style="display: flex; align-items: center; gap: 0.5rem;">
-                    ➕ Nuevo
+                <button class="btn btn-acento" onclick="abrirModalNuevoMedio()"
+                    style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Nuevo
                 </button>
             </div>
-            
+
             <!-- Buscador de Medios -->
             <div class="buscador-Medios" id="buscadorContainer">
-                <span class="icono-buscar">🔍</span>
+                <span class="icono-buscar"><i data-lucide="search"></i></span>
                 <input type="text" id="buscarMedio" placeholder="Buscar por número o marca..." autocomplete="off">
-                <button class="btn-limpiar" id="btnLimpiarBusqueda" title="Limpiar">✕</button>
+                <button class="btn-limpiar" id="btnLimpiarBusqueda" title="Limpiar"><i data-lucide="x"></i></button>
                 <div class="sugerencias-Medios" id="sugerenciasMedios"></div>
             </div>
-            
+
             <div class="filtros-container">
                 <!-- Filtro por tipo -->
                 <div class="filtros-grupo">
-                    <div class="filtros-titulo">📦 Tipo de Medio</div>
+                    <div class="filtros-titulo"><i data-lucide="package" style="width:16px;height:16px;"></i> Tipo de
+                        Medio</div>
                     <div class="filtros-opciones" id="filtrosTipo">
                         <button class="filtro-chip activo" data-filtro="tipo" data-valor="todos">
                             Todos <span class="chip-count" id="countTodos">0</span>
@@ -293,10 +400,11 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Filtro por tipo de cinta (solo cassettes) -->
                 <div class="filtros-grupo" id="filtrosCinta" style="display: none;">
-                    <div class="filtros-titulo">🎞️ Tipo de cinta magnética</div>
+                    <div class="filtros-titulo"><i data-lucide="film" style="width:16px;height:16px;"></i> Tipo de cinta
+                        magnética</div>
                     <div class="filtros-opciones">
                         <button class="filtro-chip activo" data-filtro="cinta" data-valor="todas">
                             Todas
@@ -327,295 +435,308 @@
                     <option value="marca">Ordenar por marca</option>
                 </select>
             </div>
-            <div id="listaMedios" class="lista-items">
+            <div id="listaMedios" class="grid-medios">
                 <p class="cargando">Cargando Medios...</p>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
 
-    <script src="js/app.js"></script>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
     <script>
-        let MediosCargados = [];
-        let filtroTipoActual = 'todos';
-        let filtroCintaActual = 'todas';
-        let terminoBusqueda = '';
-        let sugerenciaActiva = -1;
+        // Envolver en IIFE para evitar contaminación de scope global  
+        (function () {
+            'use strict';
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Poner iconos en los chips
-            document.getElementById('iconoChipCassette').innerHTML = ICONOS.cassette;
-            document.getElementById('iconoChipCd').innerHTML = ICONOS.cd;
+            let MediosCargados = [];
+            let filtroTipoActual = 'todos';
+            let filtroCintaActual = 'todas';
+            let terminoBusqueda = '';
+            let sugerenciaActiva = -1;
 
-            await cargarMedios();
+            // Inicialización inmediata para SPA
+            (async () => {
+                // Poner iconos en los chips
+                document.getElementById('iconoChipCassette').innerHTML = ICONOS.cassette;
+                document.getElementById('iconoChipCd').innerHTML = ICONOS.cd;
 
-            // Configurar filtros de tipo
-            document.querySelectorAll('[data-filtro="tipo"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('[data-filtro="tipo"]').forEach(b => b.classList.remove('activo'));
-                    btn.classList.add('activo');
-                    filtroTipoActual = btn.dataset.valor;
-                    
-                    // Mostrar/ocultar filtros de cinta
-                    const filtrosCinta = document.getElementById('filtrosCinta');
-                    if (filtroTipoActual === 'cassette') {
-                        filtrosCinta.style.display = 'block';
-                    } else {
-                        filtrosCinta.style.display = 'none';
-                        filtroCintaActual = 'todas';
-                        document.querySelectorAll('[data-filtro="cinta"]').forEach(b => {
-                            b.classList.toggle('activo', b.dataset.valor === 'todas');
-                        });
-                    }
-                    
-                    aplicarFiltros();
-                });
-            });
+                await cargarMedios();
 
-            // Configurar filtros de cinta
-            document.querySelectorAll('[data-filtro="cinta"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('[data-filtro="cinta"]').forEach(b => b.classList.remove('activo'));
-                    btn.classList.add('activo');
-                    filtroCintaActual = btn.dataset.valor;
-                    aplicarFiltros();
-                });
-            });
-
-            // Configurar ordenamiento
-            document.getElementById('ordenarPor').addEventListener('change', aplicarFiltros);
-            
-            // Configurar buscador
-            configurarBuscador();
-
-            // Verificar parámetros de URL
-            const params = new URLSearchParams(window.location.search);
-            const tipoParam = params.get('tipo');
-            if (tipoParam) {
+                // Configurar filtros de tipo
                 document.querySelectorAll('[data-filtro="tipo"]').forEach(btn => {
-                    btn.classList.toggle('activo', btn.dataset.valor === tipoParam);
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-filtro="tipo"]').forEach(b => b.classList.remove('activo'));
+                        btn.classList.add('activo');
+                        filtroTipoActual = btn.dataset.valor;
+
+                        // Mostrar/ocultar filtros de cinta
+                        const filtrosCinta = document.getElementById('filtrosCinta');
+                        if (filtroTipoActual === 'cassette') {
+                            filtrosCinta.style.display = 'block';
+                        } else {
+                            filtrosCinta.style.display = 'none';
+                            filtroCintaActual = 'todas';
+                            document.querySelectorAll('[data-filtro="cinta"]').forEach(b => {
+                                b.classList.toggle('activo', b.dataset.valor === 'todas');
+                            });
+                        }
+
+                        aplicarFiltros();
+                    });
                 });
-                filtroTipoActual = tipoParam;
-                if (tipoParam === 'cassette') {
-                    document.getElementById('filtrosCinta').style.display = 'block';
+
+                // Configurar filtros de cinta
+                document.querySelectorAll('[data-filtro="cinta"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-filtro="cinta"]').forEach(b => b.classList.remove('activo'));
+                        btn.classList.add('activo');
+                        filtroCintaActual = btn.dataset.valor;
+                        aplicarFiltros();
+                    });
+                });
+
+                // Configurar ordenamiento
+                document.getElementById('ordenarPor').addEventListener('change', aplicarFiltros);
+
+                // Configurar buscador
+                configurarBuscador();
+
+                // Verificar parámetros de URL
+                const params = new URLSearchParams(window.location.search);
+                const tipoParam = params.get('tipo');
+                if (tipoParam) {
+                    document.querySelectorAll('[data-filtro="tipo"]').forEach(btn => {
+                        btn.classList.toggle('activo', btn.dataset.valor === tipoParam);
+                    });
+                    filtroTipoActual = tipoParam;
+                    if (tipoParam === 'cassette') {
+                        document.getElementById('filtrosCinta').style.display = 'block';
+                    }
+                    aplicarFiltros();
                 }
-                aplicarFiltros();
-            }
-        });
+            })();
 
-        async function cargarMedios() {
-            try {
-                const resp = await fetch('/api/Medios?limite=500');
-                MediosCargados = await resp.json();
-                
-                // Actualizar contadores
-                const cassettes = MediosCargados.filter(f => esCassette(f.numMedio));
-                const cds = MediosCargados.filter(f => !esCassette(f.numMedio));
-                
-                document.getElementById('countTodos').textContent = MediosCargados.length;
-                document.getElementById('countCassettes').textContent = cassettes.length;
-                document.getElementById('countCds').textContent = cds.length;
-                
-                aplicarFiltros();
-            } catch (error) {
-                console.error('Error cargando Medios:', error);
-                document.getElementById('listaMedios').innerHTML = '<p class="error">Error al cargar los Medios</p>';
-            }
-        }
+            async function cargarMedios() {
+                try {
+                    const resp = await fetch('/api/Medios?limite=500');
+                    MediosCargados = await resp.json();
 
-        function esCassette(numMedio) {
-            return /^[nc]\d/i.test(numMedio || '');
-        }
+                    // Actualizar contadores
+                    const cassettes = MediosCargados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cassette');
+                    const cds = MediosCargados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cd');
 
-        function obtenerTipoCinta(bias) {
-            if (!bias) return 'normal';
-            const b = bias.toLowerCase();
-            if (b.includes('metal')) return 'metal';
-            if (b.includes('cromo') || b.includes('chrome')) return 'cromo';
-            if (b.includes('fecr') || b.includes('fe cr')) return 'fecr';
-            return 'normal';
-        }
+                    document.getElementById('countTodos').textContent = MediosCargados.length;
+                    document.getElementById('countCassettes').textContent = cassettes.length;
+                    document.getElementById('countCds').textContent = cds.length;
 
-        function aplicarFiltros() {
-            let filtrados = [...MediosCargados];
-            
-            // Filtrar por búsqueda
-            if (terminoBusqueda.length > 0) {
-                const busq = terminoBusqueda.toLowerCase();
-                filtrados = filtrados.filter(f => 
-                    (f.numMedio || '').toLowerCase().includes(busq) ||
-                    (f.marca || '').toLowerCase().includes(busq)
-                );
-            }
-            
-            // Filtrar por tipo
-            if (filtroTipoActual === 'cassette') {
-                filtrados = filtrados.filter(f => esCassette(f.numMedio));
-            } else if (filtroTipoActual === 'cd') {
-                filtrados = filtrados.filter(f => !esCassette(f.numMedio));
-            }
-            
-            // Filtrar por tipo de cinta (solo si es cassette)
-            if (filtroTipoActual === 'cassette' && filtroCintaActual !== 'todas') {
-                filtrados = filtrados.filter(f => obtenerTipoCinta(f.bias) === filtroCintaActual);
-            }
-            
-            // Ordenar
-            const orden = document.getElementById('ordenarPor').value;
-            if (orden === 'canciones') {
-                filtrados.sort((a, b) => (b.totalTemas || 0) - (a.totalTemas || 0));
-            } else if (orden === 'marca') {
-                filtrados.sort((a, b) => (a.marca || '').localeCompare(b.marca || ''));
-            } else {
-                filtrados.sort((a, b) => (a.numMedio || '').localeCompare(b.numMedio || ''));
-            }
-            
-            mostrarMedios(filtrados);
-        }
-
-        function mostrarMedios(Medios) {
-            const lista = document.getElementById('listaMedios');
-            const contador = document.getElementById('contadorResultados');
-            
-            // Contar cassettes y CDs en resultados filtrados
-            const cassettes = Medios.filter(f => esCassette(f.numMedio)).length;
-            const cds = Medios.length - cassettes;
-            
-            let textoContador = `${Medios.length} Medio${Medios.length !== 1 ? 's' : ''}`;
-            if (filtroTipoActual === 'todos') {
-                textoContador += ` (${cassettes} cassettes, ${cds} CDs)`;
-            }
-            contador.textContent = textoContador;
-            
-            if (Medios.length === 0) {
-                lista.innerHTML = '<p class="cargando">No se encontraron Medios con estos filtros</p>';
-                return;
+                    aplicarFiltros();
+                } catch (error) {
+                    console.error('Error cargando Medios:', error);
+                    document.getElementById('listaMedios').innerHTML = '<p class="error">Error al cargar los Medios</p>';
+                }
             }
 
-            lista.innerHTML = Medios.map(f => {
-                const esC = esCassette(f.numMedio);
-                const icono = obtenerIconoMedio(f.numMedio, f.bias, esC);
-                const claseTipo = obtenerClaseTipo(f.numMedio, f.bias);
-                const nombreTipo = esC ? obtenerNombreTipoCinta(f.bias) : 'CD';
-                
-                return `
-                    <a href="medio.html?num=${encodeURIComponent(f.numMedio)}" class="item-card">
-                        <div class="item-icono">${icono}</div>
-                        <div class="item-contenido">
-                            <div class="item-titulo">${escapeHtml(f.numMedio)}</div>
-                            <div class="item-info">${escapeHtml(f.marca || 'Sin marca')} • ${f.totalTemas || 0} canciones</div>
-                            <div class="item-badges">
-                                <span class="badge badge-${claseTipo}">${nombreTipo}</span>
+
+
+            function obtenerTipoCinta(bias) {
+                if (!bias) return 'normal';
+                const b = bias.toLowerCase();
+                if (b.includes('metal')) return 'metal';
+                if (b.includes('cromo') || b.includes('chrome')) return 'cromo';
+                if (b.includes('fecr') || b.includes('fe cr')) return 'fecr';
+                return 'normal';
+            }
+
+            function aplicarFiltros() {
+                let filtrados = [...MediosCargados];
+
+                // Filtrar por búsqueda
+                if (terminoBusqueda.length > 0) {
+                    const busq = terminoBusqueda.toLowerCase();
+                    filtrados = filtrados.filter(f =>
+                        (f.numMedio || '').toLowerCase().includes(busq) ||
+                        (f.marca || '').toLowerCase().includes(busq)
+                    );
+                }
+
+                // Filtrar por tipo
+                if (filtroTipoActual === 'cassette') {
+                    filtrados = filtrados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cassette');
+                } else if (filtroTipoActual === 'cd') {
+                    filtrados = filtrados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cd');
+                }
+
+                // Filtrar por tipo de cinta (solo si es cassette)
+                if (filtroTipoActual === 'cassette' && filtroCintaActual !== 'todas') {
+                    filtrados = filtrados.filter(f => obtenerTipoCinta(f.bias) === filtroCintaActual);
+                }
+
+                // Ordenar
+                const orden = document.getElementById('ordenarPor').value;
+                if (orden === 'canciones') {
+                    filtrados.sort((a, b) => (b.totalTemas || 0) - (a.totalTemas || 0));
+                } else if (orden === 'marca') {
+                    filtrados.sort((a, b) => (a.marca || '').localeCompare(b.marca || ''));
+                } else {
+                    filtrados.sort((a, b) => (a.numMedio || '').localeCompare(b.numMedio || ''));
+                }
+
+                mostrarMedios(filtrados);
+            }
+
+            function mostrarMedios(Medios) {
+                const lista = document.getElementById('listaMedios');
+                const contador = document.getElementById('contadorResultados');
+
+                // Contar cassettes y CDs en resultados filtrados
+                const cassettes = Medios.filter(f => (f.tipoMedio || '').toLowerCase() === 'cassette').length;
+                const cds = Medios.length - cassettes;
+
+                let textoContador = `${Medios.length} Medio${Medios.length !== 1 ? 's' : ''}`;
+                if (filtroTipoActual === 'todos') {
+                    textoContador += ` (${cassettes} cassettes, ${cds} CDs)`;
+                }
+                contador.textContent = textoContador;
+
+                if (Medios.length === 0) {
+                    lista.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><p class="cargando">No se encontraron Medios con estos filtros</p></div>';
+                    return;
+                }
+
+                lista.innerHTML = Medios.map(f => {
+                    const esC = (f.tipoMedio || '').toLowerCase() === 'cassette';
+                    const icono = obtenerIconoMedio(f.numMedio, f.bias, esC);
+                    const claseTipo = obtenerClaseTipo(f.numMedio, f.bias, esC);
+                    const nombreTipo = esC ? obtenerNombreTipoCinta(f.bias) : 'CD';
+                    const tipoGeneral = esC ? 'tipo-cassette' : 'tipo-cd';
+
+                    return `
+                    <a href="medio.html?num=${encodeURIComponent(f.numMedio)}" class="card-medio ${tipoGeneral}" data-spa-link>
+                        <div class="medio-icono">${icono}</div>
+                        <div class="medio-titulo">${escapeHtml(f.numMedio)}</div>
+                        <div class="medio-marca">${escapeHtml(f.marca || 'Sin marca')}</div>
+                        
+                        <div class="medio-stats">
+                            <div class="stat-item">
+                                <span class="stat-valor">${f.totalTemas || 0}</span>
+                                <span>Canciones</span>
                             </div>
+                            ${f.ubicacion ? `
+                            <div class="stat-item">
+                                <span class="stat-valor" style="font-size: 0.9rem;">${escapeHtml(f.ubicacion)}</span>
+                                <span>Ubicación</span>
+                            </div>` : ''}
                         </div>
                     </a>
                 `;
-            }).join('');
-        }
+                }).join('');
+            }
 
-        // ========== BUSCADOR ==========
-        
-        function configurarBuscador() {
-            const input = document.getElementById('buscarMedio');
-            const sugerencias = document.getElementById('sugerenciasMedios');
-            const container = document.getElementById('buscadorContainer');
-            const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
-            
-            input.addEventListener('input', () => {
-                const valor = input.value.trim();
-                terminoBusqueda = valor;
-                sugerenciaActiva = -1;
-                
-                // Toggle clase para mostrar/ocultar botón limpiar
-                container.classList.toggle('tiene-valor', valor.length > 0);
-                
-                if (valor.length === 0) {
+            // ========== BUSCADOR ==========
+
+            function configurarBuscador() {
+                const input = document.getElementById('buscarMedio');
+                const sugerencias = document.getElementById('sugerenciasMedios');
+                const container = document.getElementById('buscadorContainer');
+                const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+
+                input.addEventListener('input', () => {
+                    const valor = input.value.trim();
+                    terminoBusqueda = valor;
+                    sugerenciaActiva = -1;
+
+                    // Toggle clase para mostrar/ocultar botón limpiar
+                    container.classList.toggle('tiene-valor', valor.length > 0);
+
+                    if (valor.length === 0) {
+                        sugerencias.classList.remove('visible');
+                        aplicarFiltros();
+                        return;
+                    }
+
+                    mostrarSugerencias(valor);
+                    aplicarFiltros();
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    const items = sugerencias.querySelectorAll('.sugerencia-Medio');
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        sugerenciaActiva = Math.min(sugerenciaActiva + 1, items.length - 1);
+                        actualizarSugerenciaActiva(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        sugerenciaActiva = Math.max(sugerenciaActiva - 1, -1);
+                        actualizarSugerenciaActiva(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (sugerenciaActiva >= 0 && items[sugerenciaActiva]) {
+                            items[sugerenciaActiva].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        sugerencias.classList.remove('visible');
+                    }
+                });
+
+                btnLimpiar.addEventListener('click', () => {
+                    input.value = '';
+                    terminoBusqueda = '';
+                    container.classList.remove('tiene-valor');
                     sugerencias.classList.remove('visible');
                     aplicarFiltros();
+                    input.focus();
+                });
+
+                // Cerrar sugerencias al hacer clic fuera
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.buscador-Medios')) {
+                        sugerencias.classList.remove('visible');
+                    }
+                });
+            }
+
+            function mostrarSugerencias(valor) {
+                const sugerencias = document.getElementById('sugerenciasMedios');
+                const busq = valor.toLowerCase();
+
+                // Filtrar Medios según tipo activo
+                let MediosFiltrados = MediosCargados;
+                if (filtroTipoActual === 'cassette') {
+                    MediosFiltrados = MediosFiltrados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cassette');
+                } else if (filtroTipoActual === 'cd') {
+                    MediosFiltrados = MediosFiltrados.filter(f => (f.tipoMedio || '').toLowerCase() === 'cd');
+                }
+
+                const coincidencias = MediosFiltrados
+                    .filter(f =>
+                        (f.numMedio || '').toLowerCase().includes(busq) ||
+                        (f.marca || '').toLowerCase().includes(busq)
+                    )
+                    .slice(0, 10);
+
+                if (coincidencias.length === 0) {
+                    sugerencias.innerHTML = '<div style="padding:1rem;color:var(--color-texto-secundario);text-align:center;">No se encontraron Medios</div>';
+                    sugerencias.classList.add('visible');
                     return;
                 }
-                
-                mostrarSugerencias(valor);
-                aplicarFiltros();
-            });
-            
-            input.addEventListener('keydown', (e) => {
-                const items = sugerencias.querySelectorAll('.sugerencia-Medio');
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    sugerenciaActiva = Math.min(sugerenciaActiva + 1, items.length - 1);
-                    actualizarSugerenciaActiva(items);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    sugerenciaActiva = Math.max(sugerenciaActiva - 1, -1);
-                    actualizarSugerenciaActiva(items);
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (sugerenciaActiva >= 0 && items[sugerenciaActiva]) {
-                        items[sugerenciaActiva].click();
-                    }
-                } else if (e.key === 'Escape') {
-                    sugerencias.classList.remove('visible');
-                }
-            });
-            
-            btnLimpiar.addEventListener('click', () => {
-                input.value = '';
-                terminoBusqueda = '';
-                container.classList.remove('tiene-valor');
-                sugerencias.classList.remove('visible');
-                aplicarFiltros();
-                input.focus();
-            });
-            
-            // Cerrar sugerencias al hacer clic fuera
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.buscador-Medios')) {
-                    sugerencias.classList.remove('visible');
-                }
-            });
-        }
-        
-        function mostrarSugerencias(valor) {
-            const sugerencias = document.getElementById('sugerenciasMedios');
-            const busq = valor.toLowerCase();
-            
-            // Filtrar Medios según tipo activo
-            let MediosFiltrados = MediosCargados;
-            if (filtroTipoActual === 'cassette') {
-                MediosFiltrados = MediosFiltrados.filter(f => esCassette(f.numMedio));
-            } else if (filtroTipoActual === 'cd') {
-                MediosFiltrados = MediosFiltrados.filter(f => !esCassette(f.numMedio));
-            }
-            
-            const coincidencias = MediosFiltrados
-                .filter(f => 
-                    (f.numMedio || '').toLowerCase().includes(busq) ||
-                    (f.marca || '').toLowerCase().includes(busq)
-                )
-                .slice(0, 10);
-            
-            if (coincidencias.length === 0) {
-                sugerencias.innerHTML = '<div style="padding:1rem;color:var(--color-texto-secundario);text-align:center;">No se encontraron Medios</div>';
-                sugerencias.classList.add('visible');
-                return;
-            }
-            
-            sugerencias.innerHTML = coincidencias.map(f => {
-                const esC = esCassette(f.numMedio);
-                const icono = obtenerIconoMedio(f.numMedio, f.bias, esC);
-                const claseTipo = obtenerClaseTipo(f.numMedio, f.bias);
-                const nombreTipo = esC ? obtenerNombreTipoCinta(f.bias) : 'CD';
-                
-                // Resaltar coincidencias
-                const numResaltado = resaltarTexto(f.numMedio || '', busq);
-                const marcaResaltada = resaltarTexto(f.marca || 'Sin marca', busq);
-                
-                return `
+
+                sugerencias.innerHTML = coincidencias.map(f => {
+                    const esC = (f.tipoMedio || '').toLowerCase() === 'cassette';
+                    const icono = obtenerIconoMedio(f.numMedio, f.bias, esC);
+                    const claseTipo = obtenerClaseTipo(f.numMedio, f.bias, esC);
+                    const nombreTipo = esC ? obtenerNombreTipoCinta(f.bias) : 'CD';
+
+                    // Resaltar coincidencias
+                    const numResaltado = resaltarTexto(f.numMedio || '', busq);
+                    const marcaResaltada = resaltarTexto(f.marca || 'Sin marca', busq);
+
+                    return `
                     <div class="sugerencia-Medio" data-num="${escapeHtml(f.numMedio)}">
                         <div class="sf-icono">${icono}</div>
                         <div class="sf-contenido">
@@ -625,87 +746,91 @@
                         <span class="sf-badge badge-${claseTipo}">${nombreTipo}</span>
                     </div>
                 `;
-            }).join('');
-            
-            sugerencias.classList.add('visible');
-            
-            // Agregar eventos de clic
-            sugerencias.querySelectorAll('.sugerencia-Medio').forEach(item => {
-                item.addEventListener('click', () => {
-                    window.location.href = `medio.html?num=${encodeURIComponent(item.dataset.num)}`;
+                }).join('');
+
+                sugerencias.classList.add('visible');
+
+                // Agregar eventos de clic
+                sugerencias.querySelectorAll('.sugerencia-Medio').forEach(item => {
+                    item.addEventListener('click', () => {
+                        if (window.SPARouter) {
+                            SPARouter.navigateTo(`medio.html?num=${encodeURIComponent(item.dataset.num)}`);
+                        } else {
+                            window.location.href = `medio.html?num=${encodeURIComponent(item.dataset.num)}`;
+                        }
+                    });
                 });
-            });
-        }
-        
-        function resaltarTexto(texto, busqueda) {
-            if (!busqueda || busqueda.length === 0) return escapeHtml(texto);
-            
-            const regex = new RegExp(`(${busqueda.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return escapeHtml(texto).replace(regex, '<span class="resaltado">$1</span>');
-        }
-        
-        function actualizarSugerenciaActiva(items) {
-            items.forEach((item, i) => {
-                item.classList.toggle('activa', i === sugerenciaActiva);
-            });
-            
-            if (sugerenciaActiva >= 0 && items[sugerenciaActiva]) {
-                items[sugerenciaActiva].scrollIntoView({ block: 'nearest' });
             }
-        }
 
-        // ========== CREAR NUEVO Medio ==========
-        let opciones = null;
-        let selectorActual = null;
-        
-        // Mapeo de campos a sus datos
-        const camposSelector = {
-            marca: { lista: 'marcas', placeholder: 'Seleccionar marca...', icono: '🏷️' },
-            grabador: { lista: 'grabadores', placeholder: 'Seleccionar grabador...', icono: '🎛️' },
-            fuente: { lista: 'fuentes', placeholder: 'Seleccionar fuente...', icono: '📻' },
-            bias: { lista: 'bias', placeholder: 'Seleccionar tipo de cinta...', icono: '📼' },
-            ecualizador: { lista: 'ecualizadores', placeholder: 'Seleccionar ecualizador...', icono: '🎚️' },
-            supresor: { lista: 'supresores', placeholder: 'Seleccionar supresor...', icono: '🔇' },
-            modo: { lista: 'modos', placeholder: 'Seleccionar modo...', icono: '⚙️' }
-        };
+            function resaltarTexto(texto, busqueda) {
+                if (!busqueda || busqueda.length === 0) return escapeHtml(texto);
 
-        async function cargarOpciones() {
-            if (opciones) return;
-            try {
-                const resp = await fetch('/api/opciones');
-                opciones = await resp.json();
-            } catch (error) {
-                console.error('Error cargando opciones:', error);
+                const regex = new RegExp(`(${busqueda.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return escapeHtml(texto).replace(regex, '<span class="resaltado">$1</span>');
             }
-        }
 
-        function toggleSelectorVisual(campo) {
-            const selector = document.getElementById(`selector${capitalizar(campo)}`);
-            const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
-            
-            // Cerrar otros dropdowns abiertos
-            if (selectorActual && selectorActual !== campo) {
-                cerrarSelectorVisual(selectorActual);
+            function actualizarSugerenciaActiva(items) {
+                items.forEach((item, i) => {
+                    item.classList.toggle('activa', i === sugerenciaActiva);
+                });
+
+                if (sugerenciaActiva >= 0 && items[sugerenciaActiva]) {
+                    items[sugerenciaActiva].scrollIntoView({ block: 'nearest' });
+                }
             }
-            
-            if (dropdown.classList.contains('visible')) {
-                cerrarSelectorVisual(campo);
-            } else {
-                abrirSelectorVisual(campo);
+
+            // ========== CREAR NUEVO Medio ==========
+            let opciones = null;
+            let selectorActual = null;
+
+            // Mapeo de campos a sus datos
+            const camposSelector = {
+                marca: { lista: 'marcas', placeholder: 'Seleccionar marca...', icono: '🏷️' },
+                grabador: { lista: 'grabadores', placeholder: 'Seleccionar grabador...', icono: '🎛️' },
+                fuente: { lista: 'fuentes', placeholder: 'Seleccionar fuente...', icono: '📻' },
+                bias: { lista: 'bias', placeholder: 'Seleccionar tipo de cinta...', icono: '📼' },
+                ecualizador: { lista: 'ecualizadores', placeholder: 'Seleccionar ecualizador...', icono: '🎚️' },
+                supresor: { lista: 'supresores', placeholder: 'Seleccionar supresor...', icono: '🔇' },
+                modo: { lista: 'modos', placeholder: 'Seleccionar modo...', icono: '⚙️' }
+            };
+
+            async function cargarOpciones() {
+                if (opciones) return;
+                try {
+                    const resp = await fetch('/api/opciones');
+                    opciones = await resp.json();
+                } catch (error) {
+                    console.error('Error cargando opciones:', error);
+                }
             }
-        }
-        
-        function abrirSelectorVisual(campo) {
-            const selector = document.getElementById(`selector${capitalizar(campo)}`);
-            const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
-            const config = camposSelector[campo];
-            const items = opciones ? opciones[config.lista] || [] : [];
-            
-            selector.classList.add('abierto');
-            selectorActual = campo;
-            
-            // Construir dropdown
-            dropdown.innerHTML = `
+
+            function toggleSelectorVisual(campo) {
+                const selector = document.getElementById(`selector${capitalizar(campo)}`);
+                const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
+
+                // Cerrar otros dropdowns abiertos
+                if (selectorActual && selectorActual !== campo) {
+                    cerrarSelectorVisual(selectorActual);
+                }
+
+                if (dropdown.classList.contains('visible')) {
+                    cerrarSelectorVisual(campo);
+                } else {
+                    abrirSelectorVisual(campo);
+                }
+            }
+
+            function abrirSelectorVisual(campo) {
+                const selector = document.getElementById(`selector${capitalizar(campo)}`);
+                const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
+                const config = camposSelector[campo];
+                const items = opciones ? opciones[config.lista] || [] : [];
+
+                selector.classList.add('abierto');
+                selectorActual = campo;
+
+                // Construir dropdown
+                dropdown.innerHTML = `
                 <div class="selector-dropdown-search">
                     <input type="text" placeholder="Buscar o crear nuevo..." 
                            id="buscar${capitalizar(campo)}" 
@@ -715,249 +840,274 @@
                     ${renderizarItemsSelector(campo, items, '')}
                 </div>
             `;
-            
-            dropdown.classList.add('visible');
-            
-            // Enfocar búsqueda
-            setTimeout(() => {
-                document.getElementById(`buscar${capitalizar(campo)}`).focus();
-            }, 50);
-        }
-        
-        function cerrarSelectorVisual(campo) {
-            const selector = document.getElementById(`selector${capitalizar(campo)}`);
-            const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
-            
-            selector.classList.remove('abierto');
-            dropdown.classList.remove('visible');
-            
-            if (selectorActual === campo) {
-                selectorActual = null;
+
+                dropdown.classList.add('visible');
+
+                // Enfocar búsqueda
+                setTimeout(() => {
+                    document.getElementById(`buscar${capitalizar(campo)}`).focus();
+                }, 50);
             }
-        }
-        
-        function filtrarSelectorVisual(campo, busqueda) {
-            const config = camposSelector[campo];
-            const items = opciones ? opciones[config.lista] || [] : [];
-            const container = document.getElementById(`items${capitalizar(campo)}`);
-            
-            container.innerHTML = renderizarItemsSelector(campo, items, busqueda);
-        }
-        
-        function renderizarItemsSelector(campo, items, busqueda) {
-            const config = camposSelector[campo];
-            const busquedaNorm = busqueda.toLowerCase().trim();
-            
-            let filtrados = items || [];
-            if (busquedaNorm) {
-                filtrados = filtrados.filter(i => {
-                    const nombre = i.nombre || i.Nombre || '';
-                    return nombre.toLowerCase().includes(busquedaNorm);
-                });
+
+            function cerrarSelectorVisual(campo) {
+                const selector = document.getElementById(`selector${capitalizar(campo)}`);
+                const dropdown = document.getElementById(`dropdown${capitalizar(campo)}`);
+
+                selector.classList.remove('abierto');
+                dropdown.classList.remove('visible');
+
+                if (selectorActual === campo) {
+                    selectorActual = null;
+                }
             }
-            
-            let html = '';
-            
-            // Mostrar items existentes
-            if (filtrados.length > 0) {
-                html = filtrados.slice(0, 15).map(item => {
-                    const nombre = item.nombre || item.Nombre || '';
-                    const cantidad = item.cantidad || item.Cantidad || item.count || 0;
-                    return `
+
+            function filtrarSelectorVisual(campo, busqueda) {
+                const config = camposSelector[campo];
+                const items = opciones ? opciones[config.lista] || [] : [];
+                const container = document.getElementById(`items${capitalizar(campo)}`);
+
+                container.innerHTML = renderizarItemsSelector(campo, items, busqueda);
+            }
+
+            function renderizarItemsSelector(campo, items, busqueda) {
+                const config = camposSelector[campo];
+                const busquedaNorm = busqueda.toLowerCase().trim();
+
+                let filtrados = items || [];
+                if (busquedaNorm) {
+                    filtrados = filtrados.filter(i => {
+                        const nombre = i.nombre || i.Nombre || '';
+                        return nombre.toLowerCase().includes(busquedaNorm);
+                    });
+                }
+
+                let html = '';
+
+                // Mostrar items existentes
+                if (filtrados.length > 0) {
+                    html = filtrados.slice(0, 15).map(item => {
+                        const nombre = item.nombre || item.Nombre || '';
+                        const cantidad = item.cantidad || item.Cantidad || item.count || 0;
+                        return `
                         <div class="selector-dropdown-item" onclick="seleccionarOpcion('${campo}', '${escapeHtml(nombre)}')">
                             <span class="item-icono">${config.icono}</span>
                             <span>${escapeHtml(nombre)}</span>
                             ${cantidad ? `<span class="item-count">${cantidad}</span>` : ''}
                         </div>
                     `;
-                }).join('');
-            }
-            
-            // Opción de crear nuevo si no existe exacto
-            const existeExacto = (items || []).some(i => {
-                const nombre = i.nombre || i.Nombre || '';
-                return nombre.toLowerCase() === busquedaNorm;
-            });
-            if (busquedaNorm && !existeExacto) {
-                html += `
+                    }).join('');
+                }
+
+                // Opción de crear nuevo si no existe exacto
+                const existeExacto = (items || []).some(i => {
+                    const nombre = i.nombre || i.Nombre || '';
+                    return nombre.toLowerCase() === busquedaNorm;
+                });
+                if (busquedaNorm && !existeExacto) {
+                    html += `
                     <div class="selector-dropdown-item crear-nuevo" onclick="seleccionarOpcion('${campo}', '${escapeHtml(busqueda)}')">
                         <span class="item-icono">➕</span>
                         <span>Crear: "${escapeHtml(busqueda)}"</span>
                     </div>
                 `;
-            }
-            
-            // Mensaje si no hay nada
-            if (!html) {
-                if (busquedaNorm) {
-                    html = `
+                }
+
+                // Mensaje si no hay nada
+                if (!html) {
+                    if (busquedaNorm) {
+                        html = `
                         <div class="selector-dropdown-item crear-nuevo" onclick="seleccionarOpcion('${campo}', '${escapeHtml(busqueda)}')">
                             <span class="item-icono">➕</span>
                             <span>Crear: "${escapeHtml(busqueda)}"</span>
                         </div>
                     `;
-                } else {
-                    html = '<div style="padding: 1rem; text-align: center; color: #9ca3af;">Escribe para crear nuevo</div>';
+                    } else {
+                        html = '<div style="padding: 1rem; text-align: center; color: #9ca3af;">Escribe para crear nuevo</div>';
+                    }
                 }
-            }
-            
-            return html;
-        }
-        
-        function seleccionarOpcion(campo, valor) {
-            const selector = document.getElementById(`selector${capitalizar(campo)}`);
-            const config = camposSelector[campo];
-            
-            selector.dataset.valor = valor;
-            selector.classList.add('seleccionado');
-            selector.querySelector('.selector-texto').textContent = valor;
-            
-            cerrarSelectorVisual(campo);
-        }
-        
-        function capitalizar(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-        
-        // Cerrar dropdowns al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.selector-visual-container') && selectorActual) {
-                cerrarSelectorVisual(selectorActual);
-            }
-        });
 
-        async function abrirModalNuevoMedio() {
-            await cargarOpciones();
-            document.getElementById('formNuevoMedio').reset();
-            limpiarSelectores();
-            toggleCamposCassetteNuevo();
-            document.getElementById('modalNuevoMedio').classList.add('activo');
-        }
-        
-        function limpiarSelectores() {
-            Object.keys(camposSelector).forEach(campo => {
+                return html;
+            }
+
+            function seleccionarOpcion(campo, valor) {
                 const selector = document.getElementById(`selector${capitalizar(campo)}`);
-                if (selector) {
-                    selector.dataset.valor = '';
-                    selector.classList.remove('seleccionado');
-                    const config = camposSelector[campo];
-                    selector.querySelector('.selector-texto').textContent = config.placeholder;
+                const config = camposSelector[campo];
+
+                selector.dataset.valor = valor;
+                selector.classList.add('seleccionado');
+                selector.querySelector('.selector-texto').textContent = valor;
+
+                cerrarSelectorVisual(campo);
+            }
+
+            function capitalizar(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            }
+
+            // Cerrar dropdowns al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.selector-visual-container') && selectorActual) {
+                    cerrarSelectorVisual(selectorActual);
                 }
             });
-        }
 
-        function cerrarModal(id) {
-            document.getElementById(id).classList.remove('activo');
-            if (selectorActual) {
-                cerrarSelectorVisual(selectorActual);
-            }
-        }
-
-        function toggleCamposCassetteNuevo() {
-            const tipo = document.getElementById('tipoNuevo').value;
-            const campos = document.getElementById('camposCassetteNuevo');
-            campos.style.display = tipo === 'cassette' ? 'block' : 'none';
-        }
-
-        async function crearNuevoMedio() {
-            const numMedio = document.getElementById('numMedioNuevo').value.trim();
-            if (!numMedio) {
-                mostrarToast('Por favor ingrese el número de Medio', 'error');
-                return;
-            }
-            
-            const selectorMarca = document.getElementById('selectorMarca');
-            const marcaNombre = selectorMarca.dataset.valor || '';
-            if (!marcaNombre) {
-                mostrarToast('Por favor seleccione una marca', 'error');
-                return;
+            async function abrirModalNuevoMedio() {
+                await cargarOpciones();
+                document.getElementById('formNuevoMedio').reset();
+                limpiarSelectores();
+                toggleCamposCassetteNuevo();
+                document.getElementById('modalNuevoMedio').classList.add('activo');
             }
 
-            const data = {
-                numMedio: numMedio,
-                tipoMedio: document.getElementById('tipoNuevo').value,
-                nombreMarca: marcaNombre,
-                nombreGrabador: document.getElementById('selectorGrabador').dataset.valor || '',
-                nombreFuente: document.getElementById('selectorFuente').dataset.valor || '',
-                fechaInicio: document.getElementById('fechaInicioNuevo').value
-            };
+            function limpiarSelectores() {
+                Object.keys(camposSelector).forEach(campo => {
+                    const selector = document.getElementById(`selector${capitalizar(campo)}`);
+                    if (selector) {
+                        selector.dataset.valor = '';
+                        selector.classList.remove('seleccionado');
+                        const config = camposSelector[campo];
+                        selector.querySelector('.selector-texto').textContent = config.placeholder;
+                    }
+                });
+            }
 
-            if (data.tipoMedio === 'cassette') {
-                const selectorBias = document.getElementById('selectorBias');
-                const biasNombre = selectorBias.dataset.valor || '';
-                if (!biasNombre) {
-                    mostrarToast('Por favor seleccione el tipo de cinta', 'error');
+            function cerrarModal(id) {
+                document.getElementById(id).classList.remove('activo');
+                if (selectorActual) {
+                    cerrarSelectorVisual(selectorActual);
+                }
+            }
+
+            function toggleCamposCassetteNuevo() {
+                const tipo = document.getElementById('tipoNuevo').value;
+                const campos = document.getElementById('camposCassetteNuevo');
+                campos.style.display = tipo === 'cassette' ? 'block' : 'none';
+            }
+
+            async function crearNuevoMedio() {
+                const numMedio = document.getElementById('numMedioNuevo').value.trim();
+                if (!numMedio) {
+                    mostrarToast('Por favor ingrese el número de Medio', 'error');
                     return;
                 }
-                data.nombreEcualizador = document.getElementById('selectorEcualizador').dataset.valor || '';
-                data.nombreSupresor = document.getElementById('selectorSupresor').dataset.valor || '';
-                data.nombreBias = biasNombre;
-                data.nombreModo = document.getElementById('selectorModo').dataset.valor || '';
-            }
 
-            try {
-                const resp = await fetch('/api/Medios', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await resp.json();
-
-                if (result.exito) {
-                    cerrarModal('modalNuevoMedio');
-                    mostrarToast('Medio creado exitosamente', 'exito');
-                    // Ir al nuevo Medio para agregar canciones
-                    setTimeout(() => {
-                        window.location.href = `medio.html?num=${encodeURIComponent(numMedio)}`;
-                    }, 500);
-                } else {
-                    mostrarToast('Error: ' + result.mensaje, 'error');
+                const selectorMarca = document.getElementById('selectorMarca');
+                const marcaNombre = selectorMarca.dataset.valor || '';
+                if (!marcaNombre) {
+                    mostrarToast('Por favor seleccione una marca', 'error');
+                    return;
                 }
-            } catch (error) {
-                mostrarToast('Error: ' + error.message, 'error');
+
+                const data = {
+                    numMedio: numMedio,
+                    tipoMedio: document.getElementById('tipoNuevo').value,
+                    nombreMarca: marcaNombre,
+                    nombreGrabador: document.getElementById('selectorGrabador').dataset.valor || '',
+                    nombreFuente: document.getElementById('selectorFuente').dataset.valor || '',
+                    fechaInicio: document.getElementById('fechaInicioNuevo').value
+                };
+
+                if (data.tipoMedio === 'cassette') {
+                    const selectorBias = document.getElementById('selectorBias');
+                    const biasNombre = selectorBias.dataset.valor || '';
+                    if (!biasNombre) {
+                        mostrarToast('Por favor seleccione el tipo de cinta', 'error');
+                        return;
+                    }
+                    data.nombreEcualizador = document.getElementById('selectorEcualizador').dataset.valor || '';
+                    data.nombreSupresor = document.getElementById('selectorSupresor').dataset.valor || '';
+                    data.nombreBias = biasNombre;
+                    data.nombreModo = document.getElementById('selectorModo').dataset.valor || '';
+                }
+
+                try {
+                    const resp = await fetch('/api/Medios', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await resp.json();
+
+                    if (result.exito) {
+                        cerrarModal('modalNuevoMedio');
+                        mostrarToast('Medio creado exitosamente', 'exito');
+                        // Ir al nuevo Medio para agregar canciones
+                        setTimeout(() => {
+                            if (window.SPARouter) {
+                                SPARouter.navigateTo(`medio.html?num=${encodeURIComponent(numMedio)}`);
+                            } else {
+                                window.location.href = `medio.html?num=${encodeURIComponent(numMedio)}`;
+                            }
+                        }, 500);
+                    } else {
+                        mostrarToast('Error: ' + result.mensaje, 'error');
+                    }
+                } catch (error) {
+                    mostrarToast('Error: ' + error.message, 'error');
+                }
             }
-        }
-        
-        // ========== UTILIDADES ==========
-        
-        function mostrarToast(mensaje, tipo) {
-            const toast = document.createElement('div');
-            toast.className = `toast ${tipo}`;
-            toast.textContent = mensaje;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => toast.remove(), 3000);
-        }
+
+            // ========== UTILIDADES ==========
+
+            function mostrarToast(mensaje, tipo) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${tipo}`;
+                toast.textContent = mensaje;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Exponer funciones necesarias para onclick globalmente
+            window.abrirModalNuevoMedio = abrirModalNuevoMedio;
+            window.seleccionarOpcion = seleccionarOpcion;
+            window.cerrarModal = cerrarModal;
+            window.toggleSelectorVisual = toggleSelectorVisual;
+            window.crearNuevoMedio = crearNuevoMedio;
+
+            // Mover modal al body para asegurar que cubra toda la pantalla
+            const modal = document.getElementById('modalNuevoMedio');
+            if (modal) {
+                modal.classList.add('modal-moved');
+                document.body.appendChild(modal);
+            }
+
+        })(); // Fin de IIFE
     </script>
 
     <!-- Modal Nuevo Medio -->
-    <div id="modalNuevoMedio" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:white;border-radius:12px;width:90%;max-width:550px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem;border-bottom:1px solid #e5e7eb;">
+    <div id="modalNuevoMedio" class="modal">
+        <div class="modal-contenido">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem;border-bottom:1px solid #e5e7eb;">
                 <h2 style="margin:0;font-size:1.25rem;">➕ Crear Nuevo Medio</h2>
-                <button onclick="cerrarModal('modalNuevoMedio')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">&times;</button>
+                <button onclick="cerrarModal('modalNuevoMedio')"
+                    style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">&times;</button>
             </div>
             <div style="padding:1.25rem;">
                 <form id="formNuevoMedio">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                         <div>
                             <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Número de Medio *</label>
-                            <input type="text" id="numMedioNuevo" placeholder="Ej: n001, cd001" required style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                            <input type="text" id="numMedioNuevo" placeholder="Ej: n001, cd001" required
+                                style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
                         </div>
                         <div>
                             <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Tipo *</label>
-                            <select id="tipoNuevo" onchange="toggleCamposCassetteNuevo()" style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                            <select id="tipoNuevo" onchange="toggleCamposCassetteNuevo()"
+                                style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
                                 <option value="cassette">Cassette</option>
                                 <option value="cd">CD</option>
                             </select>
                         </div>
                     </div>
-                    
+
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                         <div class="selector-visual-container">
                             <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Marca *</label>
-                            <div class="selector-visual" id="selectorMarca" data-campo="marca" data-valor="" onclick="toggleSelectorVisual('marca')">
+                            <div class="selector-visual" id="selectorMarca" data-campo="marca" data-valor=""
+                                onclick="toggleSelectorVisual('marca')">
                                 <span class="selector-texto">Seleccionar marca...</span>
                                 <span class="selector-arrow">▼</span>
                             </div>
@@ -965,28 +1115,32 @@
                         </div>
                         <div class="selector-visual-container">
                             <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Grabador</label>
-                            <div class="selector-visual" id="selectorGrabador" data-campo="grabador" data-valor="" onclick="toggleSelectorVisual('grabador')">
+                            <div class="selector-visual" id="selectorGrabador" data-campo="grabador" data-valor=""
+                                onclick="toggleSelectorVisual('grabador')">
                                 <span class="selector-texto">Seleccionar grabador...</span>
                                 <span class="selector-arrow">▼</span>
                             </div>
                             <div class="selector-dropdown" id="dropdownGrabador"></div>
                         </div>
                     </div>
-                    
+
                     <div class="selector-visual-container" style="margin-bottom:1rem;">
                         <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Fuente de Grabación</label>
-                        <div class="selector-visual" id="selectorFuente" data-campo="fuente" data-valor="" onclick="toggleSelectorVisual('fuente')">
+                        <div class="selector-visual" id="selectorFuente" data-campo="fuente" data-valor=""
+                            onclick="toggleSelectorVisual('fuente')">
                             <span class="selector-texto">Seleccionar fuente...</span>
                             <span class="selector-arrow">▼</span>
                         </div>
                         <div class="selector-dropdown" id="dropdownFuente"></div>
                     </div>
-                    
+
                     <div id="camposCassetteNuevo">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                             <div class="selector-visual-container">
-                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Tipo de Cinta *</label>
-                                <div class="selector-visual" id="selectorBias" data-campo="bias" data-valor="" onclick="toggleSelectorVisual('bias')">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Tipo de Cinta
+                                    *</label>
+                                <div class="selector-visual" id="selectorBias" data-campo="bias" data-valor=""
+                                    onclick="toggleSelectorVisual('bias')">
                                     <span class="selector-texto">Seleccionar tipo...</span>
                                     <span class="selector-arrow">▼</span>
                                 </div>
@@ -994,7 +1148,8 @@
                             </div>
                             <div class="selector-visual-container">
                                 <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Ecualizador</label>
-                                <div class="selector-visual" id="selectorEcualizador" data-campo="ecualizador" data-valor="" onclick="toggleSelectorVisual('ecualizador')">
+                                <div class="selector-visual" id="selectorEcualizador" data-campo="ecualizador"
+                                    data-valor="" onclick="toggleSelectorVisual('ecualizador')">
                                     <span class="selector-texto">Seleccionar...</span>
                                     <span class="selector-arrow">▼</span>
                                 </div>
@@ -1003,8 +1158,10 @@
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                             <div class="selector-visual-container">
-                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Supresor de Ruido</label>
-                                <div class="selector-visual" id="selectorSupresor" data-campo="supresor" data-valor="" onclick="toggleSelectorVisual('supresor')">
+                                <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Supresor de
+                                    Ruido</label>
+                                <div class="selector-visual" id="selectorSupresor" data-campo="supresor" data-valor=""
+                                    onclick="toggleSelectorVisual('supresor')">
                                     <span class="selector-texto">Seleccionar...</span>
                                     <span class="selector-arrow">▼</span>
                                 </div>
@@ -1012,7 +1169,8 @@
                             </div>
                             <div class="selector-visual-container">
                                 <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Modo</label>
-                                <div class="selector-visual" id="selectorModo" data-campo="modo" data-valor="" onclick="toggleSelectorVisual('modo')">
+                                <div class="selector-visual" id="selectorModo" data-campo="modo" data-valor=""
+                                    onclick="toggleSelectorVisual('modo')">
                                     <span class="selector-texto">Seleccionar...</span>
                                     <span class="selector-arrow">▼</span>
                                 </div>
@@ -1020,28 +1178,67 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-bottom:1rem;">
                         <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Fecha</label>
-                        <input type="text" id="fechaInicioNuevo" placeholder="DD/MM/AAAA" style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+                        <input type="text" id="fechaInicioNuevo" placeholder="DD/MM/AAAA"
+                            style="width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;font-size:1rem;">
                     </div>
                 </form>
             </div>
-            <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding:1.25rem;border-top:1px solid #e5e7eb;background:#f9fafb;">
-                <button onclick="cerrarModal('modalNuevoMedio')" style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#f3f4f6;">Cancelar</button>
-                <button onclick="crearNuevoMedio()" style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#10b981;color:white;">Crear y Agregar Canciones</button>
+            <div
+                style="display:flex;justify-content:flex-end;gap:0.75rem;padding:1.25rem;border-top:1px solid #e5e7eb;background:#f9fafb;">
+                <button onclick="cerrarModal('modalNuevoMedio')"
+                    style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#f3f4f6;">Cancelar</button>
+                <button onclick="crearNuevoMedio()"
+                    style="padding:0.6rem 1.25rem;border:none;border-radius:8px;cursor:pointer;font-weight:500;background:#10b981;color:white;">Crear
+                    y Agregar Canciones</button>
             </div>
         </div>
     </div>
 
     <style>
-        .modal.activo { display: flex !important; }
-        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal.activo {
+            display: flex !important;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-contenido {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal.activo .modal-contenido {
+            transform: scale(1);
+        }
+
         /* Selectores visuales tipo dropdown */
         .selector-visual-container {
             position: relative;
         }
-        
+
         .selector-visual {
             display: flex;
             align-items: center;
@@ -1053,21 +1250,21 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
+
         .selector-visual:hover {
             border-color: #3b82f6;
         }
-        
+
         .selector-visual.abierto {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        
+
         .selector-visual.seleccionado {
             border-color: #10b981;
             background: #f0fdf4;
         }
-        
+
         .selector-texto {
             flex: 1;
             white-space: nowrap;
@@ -1075,22 +1272,22 @@
             text-overflow: ellipsis;
             color: #6b7280;
         }
-        
+
         .selector-visual.seleccionado .selector-texto {
             color: #065f46;
             font-weight: 500;
         }
-        
+
         .selector-arrow {
             font-size: 0.7rem;
             color: #9ca3af;
             transition: transform 0.2s;
         }
-        
+
         .selector-visual.abierto .selector-arrow {
             transform: rotate(180deg);
         }
-        
+
         .selector-dropdown {
             display: none;
             position: absolute;
@@ -1103,13 +1300,13 @@
             max-height: 250px;
             overflow-y: auto;
             z-index: 1002;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
-        
+
         .selector-dropdown.visible {
             display: block;
         }
-        
+
         .selector-dropdown-search {
             padding: 0.6rem;
             border-bottom: 1px solid #e5e7eb;
@@ -1117,7 +1314,7 @@
             top: 0;
             background: white;
         }
-        
+
         .selector-dropdown-search input {
             width: 100%;
             padding: 0.5rem 0.75rem;
@@ -1125,16 +1322,16 @@
             border-radius: 6px;
             font-size: 0.9rem;
         }
-        
+
         .selector-dropdown-search input:focus {
             outline: none;
             border-color: #3b82f6;
         }
-        
+
         .selector-dropdown-items {
             padding: 0.25rem 0;
         }
-        
+
         .selector-dropdown-item {
             padding: 0.6rem 0.8rem;
             cursor: pointer;
@@ -1143,26 +1340,26 @@
             gap: 0.5rem;
             transition: background 0.15s;
         }
-        
+
         .selector-dropdown-item:hover {
             background: #f3f4f6;
         }
-        
+
         .selector-dropdown-item.crear-nuevo {
             color: #059669;
             font-weight: 500;
             border-top: 1px solid #e5e7eb;
             background: #f0fdf4;
         }
-        
+
         .selector-dropdown-item.crear-nuevo:hover {
             background: #dcfce7;
         }
-        
+
         .selector-dropdown-item .item-icono {
             font-size: 1.1rem;
         }
-        
+
         .selector-dropdown-item .item-count {
             margin-left: auto;
             font-size: 0.75rem;
@@ -1171,7 +1368,7 @@
             padding: 0.1rem 0.4rem;
             border-radius: 4px;
         }
-        
+
         /* Toast notifications */
         .toast {
             position: fixed;
@@ -1184,16 +1381,39 @@
             font-weight: 500;
             z-index: 2000;
             animation: slideUp 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        
-        .toast.exito { background: #059669; }
-        .toast.error { background: #dc2626; }
-        
+
+        .toast.exito {
+            background: #059669;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
         @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            from {
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
         }
     </style>
-</body>
-</html>
+
+    <script>
+        // Mover modal al body para asegurar que cubra toda la pantalla
+        (function () {
+            const modal = document.getElementById('modalNuevoMedio');
+            if (modal) {
+                modal.classList.add('modal-moved');
+                document.body.appendChild(modal);
+            }
+        })();
+    </script>
+
+</main>

@@ -9,9 +9,9 @@
         .buscador-container input {
             width: 100%;
             padding: 1rem 1.5rem 1rem 3rem;
-            font-size: 1.1rem;
-            border: 2px solid var(--color-borde);
-            border-radius: var(--radio-grande);
+            font-size: 1rem;
+            border: 1px solid var(--color-borde);
+            border-radius: 2rem;
             background: white;
         }
 
@@ -22,12 +22,14 @@
         }
 
         .buscador-container::before {
-            content: '🔍';
+            content: '';
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.2rem;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
         }
 
         .filtros-rapidos {
@@ -903,11 +905,12 @@
 
     <main class="container">
         <section class="seccion">
-            <h2>Canciones</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="music"
+                    style="width:20px;height:20px;"></i> Canciones</h2>
             <p class="seccion-descripcion">Explora tu colección de canciones</p>
 
             <div class="buscador-container">
-                <input type="text" id="inputBusqueda" placeholder="Buscar por canción..." autocomplete="off">
+                <input type="text" id="inputBusqueda" placeholder="Buscar..." autocomplete="off">
             </div>
 
             <div class="filtros-container">
@@ -1307,9 +1310,6 @@
                     return `
                     <div class="cancion-card" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
                         ${p.totalArtistas > 1 ? `<div class="badge-multi-artista"><i data-lucide="mic-2"></i> ${p.totalArtistas} ver.</div>` : ''}
-                        <a href="${editUrl}" class="btn-editar-cancion" data-spa-link onclick="event.stopPropagation();">
-                            <i data-lucide="pencil"></i>
-                        </a>
                         <div class="cancion-imagen-container">
                             ${playButton}
                             ${imgUrl ? `<img src="${imgUrl}" class="cancion-portada" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%2394a3b8%22><path d=%22M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z%22/></svg>'">` : '<div class="cancion-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>'}

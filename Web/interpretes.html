@@ -1,8 +1,67 @@
 <main class="container">
+    <style>
+        .interprete-foto {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .interprete-foto-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #6366f1;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .interpretes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .badge-foto {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--color-exito);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-icono {
+            position: relative;
+        }
+    </style>
+
     <main class="container">
         <section class="seccion">
-            <h2>🎤 Intérpretes</h2>
-            <p class="seccion-descripcion">Busque un intérprete por nombre o navegue por la lista alfabética</p>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="mic"
+                    style="width:20px;height:20px;"></i> Intérpretes</h2>
+            <p class="seccion-descripcion">Busque un intérprete por nombre o navegue por la lista alfabética.
+                Los artistas con <span style="color: var(--color-exito);">●</span> tienen foto personalizada.</p>
 
             <div class="buscador">
                 <input type="text" id="filtroInterprete" placeholder="Escriba el nombre del intérprete..."
@@ -15,7 +74,7 @@
             <div class="resultados-info" style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
                 <span id="contadorInterpretes">Cargando...</span>
             </div>
-            <div id="listaInterpretes" class="lista-items">
+            <div id="listaInterpretes" class="lista-items interpretes-grid">
                 <p class="cargando">Cargando intérpretes...</p>
             </div>
         </section>
@@ -52,6 +111,25 @@
             });
         })();
 
+        function generarFotoInterprete(interprete) {
+            if (interprete.tieneFoto) {
+                return `
+                    <div class="item-icono">
+                        <img src="/api/interpretes/${interprete.id}/foto" 
+                             class="interprete-foto" 
+                             alt="${escapeHtml(interprete.interprete)}"
+                             onerror="this.outerHTML = generarPlaceholderInterprete('${escapeHtml(interprete.interprete).replace(/'/g, "\\'")}')">
+                        <span class="badge-foto">✓</span>
+                    </div>`;
+            }
+            return `<div class="item-icono">${generarPlaceholderInterprete(interprete.interprete)}</div>`;
+        }
+
+        function generarPlaceholderInterprete(nombre) {
+            const inicial = nombre.charAt(0).toUpperCase();
+            return `<div class="interprete-foto-placeholder">${inicial}</div>`;
+        }
+
         async function cargarInterpretes(filtro = '') {
             const lista = document.getElementById('listaInterpretes');
             const contador = document.getElementById('contadorInterpretes');
@@ -64,7 +142,9 @@
                 const resp = await fetch(url);
                 const interpretes = await resp.json();
 
-                contador.textContent = `${formatearNumero(interpretes.length)} intérprete${interpretes.length !== 1 ? 's' : ''} encontrado${interpretes.length !== 1 ? 's' : ''}`;
+                const conFoto = interpretes.filter(i => i.tieneFoto).length;
+                contador.innerHTML = `${formatearNumero(interpretes.length)} intérprete${interpretes.length !== 1 ? 's' : ''} encontrado${interpretes.length !== 1 ? 's' : ''}` +
+                    (conFoto > 0 ? ` <span style="color: var(--color-exito);">(${conFoto} con foto)</span>` : '');
 
                 if (interpretes.length === 0) {
                     lista.innerHTML = '<p class="cargando">No se encontraron intérpretes con ese nombre</p>';
@@ -72,11 +152,11 @@
                 }
 
                 lista.innerHTML = interpretes.map(i => `
-                    <a href="interprete.html?nombre=${encodeURIComponent(i.interprete)}" class="item-card" data-spa-link>
-                        <div class="item-icono">${ICONOS.iconoInterprete}</div>
+                    <a href="interprete.html?nombre=${encodeURIComponent(i.interprete)}&id=${i.id}" class="item-card" data-spa-link>
+                        ${generarFotoInterprete(i)}
                         <div class="item-contenido">
                             <div class="item-titulo">${escapeHtml(i.interprete)}</div>
-                            <div class="item-info">${i.totalTemas} canción${i.totalTemas !== 1 ? 'es' : ''}</div>
+                            <div class="item-info">${i.totalTemas} canción${i.totalTemas !== 1 ? 'es' : ''}${i.integranteDe ? ` • Integrante de ${escapeHtml(i.integranteDe)}` : ''}</div>
                         </div>
                     </a>
                 `).join('');

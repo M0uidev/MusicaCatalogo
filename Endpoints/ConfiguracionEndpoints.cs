@@ -3,6 +3,7 @@ using MusicaCatalogo.Data.Entidades;
 using MusicaCatalogo.Services;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
+using Dapper;
 
 namespace MusicaCatalogo.Endpoints;
 
@@ -135,6 +136,28 @@ public static class ConfiguracionEndpoints
         })
         .WithName("ObtenerInfoRed")
         .WithTags("Sistema");
+
+        // ==========================================
+        // DEBUG SCHEMA
+        // ==========================================
+        app.MapGet("/api/debug/schema", async () =>
+        {
+            using var conn = db.ObtenerConexion();
+            var infoTemas = await conn.QueryAsync("SELECT * FROM pragma_table_info('temas')");
+            var infoTemasCd = await conn.QueryAsync("SELECT * FROM pragma_table_info('temas_cd')");
+            return Results.Ok(new { temas = infoTemas, temas_cd = infoTemasCd });
+        });
+
+        app.MapGet("/api/debug/testquery", async () =>
+        {
+            try {
+                using var conn = db.ObtenerConexion();
+                var res = await conn.QueryAsync("SELECT t.artista_original FROM temas t LIMIT 1");
+                return Results.Ok(res);
+            } catch (Exception ex) {
+                return Results.Problem(ex.Message);
+            }
+        });
 
         // ==========================================
         // SISTEMA QR - Conexión móvil
@@ -299,13 +322,209 @@ public static class ConfiguracionEndpoints
         .WithName("CrearInterprete")
         .WithTags("CRUD");
 
+        // Obtener intérprete por ID con información completa
+        app.MapGet("/api/interpretes/id/{id:int}", async (int id) =>
+        {
+            var interprete = await repo.ObtenerInterpreteCompletoAsync(id);
+            return interprete is null ? Results.NotFound() : Results.Ok(interprete);
+        })
+        .WithName("ObtenerInterpreteCompleto")
+        .WithTags("Intérpretes");
+
+        // Actualizar intérprete
+        app.MapPut("/api/interpretes/{id:int}", async (int id, InterpreteUpdateRequest request) =>
+        {
+            var resultado = await repo.ActualizarInterpreteAsync(id, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("ActualizarInterprete")
+        .WithTags("Intérpretes");
+
+        // Foto de intérprete - Obtener
+        app.MapGet("/api/interpretes/{id:int}/foto", async (int id) =>
+        {
+            var foto = await repo.ObtenerFotoInterpreteAsync(id);
+            if (foto == null || foto.Length == 0)
+                return Results.NotFound();
+            return Results.File(foto, "image/jpeg");
+        })
+        .WithName("ObtenerFotoInterprete")
+        .WithTags("Intérpretes");
+
+        // Foto de intérprete - Subir
+        app.MapPost("/api/interpretes/{id:int}/foto", async (int id, HttpContext context) =>
+        {
+            var form = await context.Request.ReadFormAsync();
+            var file = form.Files.FirstOrDefault();
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Archivo requerido" });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var resultado = await repo.GuardarFotoInterpreteAsync(id, ms.ToArray());
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SubirFotoInterprete")
+        .WithTags("Intérpretes")
+        .DisableAntiforgery();
+
+        // Foto de intérprete - Eliminar
+        app.MapDelete("/api/interpretes/{id:int}/foto", async (int id) =>
+        {
+            var resultado = await repo.EliminarFotoInterpreteAsync(id);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("EliminarFotoInterprete")
+        .WithTags("Intérpretes");
+
+        // ==========================================
+        // MULTI-ARTISTA EN CANCIONES
+        // ==========================================
+
+        // Obtener artistas de una canción
+        app.MapGet("/api/canciones/{id:int}/artistas", async (int id, string tipo) =>
+        {
+            var artistas = await repo.ObtenerArtistasDeCancionAsync(id, tipo);
+            return Results.Ok(artistas);
+        })
+        .WithName("ObtenerArtistasDeCancion")
+        .WithTags("Multi-Artista");
+
+        // Asignar artistas a una canción
+        app.MapPost("/api/canciones/artistas", async (AsignarArtistasCancionRequest request) =>
+        {
+            var resultado = await repo.AsignarArtistasACancionAsync(request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("AsignarArtistasCancion")
+        .WithTags("Multi-Artista");
+
+        // Quitar artista de una canción
+        app.MapDelete("/api/canciones/{id:int}/artistas/{artistaId:int}", async (int id, int artistaId, string tipo) =>
+        {
+            var resultado = await repo.QuitarArtistaDeCancionAsync(id, tipo, artistaId);
+            return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
+        })
+        .WithName("QuitarArtistaDeCancion")
+        .WithTags("Multi-Artista");
+
+        // ==========================================
+        // PERFILES DE ARTISTAS (TIPO SPOTIFY)
+        // ==========================================
+
+        // Obtener perfil completo de artista
+        app.MapGet("/api/interpretes/{id:int}/perfil", async (int id) =>
+        {
+            var perfil = await repo.ObtenerPerfilArtistaAsync(id);
+            return perfil is null ? Results.NotFound() : Results.Ok(perfil);
+        })
+        .WithName("ObtenerPerfilArtista")
+        .WithTags("Perfiles");
+
+        // Actualizar perfil de artista
+        app.MapPut("/api/interpretes/{id:int}/perfil", async (int id, ActualizarPerfilArtistaRequest request) =>
+        {
+            var resultado = await repo.ActualizarPerfilArtistaAsync(id, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("ActualizarPerfilArtista")
+        .WithTags("Perfiles");
+
+        // ==========================================
+        // MIEMBROS DE BANDA
+        // ==========================================
+
+        // Obtener miembros de una banda
+        app.MapGet("/api/interpretes/{id:int}/miembros", async (int id) =>
+        {
+            var miembros = await repo.ObtenerMiembrosBandaAsync(id);
+            return Results.Ok(miembros);
+        })
+        .WithName("ObtenerMiembrosBanda")
+        .WithTags("Miembros");
+
+        // Agregar miembro a banda
+        app.MapPost("/api/interpretes/{id:int}/miembros", async (int id, AgregarMiembroRequest request) =>
+        {
+            var resultado = await repo.AgregarMiembroBandaAsync(id, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("AgregarMiembroBanda")
+        .WithTags("Miembros");
+
+        // Actualizar miembro de banda
+        app.MapPut("/api/interpretes/{idBanda:int}/miembros/{idMiembro:int}", async (int idBanda, int idMiembro, ActualizarMiembroRequest request) =>
+        {
+            var resultado = await repo.ActualizarMiembroAsync(idMiembro, request);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("ActualizarMiembroBanda")
+        .WithTags("Miembros");
+
+        // Quitar miembro de banda
+        app.MapDelete("/api/interpretes/{idBanda:int}/miembros/{idMiembro:int}", async (int idBanda, int idMiembro) =>
+        {
+            var resultado = await repo.QuitarMiembroAsync(idMiembro);
+            return resultado.Exito ? Results.Ok(resultado) : Results.NotFound(resultado);
+        })
+        .WithName("QuitarMiembroBanda")
+        .WithTags("Miembros");
+
+        // ==========================================
+        // CATÁLOGOS (ROLES Y GÉNEROS)
+        // ==========================================
+
+        // Listar roles
+        app.MapGet("/api/catalogos/roles", async () =>
+        {
+            var roles = await repo.ListarRolesAsync();
+            return Results.Ok(roles);
+        })
+        .WithName("ListarRoles")
+        .WithTags("Catálogos");
+
+        // Listar géneros
+        app.MapGet("/api/catalogos/generos", async () =>
+        {
+            var generos = await repo.ListarGenerosAsync();
+            return Results.Ok(generos);
+        })
+        .WithName("ListarGeneros")
+        .WithTags("Catálogos");
+
+        // Crear rol
+        app.MapPost("/api/catalogos/roles", async (HttpContext context) =>
+        {
+            var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+            var nombre = body?.GetValueOrDefault("nombre") ?? "";
+            if (string.IsNullOrWhiteSpace(nombre))
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Nombre requerido" });
+            var resultado = await repo.CrearRolAsync(nombre);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("CrearRol")
+        .WithTags("Catálogos");
+
+        // Crear género
+        app.MapPost("/api/catalogos/generos", async (HttpContext context) =>
+        {
+            var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+            var nombre = body?.GetValueOrDefault("nombre") ?? "";
+            if (string.IsNullOrWhiteSpace(nombre))
+                return Results.BadRequest(new CrudResponse { Exito = false, Mensaje = "Nombre requerido" });
+            var resultado = await repo.CrearGeneroAsync(nombre);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("CrearGenero")
+        .WithTags("Catálogos");
+
         // ==========================================
         // ÁLBUMES
         // ==========================================
 
-        app.MapGet("/api/albumes", async (string? filtro, int? limite) =>
+        app.MapGet("/api/albumes", async (string? filtro, int? limite, int? idInterprete) =>
         {
-            var albumes = await repo.ListarAlbumesAsync(filtro, limite ?? 100);
+            var albumes = await repo.ListarAlbumesAsync(filtro, limite ?? 100, idInterprete);
             return Results.Ok(albumes);
         })
         .WithName("ListarAlbumes")

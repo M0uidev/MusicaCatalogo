@@ -707,9 +707,10 @@
 
         <section id="seccionCanciones" class="seccion" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2>🎵 Canciones en este Medio</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="music"
+                        style="width:20px;height:20px;"></i> Canciones en este Medio</h2>
                 <button class="btn-header btn-agregar-cancion" onclick="abrirModalCancion()">
-                    ➕ Agregar Canción
+                    <i data-lucide="plus" style="width:14px;height:14px;"></i> Agregar Canción
                 </button>
             </div>
             <div id="listaCanciones"></div>
@@ -858,7 +859,7 @@
                         <!-- Grid de selección de álbumes -->
                         <div id="albumSelectorGrid">
                             <input type="text" class="buscar-album-input" id="buscarAlbumInput"
-                                placeholder="🔍 Buscar álbum..." oninput="filtrarAlbumesSelector()">
+                                placeholder="Buscar álbum..." oninput="filtrarAlbumesSelector()">
                             <div class="album-grid-selector" id="albumGridSelector">
                                 <!-- Se llena dinámicamente -->
                             </div>
@@ -926,7 +927,8 @@
                     </div>
                     <p class="texto-ayuda"
                         style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem;">
-                        💡 Podrás agregar portada y más detalles desde la sección Álbumes
+                        <i data-lucide="lightbulb" style="width:14px;height:14px;"></i> Podrás agregar portada y más
+                        detalles desde la sección Álbumes
                     </p>
                 </form>
             </div>
@@ -941,7 +943,8 @@
     <div id="modalConfirmar" class="modal">
         <div class="modal-contenido" style="max-width: 400px;">
             <div class="modal-header">
-                <h2>⚠️ Confirmar Eliminación</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="alert-triangle"
+                        style="width:20px;height:20px;"></i> Confirmar Eliminación</h2>
                 <button class="modal-cerrar" onclick="cerrarModal('modalConfirmar')">&times;</button>
             </div>
             <div class="modal-body">
@@ -1083,7 +1086,7 @@
                 html += `
                     <div class="album-mini-card sin-album ${albumSeleccionadoId === null || albumSeleccionadoId === '' ? 'seleccionado' : ''}" 
                          onclick="seleccionarAlbum(null)">
-                        <div class="album-mini-placeholder">🚫</div>
+                        <div class="album-mini-placeholder"><i data-lucide="ban" style="width:24px;height:24px;"></i></div>
                         <div class="album-mini-info">
                             <div class="album-mini-nombre">Sin álbum</div>
                             <div class="album-mini-artista">No asignar</div>
@@ -1094,7 +1097,7 @@
                 // Opción "Crear nuevo"
                 html += `
                     <div class="album-mini-card nuevo-album" onclick="abrirModalCrearAlbum()">
-                        <div class="album-mini-placeholder">➕</div>
+                        <div class="album-mini-placeholder"><i data-lucide="plus" style="width:24px;height:24px;"></i></div>
                         <div class="album-mini-info">
                             <div class="album-mini-nombre">Crear nuevo</div>
                             <div class="album-mini-artista">Nuevo álbum</div>
@@ -1902,7 +1905,7 @@
                     .slice(0, 10);
 
                 if (filtrados.length === 0) {
-                    lista.innerHTML = `<div class="autocomplete-item" style="color: var(--color-primario);">➕ Crear nuevo: "${escapeHtml(input.value)}"</div>`;
+                    lista.innerHTML = `<div class="autocomplete-item" style="color: var(--color-primario);"><i data-lucide="plus" style="width:12px;height:12px;"></i> Crear nuevo: "${escapeHtml(input.value)}"</div>`;
                     lista.classList.add('visible');
                     lista.querySelector('.autocomplete-item').onclick = () => {
                         document.getElementById('idInterpreteCancion').value = '';

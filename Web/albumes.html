@@ -860,7 +860,8 @@
     <div class="modal" id="modalNuevoAlbum">
         <div class="modal-contenido">
             <div class="modal-header">
-                <h2>✨ Nuevo Álbum / Single</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="sparkles"
+                        style="width:20px;height:20px;"></i> Nuevo Álbum / Single</h2>
                 <button class="modal-cerrar" onclick="cerrarModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -872,7 +873,7 @@
                     <div class="form-grupo artista-selector">
                         <label>Artista</label>
                         <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaNuevo()">
-                            <div class="artista-icono">🎤</div>
+                            <div class="artista-icono"><i data-lucide="mic" style="width:16px;height:16px;"></i></div>
                             <span class="artista-btn-nombre sin-artista" id="nuevoArtistaTexto">Seleccionar
                                 artista...</span>
                             <span>▼</span>
@@ -913,7 +914,8 @@
     <div class="modal" id="modalAgregarCanciones">
         <div class="modal-contenido" style="max-width: 600px;">
             <div class="modal-header">
-                <h2>🎵 Agregar Canciones</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="music"
+                        style="width:20px;height:20px;"></i> Agregar Canciones</h2>
                 <button class="modal-cerrar" onclick="cerrarModalCanciones()">&times;</button>
             </div>
             <div class="modal-body">
@@ -938,7 +940,8 @@
     <div class="modal" id="modalEditarAlbum">
         <div class="modal-contenido">
             <div class="modal-header">
-                <h2>✏️ Editar Álbum</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="pencil"
+                        style="width:20px;height:20px;"></i> Editar Álbum</h2>
                 <button class="modal-cerrar" onclick="cerrarModalEditar()">&times;</button>
             </div>
             <div class="modal-body">
@@ -1732,7 +1735,7 @@
                      onclick="seleccionarArtistaEditar('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
                     <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
                     <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
-                    <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
+                    <span class="artista-item-canciones">${a.totalCanciones} <i data-lucide="music" style="width:12px;height:12px;"></i></span>
                 </div>
             `).join('');
 
@@ -1838,7 +1841,7 @@
             window.buscarAlbumes = buscarAlbumes;
             window.cambiarOrden = cambiarOrden;
             window.filtrarCancionesDisponibles = filtrarCancionesDisponibles;
-            window.toggleCancion = toggleCancion;
+            window.toggleCancionSeleccion = toggleCancionSeleccion;
             window.quitarCancionDelAlbum = quitarCancionDelAlbum;
             window.cargarAlbum = cargarDetalleAlbum;
 

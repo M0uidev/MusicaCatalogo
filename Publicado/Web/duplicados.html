@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canciones Duplicadas - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
+<main class="container">
     <style>
         .stats-duplicados {
             display: grid;
@@ -33,9 +27,17 @@
             margin-top: 0.25rem;
         }
 
-        .stat-card.mixto .valor { color: #8b5cf6; }
-        .stat-card.cassette .valor { color: #f59e0b; }
-        .stat-card.cd .valor { color: #3b82f6; }
+        .stat-card.mixto .valor {
+            color: #8b5cf6;
+        }
+
+        .stat-card.cassette .valor {
+            color: #f59e0b;
+        }
+
+        .stat-card.cd .valor {
+            color: #3b82f6;
+        }
 
         .filtros-duplicados {
             display: flex;
@@ -153,48 +155,6 @@
             border-radius: 3px;
             font-size: 0.7rem;
         }
-        
-        .badge-multiartista {
-            background: #10b981;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: var(--radio);
-            font-size: 0.75rem;
-        }
-        
-        .badge-cover {
-            background: #ec4899;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: var(--radio);
-            font-size: 0.75rem;
-        }
-        
-        .badge-cover-mini {
-            background: #ec4899;
-            color: white;
-            padding: 0.1rem 0.4rem;
-            border-radius: 3px;
-            font-size: 0.65rem;
-            margin-left: 0.5rem;
-        }
-        
-        .artista-instancia {
-            font-size: 0.9rem;
-            color: var(--color-texto);
-            font-weight: 500;
-        }
-        
-        .artista-original {
-            font-size: 0.8rem;
-            color: #ec4899;
-            font-style: italic;
-        }
-        
-        .instancia-cancion.es-cover {
-            border-color: #ec4899;
-            border-left: 3px solid #ec4899;
-        }
 
         .grupo-contenido {
             display: none;
@@ -300,41 +260,17 @@
             transform: rotate(180deg);
         }
     </style>
-</head>
-<body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="medios.html">Medios</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
 
     <main class="container">
         <section class="seccion">
             <h2>🔄 Canciones Duplicadas</h2>
-            <p class="seccion-descripcion">Canciones que aparecen en múltiples Medios o repetidas</p>
+            <p class="seccion-descripcion">Canciones que aparecen en múltiples formatos o repetidas</p>
 
             <div class="info-duplicados">
                 <h4>ℹ️ ¿Qué son los duplicados?</h4>
-                <p>Son canciones con el mismo nombre que aparecen varias veces, ya sea del mismo artista 
-                   (en diferentes Medios) o de diferentes artistas (covers/versiones). Puedes marcar 
-                   cuáles son covers para organizar mejor tu colección.</p>
+                <p>Son canciones con el mismo nombre y artista que aparecen en diferentes formatos (CD y cassette)
+                    o múltiples veces en el mismo tipo de formato. Esto es normal cuando tienes la misma canción
+                    grabada en varios medios.</p>
             </div>
 
             <div id="statsContainer">
@@ -343,8 +279,6 @@
 
             <div class="filtros-duplicados" id="filtros">
                 <button class="filtro-btn activo" data-filtro="">Todos</button>
-                <button class="filtro-btn" data-filtro="multiartista">👥 Multi-artista</button>
-                <button class="filtro-btn" data-filtro="covers">🎸 Con Covers</button>
                 <button class="filtro-btn" data-filtro="mixtos">🔀 Mixtos (CD + Cassette)</button>
                 <button class="filtro-btn" data-filtro="cassette">📼 Solo Cassettes</button>
                 <button class="filtro-btn" data-filtro="cd">💿 Solo CDs</button>
@@ -356,16 +290,19 @@
         </section>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
 
-    <script src="js/app.js"></script>
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
+
     <script>
         let gruposData = [];
         let filtroActual = '';
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialización inmediata para SPA
+        (async () => {
             await Promise.all([
                 cargarEstadisticas(),
                 cargarDuplicados()
@@ -380,7 +317,7 @@
                     cargarDuplicados(filtroActual);
                 });
             });
-        });
+        })();
 
         async function cargarEstadisticas() {
             try {
@@ -444,72 +381,57 @@
                 return;
             }
 
-            container.innerHTML = gruposData.map((grupo, index) => {
-                // Obtener artistas únicos
-                const artistas = [...new Set(grupo.canciones.map(c => c.interprete))];
-                const artistasTexto = artistas.length > 1 
-                    ? `${artistas.length} artistas diferentes`
-                    : artistas[0] || 'Sin artista';
-                
-                return `
-                    <div class="grupo-duplicado">
-                        <div class="grupo-header" onclick="toggleGrupo(${index})">
-                            <div class="grupo-info">
-                                <div class="grupo-icono">🎵</div>
-                                <div class="grupo-texto">
-                                    <h3>${escapeHtml(grupo.temaNormalizado)}</h3>
-                                    <div class="artista">🎤 ${escapeHtml(artistasTexto)}</div>
-                                </div>
-                            </div>
-                            <div class="grupo-badges">
-                                ${grupo.totalArtistas > 1 ? '<span class="badge-multiartista">👥 Multi-artista</span>' : ''}
-                                ${grupo.tieneCovers ? '<span class="badge-cover">🎸 Covers</span>' : ''}
-                                ${grupo.tieneMixMedios ? '<span class="badge-mixto">🔀 Mixto</span>' : ''}
-                                <span class="badge-cantidad">${grupo.totalInstancias} copias</span>
-                                <span class="expandir-icono">▼</span>
+            container.innerHTML = gruposData.map((grupo, index) => `
+                <div class="grupo-duplicado">
+                    <div class="grupo-header" onclick="toggleGrupo(${index})">
+                        <div class="grupo-info">
+                            <div class="grupo-icono">🎵</div>
+                            <div class="grupo-texto">
+                                <h3>${escapeHtml(grupo.temaNormalizado)}</h3>
+                                <div class="artista">🎤 ${escapeHtml(grupo.interpreteNormalizado)}</div>
                             </div>
                         </div>
-                        <div class="grupo-contenido" id="grupo-${index}">
-                            <div class="perfil-link" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--color-primario-claro); border-radius: var(--radio); display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-texto-secundario);">Esta canción tiene ${grupo.totalInstancias} copias físicas de ${grupo.totalArtistas} artista(s)</span>
-                                <a href="perfil-cancion.html?grupo=${encodeURIComponent(grupo.id)}" class="btn-ver" style="background: var(--color-primario); color: white; border: none;">
-                                    👤 Ver perfil unificado
-                                </a>
-                            </div>
-                            ${grupo.canciones.map(c => `
-                                <div class="instancia-cancion ${c.esCover ? 'es-cover' : ''}">
-                                    <div class="instancia-tipo">${c.tipo === 'cassette' ? '📼' : '💿'}</div>
-                                    <div class="instancia-info">
-                                        <div class="titulo">
-                                            ${escapeHtml(c.tema)}
-                                            ${c.esCover ? '<span class="badge-cover-mini">Cover</span>' : ''}
-                                        </div>
-                                        <div class="artista-instancia">🎤 ${escapeHtml(c.interprete)}</div>
-                                        ${c.esCover && c.artistaOriginal ? `<div class="artista-original">Original: ${escapeHtml(c.artistaOriginal)}</div>` : ''}
-                                        <div class="meta">
-                                            <span>${c.tipo === 'cassette' ? 'Cassette' : 'CD'}: ${escapeHtml(c.numMedio)}</span>
-                                            <span>📍 ${escapeHtml(c.posicion || 'Sin posición')}</span>
-                                            ${c.nombreAlbum ? `<span>💿 ${escapeHtml(c.nombreAlbum)}</span>` : ''}
-                                            ${c.tienePortada ? '<span>🖼️</span>' : ''}
-                                            ${c.linkExterno ? '<span>🔗</span>' : ''}
-                                        </div>
-                                    </div>
-                                    <div class="instancia-acciones">
-                                        <a href="cancion.html?id=${c.id}&tipo=${c.tipo}" class="btn-ver">Ver</a>
-                                        <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}" class="btn-ver">Medio</a>
-                                    </div>
-                                </div>
-                            `).join('')}
+                        <div class="grupo-badges">
+                            ${grupo.tieneMixFormatos ? '<span class="badge-mixto">🔀 Mixto</span>' : ''}
+                            <span class="badge-cantidad">${grupo.totalInstancias} copias</span>
+                            <span class="expandir-icono">▼</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="grupo-contenido" id="grupo-${index}">
+                        <div class="perfil-link" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--color-primario-claro); border-radius: var(--radio); display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: var(--color-texto-secundario);">Esta canción tiene ${grupo.totalInstancias} copias físicas</span>
+                            <a href="perfil-cancion.html?grupo=${encodeURIComponent(grupo.id)}" class="btn-ver" style="background: var(--color-primario); color: white; border: none;" data-spa-link>
+                                👤 Ver perfil unificado
+                            </a>
+                        </div>
+                        ${grupo.canciones.map(c => `
+                            <div class="instancia-cancion">
+                                <div class="instancia-tipo">${c.tipo === 'cassette' ? '📼' : '💿'}</div>
+                                <div class="instancia-info">
+                                    <div class="titulo">${escapeHtml(c.tema)}</div>
+                                    <div class="meta">
+                                        <span>${c.tipo === 'cassette' ? 'Cassette' : 'CD'}: ${escapeHtml(c.numFormato)}</span>
+                                        <span>📍 ${escapeHtml(c.posicion || 'Sin posición')}</span>
+                                        ${c.nombreAlbum ? `<span>💿 ${escapeHtml(c.nombreAlbum)}</span>` : ''}
+                                        ${c.tienePortada ? '<span>🖼️</span>' : ''}
+                                        ${c.linkExterno ? '<span>🔗</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="instancia-acciones">
+                                    <a href="cancion.html?id=${c.id}&tipo=${c.tipo}" class="btn-ver" data-spa-link>Ver</a>
+                                    <a href="formato.html?num=${encodeURIComponent(c.numFormato)}&cancion=${c.id}&tipo=${c.tipo}" class="btn-ver" data-spa-link>Formato</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
 
         function toggleGrupo(index) {
             const contenido = document.getElementById(`grupo-${index}`);
             const header = contenido.previousElementSibling;
-            
+
             contenido.classList.toggle('visible');
             header.classList.toggle('expandido');
         }
@@ -521,5 +443,5 @@
             return div.innerHTML;
         }
     </script>
-</body>
-</html>
+
+</main>

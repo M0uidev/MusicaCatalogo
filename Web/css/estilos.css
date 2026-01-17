@@ -22,6 +22,8 @@
     /* Fondos */
     --color-fondo: #f8fafc;
     --color-fondo-card: #ffffff;
+    --color-fondo-tarjeta: #ffffff;
+    /* Alias para compatibilidad */
     --color-fondo-hover: #f1f5f9;
 
     /* Bordes */

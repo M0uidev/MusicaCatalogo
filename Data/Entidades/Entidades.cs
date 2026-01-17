@@ -205,6 +205,8 @@ public class InterpreteResumen
     public int Id { get; set; }
     public string Interprete { get; set; } = "";
     public long TotalTemas { get; set; }
+    public bool TieneFoto { get; set; }
+    public string? IntegranteDe { get; set; } // Nombre de banda(s) si es miembro
 }
 
 public class ConteoMedio
@@ -735,3 +737,138 @@ public class ArtistaParaCover
     public string Nombre { get; set; } = "";
     public bool EsOriginal { get; set; } // Si ya está marcado como original en el sistema
 }
+
+// ============================================
+// DTOs PARA INTÉRPRETES MEJORADOS
+// ============================================
+
+/// <summary>Intérprete con foto y biografía</summary>
+public class InterpreteCompleto
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public byte[]? FotoBlob { get; set; }
+    public string? Biografia { get; set; }
+    public bool TieneFoto => FotoBlob != null && FotoBlob.Length > 0;
+    public int TotalTemasCassette { get; set; }
+    public int TotalTemasCd { get; set; }
+    public int TotalTemas => TotalTemasCassette + TotalTemasCd;
+}
+
+/// <summary>Request para actualizar intérprete</summary>
+public record InterpreteUpdateRequest
+{
+    public required string Nombre { get; init; }
+    public string? Biografia { get; init; }
+}
+
+// ============================================
+// DTOs PARA MULTI-ARTISTA EN CANCIONES
+// ============================================
+
+/// <summary>Artista asociado a una canción</summary>
+public class ArtistaEnCancion
+{
+    public int IdInterprete { get; set; }
+    public string Nombre { get; set; } = "";
+    public bool EsPrincipal { get; set; }
+    public string? Rol { get; set; }
+    public bool TieneFoto { get; set; }
+}
+
+/// <summary>Request para asignar múltiples artistas a una canción</summary>
+public record AsignarArtistasCancionRequest
+{
+    public int IdCancion { get; init; }
+    public required string TipoCancion { get; init; }
+    public required List<ArtistaAsignacion> Artistas { get; init; }
+}
+
+/// <summary>Datos de un artista a asignar</summary>
+public record ArtistaAsignacion
+{
+    public int IdInterprete { get; init; }
+    public bool EsPrincipal { get; init; }
+    public string? Rol { get; init; }
+}
+
+// ============================================
+// PERFILES DE ARTISTAS (TIPO SPOTIFY)
+// ============================================
+
+/// <summary>Perfil completo de artista tipo Spotify</summary>
+public class PerfilArtista
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string TipoArtista { get; set; } = "artista"; // 'artista' o 'banda'
+    public string? Biografia { get; set; }
+    public string? Pais { get; set; }
+    public int? AnioInicio { get; set; }
+    public int? AnioFin { get; set; }
+    public string? Discografica { get; set; }
+    public string? SitioWeb { get; set; }
+    public bool TieneFoto { get; set; }
+    public List<string> Generos { get; set; } = new();
+    public List<MiembroBanda> Miembros { get; set; } = new();
+    public int TotalTemasCassette { get; set; }
+    public int TotalTemasCd { get; set; }
+    public int TotalTemas => TotalTemasCassette + TotalTemasCd;
+}
+
+/// <summary>Miembro de una banda</summary>
+public class MiembroBanda
+{
+    public int Id { get; set; }
+    public int? IdMiembro { get; set; }
+    public string NombreMiembro { get; set; } = "";
+    public string Rol { get; set; } = "";
+    public int? AnioIngreso { get; set; }
+    public int? AnioSalida { get; set; }
+    public bool EsFundador { get; set; }
+    public bool TieneFoto { get; set; }
+}
+
+/// <summary>Request para actualizar perfil de artista</summary>
+public record ActualizarPerfilArtistaRequest
+{
+    public string? TipoArtista { get; init; }
+    public string? Nombre { get; init; }
+    public string? Biografia { get; init; }
+    public string? Pais { get; init; }
+    public int? AnioInicio { get; init; }
+    public int? AnioFin { get; init; }
+    public string? Discografica { get; init; }
+    public string? SitioWeb { get; init; }
+    public List<string>? Generos { get; init; }
+}
+
+/// <summary>Request para agregar miembro a banda</summary>
+public record AgregarMiembroRequest
+{
+    public int? IdMiembro { get; init; }
+    public string? NombreMiembro { get; init; }
+    public required string Rol { get; init; }
+    public int? AnioIngreso { get; init; }
+    public int? AnioSalida { get; init; }
+    public bool EsFundador { get; init; }
+}
+
+/// <summary>Request para actualizar miembro de banda</summary>
+public record ActualizarMiembroRequest
+{
+    public string? NombreMiembro { get; init; }
+    public string? Rol { get; init; }
+    public int? AnioIngreso { get; init; }
+    public int? AnioSalida { get; init; }
+    public bool? EsFundador { get; init; }
+}
+
+/// <summary>Item de catálogo (rol o género)</summary>
+public class ItemCatalogo
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+}
+
+

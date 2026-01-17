@@ -223,12 +223,15 @@ function obtenerNombreTipoCinta(bias) {
 
 /**
  * Obtiene la clase CSS para el badge de tipo
+ * @param {string} numMedio - Número del medio (para compatibilidad)
+ * @param {string} bias - Tipo de cinta magnética
+ * @param {boolean} esCassette - Si es cassette (true) o CD (false)
  */
-function obtenerClaseTipo(numMedio, bias) {
-    if (!numMedio) return 'normal';
-    // Detectar si es CD: empieza con cd o mp
-    const num = numMedio.toLowerCase();
-    if (/^(cd|mp)/.test(num)) return 'cd';
+function obtenerClaseTipo(numMedio, bias, esCassette = true) {
+    // Si es CD, devolver clase de CD
+    if (esCassette === false) return 'cd';
+
+    // Para cassettes, determinar por el tipo de cinta
     if (!bias) return 'normal';
     const biasLower = bias.toLowerCase();
     if (biasLower.includes('metal')) return 'metal';
@@ -251,7 +254,7 @@ function escapeHtml(text) {
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const container = document.getElementById('notificaciones');
     if (!container) return;
-    
+
     const notif = document.createElement('div');
     notif.className = `notificacion ${tipo}`;
     notif.textContent = mensaje;
@@ -365,7 +368,7 @@ function toggleNotificaciones() {
 function renderizarNotificaciones(data) {
     const lista = document.getElementById('notifList');
     if (!lista) return;
-    
+
     if (data.total === 0) {
         lista.innerHTML = `
             <div class="notif-empty">
@@ -376,18 +379,18 @@ function renderizarNotificaciones(data) {
         `;
         return;
     }
-    
+
     lista.innerHTML = data.items.map(notif => {
-        const iconClass = notif.severidad === 'error' ? 'error' : 
-                         notif.severidad === 'warning' ? 'warning' : 'info';
-        const icon = notif.severidad === 'error' ? '❌' : 
-                    notif.severidad === 'warning' ? '⚠️' : 'ℹ️';
-        
+        const iconClass = notif.severidad === 'error' ? 'error' :
+            notif.severidad === 'warning' ? 'warning' : 'info';
+        const icon = notif.severidad === 'error' ? '❌' :
+            notif.severidad === 'warning' ? '⚠️' : 'ℹ️';
+
         // Notificación especial para duplicados multi-artista
         if (notif.tipo === 'duplicado' && notif.opcionesArtista && notif.opcionesArtista.length > 0) {
             const opciones = notif.opcionesArtista || notif.OpcionesArtista || [];
             const grupoId = notif.grupoId || notif.GrupoId;
-            
+
             return `
                 <div class="notif-item notif-duplicado">
                     <div class="notif-icon ${iconClass}">${icon}</div>
@@ -395,17 +398,17 @@ function renderizarNotificaciones(data) {
                         <div class="notif-message">${escapeHtml(notif.mensaje)}</div>
                         <div class="notif-artistas-opciones">
                             ${opciones.map(op => {
-                                const nombre = op.nombre || op.Nombre;
-                                const idInterprete = op.idInterprete || op.IdInterprete;
-                                const cantidadCopias = op.cantidadCopias || op.CantidadCopias;
-                                const esMasAntiguo = op.esMasAntiguo || op.EsMasAntiguo;
-                                return `
+                const nombre = op.nombre || op.Nombre;
+                const idInterprete = op.idInterprete || op.IdInterprete;
+                const cantidadCopias = op.cantidadCopias || op.CantidadCopias;
+                const esMasAntiguo = op.esMasAntiguo || op.EsMasAntiguo;
+                return `
                                     <button class="btn-seleccionar-original ${esMasAntiguo ? 'recomendado' : ''}" 
                                             onclick="seleccionarArtistaOriginal('${grupoId}', ${idInterprete})">
                                         ${esMasAntiguo ? '⭐ ' : ''}${escapeHtml(nombre)} (${cantidadCopias})
                                     </button>
                                 `;
-                            }).join('')}
+            }).join('')}
                         </div>
                         ${notif.urlArreglar ? `
                             <a href="${notif.urlArreglar}" class="notif-action" style="margin-top: 0.5rem;">
@@ -416,7 +419,7 @@ function renderizarNotificaciones(data) {
                 </div>
             `;
         }
-        
+
         return `
             <div class="notif-item">
                 <div class="notif-icon ${iconClass}">${icon}</div>
@@ -443,7 +446,7 @@ async function seleccionarArtistaOriginal(grupoId, idInterprete) {
         });
 
         const result = await resp.json();
-        
+
         if (result.exito || result.Exito) {
             // Recargar notificaciones
             notificacionesCache = null;

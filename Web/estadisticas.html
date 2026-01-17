@@ -1,7 +1,8 @@
 <main class="container">
     <main class="container">
         <section class="seccion">
-            <h2>📊 Estadísticas del Catálogo</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bar-chart-2"
+                    style="width:20px;height:20px;"></i> Estadísticas del Catálogo</h2>
             <p class="seccion-descripcion">Resumen general de su colección de música</p>
 
             <!-- Resumen Principal con Iconos -->
@@ -12,7 +13,8 @@
 
         <!-- Desglose detallado -->
         <section class="seccion">
-            <h2>📋 Desglose Detallado</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="clipboard-list"
+                    style="width:20px;height:20px;"></i> Desglose Detallado</h2>
             <div class="stats-grid" id="desglose">
                 <div class="stat-card">
                     <div class="stat-label">Canciones en Cassettes</div>
@@ -27,7 +29,8 @@
 
         <!-- Top Intérpretes -->
         <section class="seccion">
-            <h2>🏆 Intérpretes con más Canciones</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="trophy"
+                    style="width:20px;height:20px;"></i> Intérpretes con más Canciones</h2>
             <div id="topInterpretes" class="lista-items">
                 <p class="cargando">Cargando...</p>
             </div>
@@ -35,7 +38,8 @@
 
         <!-- Marcas más usadas -->
         <section class="seccion">
-            <h2>🏷️ Marcas más Utilizadas</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="tag"
+                    style="width:20px;height:20px;"></i> Marcas más Utilizadas</h2>
             <div id="topMarcas" class="lista-items">
                 <p class="cargando">Cargando...</p>
             </div>
@@ -43,7 +47,8 @@
 
         <!-- Duplicados -->
         <section class="seccion">
-            <h2>🔄 Canciones Duplicadas</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="copy"
+                    style="width:20px;height:20px;"></i> Canciones Duplicadas</h2>
             <p class="seccion-descripcion">Canciones que aparecen en múltiples Medios</p>
             <div id="statsDuplicados" class="stats-grid">
                 <p class="cargando">Cargando...</p>
@@ -51,7 +56,7 @@
             <div style="margin-top: 1rem;">
                 <a href="duplicados.html" class="btn-primario"
                     style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--color-primario); color: white; text-decoration: none; border-radius: var(--radio); font-weight: 500;">
-                    🔍 Ver todos los duplicados
+                    <i data-lucide="search" style="width:16px;height:16px;"></i> Ver todos los duplicados
                 </a>
             </div>
         </section>

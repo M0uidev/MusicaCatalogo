@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de Canción - Catálogo de Música</title>
-    <link rel="stylesheet" href="css/estilos.css">
+<main class="container">
     <style>
         .cancion-detalle {
             display: grid;
@@ -56,7 +50,7 @@
             position: absolute;
             bottom: 0.75rem;
             right: 0.75rem;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             border: none;
             padding: 0.5rem 0.75rem;
@@ -69,7 +63,7 @@
         }
 
         .btn-cambiar-portada:hover {
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
         }
 
         .cancion-info h2 {
@@ -132,6 +126,139 @@
 
         .link-externo.spotify:hover {
             background: #1aa34a;
+        }
+
+        /* Sección Cover / Versión */
+        .form-grupo-cover-cancion {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+            border: 1px solid rgba(244, 114, 182, 0.3);
+            border-radius: var(--radio);
+        }
+
+        .cover-toggle {
+            margin-bottom: 0;
+        }
+
+        .checkbox-cover-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkbox-cover-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ec4899;
+            cursor: pointer;
+        }
+
+        .cover-toggle-texto {
+            color: var(--color-texto);
+        }
+
+        .cover-details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(244, 114, 182, 0.2);
+        }
+
+        .cover-artista-original label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+            color: var(--color-texto);
+            font-size: 0.9rem;
+        }
+
+        .cover-artista-original input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid rgba(244, 114, 182, 0.4);
+            border-radius: var(--radio);
+            font-size: 1rem;
+            background: white;
+        }
+
+        .cover-artista-original input:focus {
+            outline: none;
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+
+        /* Badge de cover en la vista de canción */
+        .cover-badge-cancion {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white;
+            border-radius: var(--radio);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Sugerencias de artista original */
+        .sugerencias-artista-original {
+            margin-top: 0.75rem;
+        }
+
+        .sugerencias-artista-original-titulo {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sugerencias-artista-lista {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .btn-sugerencia-artista {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid rgba(244, 114, 182, 0.4);
+            border-radius: var(--radio);
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-sugerencia-artista:hover {
+            background: rgba(244, 114, 182, 0.1);
+            border-color: #ec4899;
+        }
+
+        .btn-sugerencia-artista.es-original {
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(168, 85, 247, 0.15));
+            border-color: #a855f7;
+        }
+
+        .btn-sugerencia-artista.es-original::before {
+            content: '⭐';
+            font-size: 0.75rem;
+        }
+
+        .sugerencias-cargando {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
+            font-style: italic;
+        }
+
+        .sugerencias-vacio {
+            font-size: 0.85rem;
+            color: var(--color-texto-secundario);
         }
 
         .form-edicion {
@@ -504,7 +631,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -519,7 +646,7 @@
             border-radius: var(--radio-lg);
             width: 90%;
             max-width: 400px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
 
         .modal-album-header {
@@ -632,7 +759,7 @@
             overflow: hidden;
             flex-direction: column;
         }
-        
+
         /* Asegurar que el dropdown del modal tenga z-index alto */
         #modalCrearAlbum .artista-selector-dropdown {
             z-index: 1001;
@@ -771,30 +898,6 @@
             background: var(--color-acento-hover);
         }
     </style>
-</head>
-<body>
-    <header>
-        <h1>Catálogo de Música</h1>
-        <nav>
-            <a href="index.html">Inicio</a>
-            <a href="buscar.html">Canciones</a>
-            <a href="albumes.html">Álbumes</a>
-            <a href="medios.html">Medios</a>
-            <a href="interpretes.html">Intérpretes</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            
-            <div class="notif-container">
-                <button class="notif-btn" onclick="toggleNotificaciones()" title="Notificaciones">
-                    🔔
-                    <span id="notifBadge" class="notif-badge"></span>
-                </button>
-                <div id="notifDropdown" class="notif-dropdown">
-                    <div class="notif-header"><span>Problemas Pendientes</span></div>
-                    <div id="notifList" class="notif-list"><div class="notif-empty">Cargando...</div></div>
-                </div>
-            </div>
-        </nav>
-    </header>
 
     <main class="container">
         <div id="contenido">
@@ -802,9 +905,12 @@
         </div>
     </main>
 
-    <footer>
-        <p>Catálogo de Música Personal © 2025</p>
-    </footer>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div id="notificaciones-component"></div>
+
+    <!-- Footer generado dinámicamente -->
+    <div id="footer-component"></div>
 
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
@@ -830,13 +936,15 @@
                         </button>
                         <div class="artista-selector-dropdown" id="artistaDropdownModal">
                             <div class="artista-selector-header">
-                                <input type="text" id="buscarArtistaInputModal" placeholder="Buscar artista..." oninput="filtrarArtistasSelectorModal()">
+                                <input type="text" id="buscarArtistaInputModal" placeholder="Buscar artista..."
+                                    oninput="filtrarArtistasSelectorModal()">
                             </div>
                             <div class="artista-selector-lista" id="listaArtistasSelectorModal">
                                 <p class="artista-vacio-dropdown">Cargando...</p>
                             </div>
                             <div class="artista-nuevo-inline" id="artistaNuevoInlineModal" style="display: none;">
-                                <input type="text" id="inputNuevoArtistaModal" placeholder="Nombre del nuevo artista...">
+                                <input type="text" id="inputNuevoArtistaModal"
+                                    placeholder="Nombre del nuevo artista...">
                                 <button onclick="crearNuevoArtistaModal()">✓</button>
                             </div>
                         </div>
@@ -855,7 +963,6 @@
         </div>
     </div>
 
-    <script src="js/app.js"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const idCancion = params.get('id');
@@ -888,7 +995,7 @@
             const c = cancionActual;
             const esCassette = c.tipo === 'cassette';
             const tienePortada = c.tienePortada || c.tienePortadaAlbum;
-            
+
             // Determinar URL de portada
             let portadaUrl = null;
             if (c.tienePortada) {
@@ -909,15 +1016,15 @@
                 }
             }
 
-            const posicion = esCassette 
-                ? `Lado ${c.lado}: ${c.desde}-${c.hasta}` 
+            const posicion = esCassette
+                ? `Lado ${c.lado}: ${c.desde}-${c.hasta}`
                 : `Track ${c.ubicacion}`;
 
             document.getElementById('contenido').innerHTML = `
                 <div class="breadcrumb">
-                    <a href="buscar.html">Canciones</a>
+                    <a href="buscar.html" data-spa-link>Canciones</a>
                     <span>›</span>
-                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
+                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}" data-spa-link>${escapeHtml(c.numMedio)}</a>
                     <span>›</span>
                     <span>${escapeHtml(c.tema)}</span>
                 </div>
@@ -925,47 +1032,44 @@
                 <section class="seccion">
                     <div class="cancion-detalle">
                         <div class="portada-container">
-                            ${tienePortada 
-                                ? `<img src="${portadaUrl}" class="portada-imagen" alt="Portada">`
-                                : `<div class="portada-placeholder">
+                            ${tienePortada
+                    ? `<img src="${portadaUrl}" class="portada-imagen" alt="Portada">`
+                    : `<div class="portada-placeholder">
                                        ${esCassette ? ICONOS.cassette : ICONOS.cd}
                                        <span>Sin portada</span>
                                    </div>`
-                            }
-                            <button class="btn-cambiar-portada" onclick="cambiarPortada()">
-                                📷 Cambiar
-                            </button>
-                               <div id="audio-player-container" style="margin-top:1.5rem;">
-                                   <div class="audio-player-spotify">
-                                       <audio id="audio-player" src="${c.archivoAudio ? `/api/canciones/${c.id}/audio?tipo=${c.tipo}` : ''}" preload="none"></audio>
-                                       <div id="audio-controls">
-                                           <button id="play-pause-btn">▶️</button>
-                                           <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1">
-                                           <span id="current-time">0:00</span> / <span id="duration">0:00</span>
-                                       </div>
-                                       <div style="width:100%;display:flex;align-items:center;justify-content:flex-start;">
-                                           <input type="file" id="audio-file-input" accept="audio/*" style="display:none;">
-                                           <button id="load-audio-btn">Cargar archivo MP3</button>
-                                           <span id="audio-file-name"></span>
-                                       </div>
-                                   </div>
-                               </div>
+                }
+                            ${c.tienePortada
+                    ? `<div style="position:absolute; bottom:0.75rem; right:0.75rem; display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end;">
+                           <button class="btn-cambiar-portada" onclick="eliminarPortada()" style="position:static; background:rgba(220,38,38,0.85);" title="Restaurar portada original">
+                               🗑️ Restaurar
+                           </button>
+                           <button class="btn-cambiar-portada" onclick="cambiarPortada()" style="position:static;">
+                               📷 Cambiar
+                           </button>
+                       </div>`
+                    : `<button class="btn-cambiar-portada" onclick="cambiarPortada()">
+                                    📷 ${c.tienePortadaAlbum ? 'Cambiar personalizada' : 'Subir portada'}
+                                   </button>
+                        ${c.idAlbum && !c.tienePortada ? `<span class="badge-portada-info" style="position:absolute; top:0.75rem; left:0.75rem; font-size:0.75rem; color:white; background:rgba(0,0,0,0.6); padding:0.2rem 0.5rem; border-radius:4px; backdrop-filter:blur(4px);">💿 Del Álbum</span>` : ''}`
+                }
                         </div>
                         
                         <div class="cancion-info">
                             <h2 id="tituloCancion">${escapeHtml(c.tema)}</h2>
                             <div class="cancion-interprete">
-                                🎤 <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}">${escapeHtml(c.interprete)}</a>
+                                🎤 <a href="interprete.html?nombre=${encodeURIComponent(c.interprete)}" data-spa-link>${escapeHtml(c.interprete)}</a>
                             </div>
                             
                             <div class="cancion-meta">
                                 <span class="meta-badge">
                                     ${esCassette ? '📼' : '💿'} 
-                                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}">${escapeHtml(c.numMedio)}</a>
+                                    <a href="medio.html?num=${encodeURIComponent(c.numMedio)}&cancion=${c.id}&tipo=${c.tipo}" data-spa-link>${escapeHtml(c.numMedio)}</a>
                                 </span>
                                 <span class="meta-badge">📍 ${posicion}</span>
-                                ${c.nombreAlbum ? `<span class="meta-badge">💿 <a href="albumes.html?id=${c.idAlbum}">${escapeHtml(c.nombreAlbum)}</a></span>` : ''}
+                                ${c.nombreAlbum ? `<span class="meta-badge">💿 <a href="albumes.html?id=${c.idAlbum}" data-spa-link>${escapeHtml(c.nombreAlbum)}</a></span>` : ''}
                                 ${c.anioAlbum ? `<span class="meta-badge">📅 ${escapeHtml(c.anioAlbum)}</span>` : ''}
+                                ${c.esCover ? `<span class="cover-badge-cancion">🎸 Cover${c.artistaOriginal ? ' de ' + escapeHtml(c.artistaOriginal) : ''}</span>` : ''}
                             </div>
 
                             ${c.linkExterno ? `
@@ -999,32 +1103,28 @@
                                             </div>
                                             <div class="artista-nuevo-inline" id="artistaNuevoInline" style="display: none;">
                                                 <input type="text" id="inputNuevoArtista" placeholder="Nombre del nuevo artista...">
+                                                <button onclick="crearNuevoArtista()">✓</button>
                                             </div>
                                         </div>
                                         <input type="hidden" id="inputInterprete" value="${escapeHtml(c.interprete)}">
                                     </div>
                                     <div class="form-grupo album-selector">
-                                        <label>Álbum / Single ${c.esCover ? '<span style="font-size: 0.85rem; color: #ec4899; font-weight: normal;">(del original)</span>' : ''}</label>
-                                        <button type="button" class="album-selector-btn ${c.esCover ? 'album-bloqueado' : ''}" onclick="${c.esCover ? 'return false;' : 'toggleSelectorAlbum()'}" ${c.esCover ? 'disabled style=\"opacity: 0.7; cursor: not-allowed;\"' : ''}>
-                                            ${c.idAlbum 
-                                                ? `${c.tienePortadaAlbum 
-                                                    ? `<img src="/api/albumes/${c.idAlbum}/portada" alt="">`
-                                                    : `<div class="placeholder-img">${c.esAlbumSingle ? '🎵' : '💿'}</div>`
-                                                  }
+                                        <label>Álbum / Single</label>
+                                        <button type="button" class="album-selector-btn" onclick="toggleSelectorAlbum()">
+                                            ${c.idAlbum
+                    ? `${c.tienePortadaAlbum
+                        ? `<img src="/api/albumes/${c.idAlbum}/portada" alt="">`
+                        : `<div class="placeholder-img">${c.esAlbumSingle ? '🎵' : '💿'}</div>`
+                    }
                                                   <div class="album-btn-info">
                                                       <div class="album-btn-nombre">${escapeHtml(c.nombreAlbum)}</div>
-                                                      <div class="album-btn-artista">${c.artistaAlbum ? escapeHtml(c.artistaAlbum) : 'Sin artista'}${c.esCover ? ' <span style=\"color: #ec4899; font-size: 0.8rem;\">(original)</span>' : ''}</div>
+                                                      <div class="album-btn-artista">${c.artistaAlbum ? escapeHtml(c.artistaAlbum) : 'Sin artista'}</div>
                                                   </div>`
-                                                : `<div class="placeholder-img">➕</div>
+                    : `<div class="placeholder-img">➕</div>
                                                    <span class="sin-album">Sin álbum asignado</span>`
-                                            }
-                                            ${c.esCover ? '<span style="opacity: 0.5;">🔒</span>' : '<span>▼</span>'}
+                }
+                                            <span>▼</span>
                                         </button>
-                                        ${c.esCover ? `
-                                            <div style="font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
-                                                🔒 El álbum se asigna automáticamente desde la canción original
-                                            </div>
-                                        ` : `
                                         <div class="album-selector-dropdown" id="albumDropdown">
                                             <div class="album-selector-header">
                                                 <input type="text" id="buscarAlbumInput" placeholder="Buscar álbum..." oninput="filtrarAlbumesSelector()">
@@ -1046,7 +1146,6 @@
                                                 </div>
                                             ` : ''}
                                         </div>
-                                        `}
                                         <input type="hidden" id="inputAlbumId" value="${c.idAlbum || ''}">
                                     </div>
                                 </div>
@@ -1056,14 +1155,57 @@
                                     <input type="url" id="inputLink" value="${escapeHtml(c.linkExterno || '')}" placeholder="https://...">
                                 </div>
 
-                                <div class="form-grupo" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radio); padding: 1rem; margin: 0.5rem 0;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                        <input type="checkbox" id="inputEsCover" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleArtistaOriginal()">
-                                        <label for="inputEsCover" style="cursor: pointer; font-weight: 500; color: #ec4899; margin: 0;">🎸 Esta canción es un cover</label>
+                                <!-- Sección Archivo de Audio -->
+                                <div class="form-grupo" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); padding: 1rem; margin: 0.5rem 0;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                        <label style="font-weight: 500; color: #3b82f6; margin: 0;">📀 Archivo de Audio</label>
+                                        ${c.tieneArchivoAudio ? `
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <span style="font-size: 0.85rem; color: var(--color-texto-secundario);">
+                                                    ${c.duracionSegundos ? Math.floor(c.duracionSegundos / 60) + ':' + (c.duracionSegundos % 60).toString().padStart(2, '0') : '--:--'}
+                                                </span>
+                                                <span style="display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-radius: 4px; font-weight: 600;">
+                                                    ${escapeHtml(c.formatoAudio || 'AUDIO').toUpperCase()}
+                                                </span>
+                                            </div>
+                                        ` : ''}
                                     </div>
-                                    <div id="campoArtistaOriginal" style="display: ${c.esCover ? 'block' : 'none'}; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(236, 72, 153, 0.2);">
-                                        <label for="inputArtistaOriginal" style="display: block; font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--color-texto-secundario);">Artista original</label>
-                                        <input type="text" id="inputArtistaOriginal" value="${escapeHtml(c.artistaOriginal || '')}" placeholder="Nombre del artista original..." style="width: 100%; padding: 0.5rem; border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radio); background: rgba(255, 255, 255, 0.8);">
+                                    ${c.tieneArchivoAudio ? `
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            <button type="button" class="btn-reproducir-audio" onclick="reproducirAudioLocal()" style="flex: 1; min-width: 120px; padding: 0.6rem 1rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; border-radius: var(--radio); font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                                ▶️ Reproducir
+                                            </button>
+                                            <button type="button" class="btn-eliminar-audio" onclick="eliminarAudio()" style="padding: 0.6rem 1rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
+                                                🗑️ Eliminar
+                                            </button>
+                                        </div>
+                                    ` : `
+                                        <div>
+                                            <input type="file" id="inputArchivoAudio" accept=".mp3,.wav,.m4a,.flac,.ogg" style="display: none;" onchange="subirAudio()">
+                                            <button type="button" onclick="document.getElementById('inputArchivoAudio').click()" style="width: 100%; padding: 0.6rem 1rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
+                                                📤 Subir archivo de audio
+                                            </button>
+                                            <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Formatos: MP3, WAV, M4A, FLAC, OGG (máx. 20MB)</p>
+                                        </div>
+                                        <div id="progresoSubidaAudio" style="display: none; margin-top: 0.75rem;">
+                                            <div style="width: 100%; height: 8px; background: rgba(59, 130, 246, 0.2); border-radius: 4px; overflow: hidden;">
+                                                <div id="barraProgresoAudio" style="height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); width: 0%; transition: width 0.3s;"></div>
+                                            </div>
+                                            <p id="textoProgresoAudio" style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Subiendo...</p>
+                                        </div>
+                                    `}
+                                </div>
+
+                                <!-- Sección Original -->
+                                <div class="form-grupo-cover-cancion">
+                                    <div class="cover-toggle">
+                                        <label class="checkbox-cover-label">
+                                            <input type="checkbox" id="inputEsOriginal" ${c.esOriginal ? 'checked' : ''}>
+                                            <span class="cover-toggle-texto">⭐ Esta canción es la versión original</span>
+                                        </label>
+                                        <p style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">
+                                            💡 Si marcas esta canción como original, las demás versiones se clasificarán automáticamente como covers o versiones.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -1104,172 +1246,7 @@
 
             // Configurar autocompletado y selector de álbum
             configurarAutocompletado();
-            cargarAlbumesSelector().then(() => {
-                // Si es cover, configurar auto-asignación de álbum original
-                if (c.esCover && c.artistaOriginal) {
-                    // Si no tiene álbum asignado, buscar y asignar el del original
-                    if (!c.idAlbum) {
-                        configurarCoverAutoAsignacion(c.tema, c.artistaOriginal);
-                    } else {
-                        // Si ya tiene álbum, asegurar que esté seleccionado en el selector
-                        albumSeleccionadoId = c.idAlbum;
-                        document.getElementById('inputAlbumId').value = c.idAlbum;
-                        
-                        // Bloquear el selector de álbum ya que es un cover
-                        setTimeout(() => {
-                            const albumBtn = document.querySelector('.album-selector-btn');
-                            if (albumBtn) {
-                                albumBtn.classList.add('album-bloqueado');
-                                albumBtn.disabled = true;
-                                albumBtn.style.opacity = '0.7';
-                                albumBtn.style.cursor = 'not-allowed';
-                                albumBtn.onclick = () => false;
-                                // Cambiar el icono
-                                const span = albumBtn.querySelector('span:last-child');
-                                if (span) span.textContent = '🔒';
-                            }
-                            
-                            // Ocultar dropdown si existe
-                            const albumDropdown = document.getElementById('albumDropdown');
-                            if (albumDropdown) {
-                                albumDropdown.remove();
-                            }
-                        }, 100);
-                    }
-                }
-            });
-            
-            // Marcar checkbox de cover si corresponde
-            if (c.esCover) {
-                const checkbox = document.getElementById('inputEsCover');
-                if (checkbox) {
-                    checkbox.checked = true;
-                }
-            }
-        }
-        
-        function toggleArtistaOriginal() {
-            const esCover = document.getElementById('inputEsCover').checked;
-            const campo = document.getElementById('campoArtistaOriginal');
-            campo.style.display = esCover ? 'block' : 'none';
-            
-            // Obtener el selector de álbum
-            const albumSelector = document.querySelector('.album-selector');
-            const albumBtn = document.querySelector('.album-selector-btn');
-            const albumDropdown = document.getElementById('albumDropdown');
-            
-            if (!esCover) {
-                document.getElementById('inputArtistaOriginal').value = '';
-                // Restaurar selector de álbum normal
-                if (albumBtn) {
-                    albumBtn.classList.remove('album-bloqueado');
-                    albumBtn.disabled = false;
-                    albumBtn.style.opacity = '1';
-                    albumBtn.style.cursor = 'pointer';
-                    albumBtn.onclick = () => toggleSelectorAlbum();
-                    // Cambiar el icono
-                    const span = albumBtn.querySelector('span:last-child');
-                    if (span) span.textContent = '▼';
-                }
-                // Restaurar dropdown si estaba oculto
-                if (albumDropdown && !albumDropdown.parentElement) {
-                    const albumSelectorDiv = document.querySelector('.album-selector');
-                    if (albumSelectorDiv) {
-                        albumSelectorDiv.appendChild(albumDropdown);
-                    }
-                }
-            } else {
-                // Si se marca como cover, bloquear selector de álbum
-                const artistaOriginal = document.getElementById('inputArtistaOriginal').value;
-                if (artistaOriginal && cancionActual) {
-                    configurarCoverAutoAsignacion(cancionActual.tema, artistaOriginal);
-                }
-                
-                // Bloquear selector de álbum
-                if (albumBtn) {
-                    albumBtn.classList.add('album-bloqueado');
-                    albumBtn.disabled = true;
-                    albumBtn.style.opacity = '0.7';
-                    albumBtn.style.cursor = 'not-allowed';
-                    albumBtn.onclick = () => false;
-                    // Cambiar el icono
-                    const span = albumBtn.querySelector('span:last-child');
-                    if (span) span.textContent = '🔒';
-                }
-                // Ocultar dropdown
-                if (albumDropdown) {
-                    albumDropdown.remove();
-                }
-                // Agregar mensaje de bloqueo
-                const existingMsg = albumSelector?.querySelector('.album-bloqueado-msg');
-                if (!existingMsg && albumSelector) {
-                    const msg = document.createElement('div');
-                    msg.className = 'album-bloqueado-msg';
-                    msg.style.cssText = 'font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;';
-                    msg.innerHTML = '🔒 El álbum se asigna automáticamente desde la canción original';
-                    albumSelector.appendChild(msg);
-                }
-            }
-        }
-        
-        async function configurarCoverAutoAsignacion(tema, artistaOriginal) {
-            try {
-                // Buscar la canción original para obtener su álbum
-                const resp = await fetch(`/api/cancion/perfil?tema=${encodeURIComponent(tema)}&artista=${encodeURIComponent(artistaOriginal)}`);
-                if (!resp.ok) {
-                    console.log('No se encontró perfil de canción original');
-                    return;
-                }
-                
-                const perfil = await resp.json();
-                if (perfil && perfil.ubicaciones && perfil.ubicaciones.length > 0) {
-                    // Buscar ubicación con álbum (preferir CD sobre cassette)
-                    const ubicacionConAlbum = perfil.ubicaciones.find(u => u.idAlbum && u.idAlbum > 0 && u.tipo === 'cd') 
-                        || perfil.ubicaciones.find(u => u.idAlbum && u.idAlbum > 0);
-                    if (ubicacionConAlbum && ubicacionConAlbum.idAlbum) {
-                        // Auto-asignar el álbum original
-                        await seleccionarAlbum(ubicacionConAlbum.idAlbum);
-                        
-                        // Bloquear el selector de álbum
-                        const albumBtn = document.querySelector('.album-selector-btn');
-                        if (albumBtn) {
-                            albumBtn.classList.add('album-bloqueado');
-                            albumBtn.disabled = true;
-                            albumBtn.style.opacity = '0.7';
-                            albumBtn.style.cursor = 'not-allowed';
-                            albumBtn.onclick = () => false;
-                            // Cambiar el icono
-                            const span = albumBtn.querySelector('span:last-child');
-                            if (span) span.textContent = '🔒';
-                        }
-                        
-                        // Ocultar dropdown si existe
-                        const albumDropdown = document.getElementById('albumDropdown');
-                        if (albumDropdown) {
-                            albumDropdown.remove();
-                        }
-                        
-                        // Agregar mensaje de bloqueo si no existe
-                        const albumSelector = document.querySelector('.album-selector');
-                        const existingMsg = albumSelector?.querySelector('.album-bloqueado-msg');
-                        if (!existingMsg && albumSelector) {
-                            const msg = document.createElement('div');
-                            msg.className = 'album-bloqueado-msg';
-                            msg.style.cssText = 'font-size: 0.8rem; color: #ec4899; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;';
-                            msg.innerHTML = '🔒 El álbum se asigna automáticamente desde la canción original';
-                            albumSelector.appendChild(msg);
-                        }
-                        
-                        // Actualizar el artista original si no está definido
-                        const inputArtistaOriginal = document.getElementById('inputArtistaOriginal');
-                        if (!inputArtistaOriginal.value && artistaOriginal) {
-                            inputArtistaOriginal.value = artistaOriginal;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error buscando álbum original:', error);
-            }
+            cargarAlbumesSelector();
         }
 
         let albumesDisponibles = [];
@@ -1294,8 +1271,8 @@
             let albumes = albumesDisponibles;
             if (filtro) {
                 const f = filtro.toLowerCase();
-                albumes = albumes.filter(a => 
-                    a.nombre.toLowerCase().includes(f) || 
+                albumes = albumes.filter(a =>
+                    a.nombre.toLowerCase().includes(f) ||
                     (a.interprete && a.interprete.toLowerCase().includes(f))
                 );
             }
@@ -1308,10 +1285,10 @@
             lista.innerHTML = albumes.map(a => `
                 <div class="album-selector-item ${a.id === albumSeleccionadoId ? 'seleccionado' : ''}" 
                      onclick="seleccionarAlbum(${a.id})">
-                    ${a.tienePortada 
-                        ? `<img src="/api/albumes/${a.id}/portada" alt="">`
-                        : `<div class="placeholder-img">${a.esSingle ? '🎵' : '💿'}</div>`
-                    }
+                    ${a.tienePortada
+                    ? `<img src="/api/albumes/${a.id}/portada" alt="">`
+                    : `<div class="placeholder-img">${a.esSingle ? '🎵' : '💿'}</div>`
+                }
                     <div class="album-item-info">
                         <div class="album-item-nombre">
                             ${escapeHtml(a.nombre)}
@@ -1326,7 +1303,7 @@
         function toggleSelectorAlbum() {
             const dropdown = document.getElementById('albumDropdown');
             const isVisible = dropdown.classList.contains('visible');
-            
+
             if (isVisible) {
                 dropdown.classList.remove('visible');
             } else {
@@ -1343,7 +1320,7 @@
 
         async function seleccionarAlbum(idAlbum) {
             let album = albumesDisponibles.find(a => a.id === idAlbum);
-            
+
             // Si no está en la lista, buscarlo del servidor
             if (!album) {
                 try {
@@ -1355,7 +1332,7 @@
                     console.error('Error buscando álbum:', e);
                 }
             }
-            
+
             if (!album) return;
 
             albumSeleccionadoId = idAlbum;
@@ -1364,7 +1341,7 @@
             // Actualizar el botón selector
             const btn = document.querySelector('.album-selector-btn');
             btn.innerHTML = `
-                ${album.tienePortada 
+                ${album.tienePortada
                     ? `<img src="/api/albumes/${album.id}/portada" alt="">`
                     : `<div class="placeholder-img">${album.esSingle ? '🎵' : '💿'}</div>`
                 }
@@ -1430,9 +1407,9 @@
             creandoSingle = esSingle;
             const modal = document.getElementById('modalCrearAlbum');
             const titulo = document.getElementById('modalAlbumTitulo');
-            
+
             titulo.textContent = esSingle ? '🎵 Nuevo Single' : '💿 Nuevo Álbum';
-            
+
             // Pre-llenar con el artista de la canción
             const artistaActual = cancionActual?.interprete || '';
             artistaSeleccionadoModal = artistaActual;
@@ -1441,20 +1418,20 @@
             if (btnArtista) {
                 btnArtista.textContent = artistaActual || 'Sin artista';
             }
-            
+
             document.getElementById('nuevoAlbumNombre').value = '';
             document.getElementById('nuevoAlbumAnio').value = '';
-            
+
             // Cerrar cualquier dropdown abierto
             const dropdownModal = document.getElementById('artistaDropdownModal');
             if (dropdownModal) dropdownModal.classList.remove('visible');
-            
+
             // Cargar artistas para el selector del modal
             cargarArtistasSelectorModal();
-            
+
             modal.classList.add('activo');
             document.getElementById('nuevoAlbumNombre').focus();
-            
+
             // Cerrar el dropdown del selector de álbum principal
             const albumDropdown = document.getElementById('albumDropdown');
             if (albumDropdown) albumDropdown.classList.remove('visible');
@@ -1489,13 +1466,13 @@
                 const result = await resp.json();
                 if (result.exito) {
                     cerrarModalAlbum();
-                    
+
                     // Obtener el ID del álbum creado
                     const nuevoAlbumId = result.idCreado || result.id;
-                    
+
                     // Recargar álbumes 
                     await cargarAlbumesSelector();
-                    
+
                     // Seleccionar el álbum recién creado directamente por ID
                     if (nuevoAlbumId) {
                         await seleccionarAlbum(nuevoAlbumId);
@@ -1508,7 +1485,147 @@
                 alert('Error al crear el álbum');
             }
         }
-        
+
+        // Cerrar dropdowns al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.album-selector')) {
+                const dropdown = document.getElementById('albumDropdown');
+                if (dropdown) dropdown.classList.remove('visible');
+            }
+            if (!e.target.closest('.artista-selector')) {
+                const dropdown = document.getElementById('artistaDropdown');
+                if (dropdown) dropdown.classList.remove('visible');
+            }
+            // Cerrar dropdown del modal de artista
+            if (!e.target.closest('#modalCrearAlbum .artista-selector')) {
+                const dropdown = document.getElementById('artistaDropdownModal');
+                if (dropdown) dropdown.classList.remove('visible');
+            }
+        });
+
+        // ============ Selector de Artista ============
+        let artistasDisponibles = [];
+        let artistaSeleccionado = null;
+        let mostrandoInputNuevo = false;
+        let timeoutBusquedaArtista = null;
+
+        function configurarAutocompletado() {
+            // Cargar artistas al iniciar
+            cargarArtistasSelector();
+        }
+
+        async function cargarArtistasSelector(filtro = '') {
+            try {
+                const params = new URLSearchParams();
+                if (filtro) params.append('filtro', filtro);
+                params.append('limite', '50');
+
+                const resp = await fetch(`/api/interpretes?${params}`);
+                artistasDisponibles = await resp.json();
+                artistaSeleccionado = cancionActual?.interprete || null;
+                renderizarArtistasSelector(filtro);
+            } catch (e) {
+                console.error('Error cargando artistas:', e);
+            }
+        }
+
+        function renderizarArtistasSelector(filtro = '') {
+            const lista = document.getElementById('listaArtistasSelector');
+            if (!lista) return;
+
+            let artistas = artistasDisponibles;
+
+            // Verificar si el filtro no coincide con ningún artista existente
+            const filtroLower = (filtro || '').toLowerCase();
+            const coincideExacto = artistas.some(a => a.interprete.toLowerCase() === filtroLower);
+            const mostrarCrear = filtro && filtro.length > 0 && !coincideExacto;
+
+            if (artistas.length === 0 && !mostrarCrear) {
+                lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
+                ocultarInputNuevoArtista();
+                return;
+            }
+
+            lista.innerHTML = artistas.map(a => `
+                <div class="artista-selector-item ${a.interprete === artistaSeleccionado ? 'seleccionado' : ''}" 
+                     onclick="seleccionarArtista('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
+                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
+                    <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
+                </div>
+            `).join('');
+
+            // Mostrar opción de crear nuevo si no hay coincidencia exacta
+            if (mostrarCrear) {
+                mostrarInputNuevoArtista(filtro);
+            } else {
+                ocultarInputNuevoArtista();
+            }
+        }
+
+        function mostrarInputNuevoArtista(nombre) {
+            const container = document.getElementById('artistaNuevoInline');
+            const input = document.getElementById('inputNuevoArtista');
+            container.style.display = 'flex';
+            input.value = nombre;
+            mostrandoInputNuevo = true;
+        }
+
+        function ocultarInputNuevoArtista() {
+            const container = document.getElementById('artistaNuevoInline');
+            if (container) container.style.display = 'none';
+            mostrandoInputNuevo = false;
+        }
+
+        function toggleSelectorArtista() {
+            const dropdown = document.getElementById('artistaDropdown');
+            const isVisible = dropdown.classList.contains('visible');
+
+            if (isVisible) {
+                dropdown.classList.remove('visible');
+            } else {
+                dropdown.classList.add('visible');
+                document.getElementById('buscarArtistaInput').value = '';
+                document.getElementById('buscarArtistaInput').focus();
+                cargarArtistasSelector(''); // Cargar sin filtro
+            }
+        }
+
+        function filtrarArtistasSelector() {
+            // Debounce: esperar 300ms después de que el usuario deje de escribir
+            clearTimeout(timeoutBusquedaArtista);
+            const filtro = document.getElementById('buscarArtistaInput').value.trim();
+
+            timeoutBusquedaArtista = setTimeout(() => {
+                cargarArtistasSelector(filtro);
+            }, 300);
+        }
+
+        function seleccionarArtista(nombre) {
+            artistaSeleccionado = nombre;
+            document.getElementById('inputInterprete').value = nombre;
+
+            // Actualizar el botón selector
+            const btn = document.querySelector('.artista-selector-btn');
+            btn.innerHTML = `
+                <div class="artista-icono">🎤</div>
+                <span class="artista-btn-nombre">${escapeHtml(nombre)}</span>
+                <span>▼</span>
+            `;
+
+            // Cerrar dropdown
+            document.getElementById('artistaDropdown').classList.remove('visible');
+        }
+
+        function crearNuevoArtista() {
+            const nombre = document.getElementById('inputNuevoArtista').value.trim();
+            if (!nombre) return;
+
+            // No necesitamos crear el artista en el backend, solo seleccionarlo
+            // El backend lo creará automáticamente al guardar la canción si no existe
+            seleccionarArtista(nombre);
+        }
+
         // ============ Selector de Artista para Modal ============
         let artistasDisponiblesModal = [];
         let artistaSeleccionadoModal = null;
@@ -1520,7 +1637,7 @@
                 const params = new URLSearchParams();
                 if (filtro) params.append('filtro', filtro);
                 params.append('limite', '50');
-                
+
                 const resp = await fetch(`/api/interpretes?${params}`);
                 artistasDisponiblesModal = await resp.json();
                 renderizarArtistasSelectorModal(filtro);
@@ -1582,7 +1699,7 @@
         function toggleSelectorArtistaModal() {
             const dropdown = document.getElementById('artistaDropdownModal');
             const isVisible = dropdown.classList.contains('visible');
-            
+
             if (isVisible) {
                 dropdown.classList.remove('visible');
             } else {
@@ -1602,7 +1719,7 @@
             const input = document.getElementById('buscarArtistaInputModal');
             if (!input) return;
             const filtro = input.value.trim();
-            
+
             timeoutBusquedaArtistaModal = setTimeout(() => {
                 cargarArtistasSelectorModal(filtro);
             }, 300);
@@ -1634,152 +1751,49 @@
             seleccionarArtistaModal(nombre);
         }
 
-        // Cerrar dropdowns al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.album-selector')) {
-                const dropdown = document.getElementById('albumDropdown');
-                if (dropdown) dropdown.classList.remove('visible');
-            }
-            if (!e.target.closest('.artista-selector')) {
-                const dropdown = document.getElementById('artistaDropdown');
-                if (dropdown) dropdown.classList.remove('visible');
-            }
-            // Cerrar dropdown del modal de artista
-            if (!e.target.closest('#modalCrearAlbum .artista-selector')) {
-                const dropdown = document.getElementById('artistaDropdownModal');
-                if (dropdown) dropdown.classList.remove('visible');
-            }
-        });
+        // Las funciones de cover/version ya no son necesarias - el sistema lo maneja automáticamente
 
-        // ============ Selector de Artista ============
-        let artistasDisponibles = [];
-        let artistaSeleccionado = null;
-        let mostrandoInputNuevo = false;
-        let timeoutBusquedaArtista = null;
-
-        function configurarAutocompletado() {
-            // Cargar artistas al iniciar
-            cargarArtistasSelector();
-        }
-
-        async function cargarArtistasSelector(filtro = '') {
+        async function cargarCancion() {
             try {
-                const params = new URLSearchParams();
-                if (filtro) params.append('filtro', filtro);
-                params.append('limite', '50');
-                
-                const resp = await fetch(`/api/interpretes?${params}`);
-                artistasDisponibles = await resp.json();
-                artistaSeleccionado = cancionActual?.interprete || null;
-                renderizarArtistasSelector(filtro);
-            } catch (e) {
-                console.error('Error cargando artistas:', e);
+                const resp = await fetch(`/api/canciones/${idCancion}?tipo=${tipoCancion}`);
+                if (!resp.ok) {
+                    throw new Error(`HTTP error! status: ${resp.status}`);
+                }
+                cancionActual = await resp.json();
+                renderizarCancion();
+
+                // Actualizar los badges de meta en la vista
+                let html = '';
+                if (cancionActual.esCover) {
+                    html += '<span class="meta-badge" style="background:var(--color-primario-claro); color:var(--color-primario);">Cover</span>';
+                }
+                if (cancionActual.esOriginal) {
+                    html += '<span class="meta-badge" style="background:#dcfce7; color:#166534;">Original</span>';
+                }
+                // Asumiendo que tienes un elemento para estos badges, por ejemplo, un div con id 'cancionMetaBadges'
+                // Si no existe, este código no hará nada o causará un error si no se maneja.
+                // Para este ejemplo, lo comentamos o asumimos que existe.
+                // document.getElementById('cancionMetaBadges').innerHTML = html;
+
+                // Formulario
+                document.getElementById('inputTema').value = cancionActual.tema;
+                document.getElementById('inputInterprete').value = cancionActual.interprete;
+                document.getElementById('inputLink').value = cancionActual.linkExterno || '';
+
+                // Original
+                document.getElementById('inputEsOriginal').checked = cancionActual.esOriginal;
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar la canción</p>';
             }
-        }
-
-        function renderizarArtistasSelector(filtro = '') {
-            const lista = document.getElementById('listaArtistasSelector');
-            if (!lista) return;
-
-            let artistas = artistasDisponibles;
-
-            // Verificar si el filtro no coincide con ningún artista existente
-            const filtroLower = (filtro || '').toLowerCase();
-            const coincideExacto = artistas.some(a => a.interprete.toLowerCase() === filtroLower);
-            const mostrarCrear = filtro && filtro.length > 0 && !coincideExacto;
-
-            if (artistas.length === 0 && !mostrarCrear) {
-                lista.innerHTML = '<p class="artista-vacio-dropdown">No se encontraron artistas</p>';
-                ocultarInputNuevoArtista();
-                return;
-            }
-
-            lista.innerHTML = artistas.map(a => `
-                <div class="artista-selector-item ${a.interprete === artistaSeleccionado ? 'seleccionado' : ''}" 
-                     onclick="seleccionarArtista('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
-                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
-                    <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
-                    <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
-                </div>
-            `).join('');
-
-            // Mostrar opción de crear nuevo si no hay coincidencia exacta
-            if (mostrarCrear) {
-                mostrarInputNuevoArtista(filtro);
-            } else {
-                ocultarInputNuevoArtista();
-            }
-        }
-
-        function mostrarInputNuevoArtista(nombre) {
-            const container = document.getElementById('artistaNuevoInline');
-            const input = document.getElementById('inputNuevoArtista');
-            container.style.display = 'flex';
-            input.value = nombre;
-            mostrandoInputNuevo = true;
-        }
-
-        function ocultarInputNuevoArtista() {
-            const container = document.getElementById('artistaNuevoInline');
-            if (container) container.style.display = 'none';
-            mostrandoInputNuevo = false;
-        }
-
-        function toggleSelectorArtista() {
-            const dropdown = document.getElementById('artistaDropdown');
-            const isVisible = dropdown.classList.contains('visible');
-            
-            if (isVisible) {
-                dropdown.classList.remove('visible');
-            } else {
-                dropdown.classList.add('visible');
-                document.getElementById('buscarArtistaInput').value = '';
-                document.getElementById('buscarArtistaInput').focus();
-                cargarArtistasSelector(''); // Cargar sin filtro
-            }
-        }
-
-        function filtrarArtistasSelector() {
-            // Debounce: esperar 300ms después de que el usuario deje de escribir
-            clearTimeout(timeoutBusquedaArtista);
-            const filtro = document.getElementById('buscarArtistaInput').value.trim();
-            
-            timeoutBusquedaArtista = setTimeout(() => {
-                cargarArtistasSelector(filtro);
-            }, 300);
-        }
-
-        function seleccionarArtista(nombre) {
-            artistaSeleccionado = nombre;
-            document.getElementById('inputInterprete').value = nombre;
-
-            // Actualizar el botón selector
-            const btn = document.querySelector('.artista-selector-btn');
-            btn.innerHTML = `
-                <div class="artista-icono">🎤</div>
-                <span class="artista-btn-nombre">${escapeHtml(nombre)}</span>
-                <span>▼</span>
-            `;
-
-            // Cerrar dropdown
-            document.getElementById('artistaDropdown').classList.remove('visible');
-        }
-
-        function crearNuevoArtista() {
-            const nombre = document.getElementById('inputNuevoArtista').value.trim();
-            if (!nombre) return;
-
-            // No necesitamos crear el artista en el backend, solo seleccionarlo
-            // El backend lo creará automáticamente al guardar la canción si no existe
-            seleccionarArtista(nombre);
         }
 
         async function guardarCambios() {
             const tema = document.getElementById('inputTema').value.trim();
             const interprete = document.getElementById('inputInterprete').value.trim();
             const link = document.getElementById('inputLink').value.trim();
-            const esCover = document.getElementById('inputEsCover').checked;
-            const artistaOriginal = document.getElementById('inputArtistaOriginal').value.trim();
+            const esOriginal = document.getElementById('inputEsOriginal').checked;
 
             if (!tema || !interprete) {
                 alert('El nombre y el artista son obligatorios');
@@ -1790,8 +1804,9 @@
                 tema,
                 nombreInterprete: interprete,
                 linkExterno: link || null,
-                esCover: esCover,
-                artistaOriginal: esCover ? (artistaOriginal || null) : null
+                esCover: false, // El backend lo determinará automáticamente
+                esOriginal,
+                artistaOriginal: null // El backend lo asignará automáticamente si es cover
             };
 
             if (cancionActual.tipo === 'cassette') {
@@ -1812,92 +1827,11 @@
                 const result = await resp.json();
                 if (result.exito) {
                     alert('Cambios guardados correctamente');
-                    cargarCancion();
-                        // ========== AUDIO PLAYER ===========
-                        function formatTime(seconds) {
-                            const m = Math.floor(seconds / 60);
-                            const s = Math.floor(seconds % 60);
-                            return `${m}:${s.toString().padStart(2, '0')}`;
-                        }
-
-                        function setupAudioPlayer() {
-                            const audio = document.getElementById('audio-player');
-                            const playPauseBtn = document.getElementById('play-pause-btn');
-                            const progressBar = document.getElementById('progress-bar');
-                            const currentTimeSpan = document.getElementById('current-time');
-                            const durationSpan = document.getElementById('duration');
-                            const loadAudioBtn = document.getElementById('load-audio-btn');
-                            const audioFileInput = document.getElementById('audio-file-input');
-                            const audioFileName = document.getElementById('audio-file-name');
-
-                            let userLoadedFile = false;
-
-                            playPauseBtn.onclick = function() {
-                                if (audio.paused) {
-                                    audio.play();
-                                } else {
-                                    audio.pause();
-                                }
-                            };
-
-                            audio.addEventListener('play', () => {
-                                playPauseBtn.textContent = '⏸️';
-                            });
-                            audio.addEventListener('pause', () => {
-                                playPauseBtn.textContent = '▶️';
-                            });
-
-                            audio.addEventListener('loadedmetadata', () => {
-                                progressBar.max = audio.duration;
-                                durationSpan.textContent = formatTime(audio.duration);
-                            });
-
-                            audio.addEventListener('timeupdate', () => {
-                                progressBar.value = audio.currentTime;
-                                currentTimeSpan.textContent = formatTime(audio.currentTime);
-                            });
-
-                            progressBar.oninput = function() {
-                                audio.currentTime = progressBar.value;
-                            };
-
-                            loadAudioBtn.onclick = function() {
-                                audioFileInput.click();
-                            };
-
-                            audioFileInput.onchange = function(e) {
-                                const file = e.target.files[0];
-                                if (file) {
-                                    const url = URL.createObjectURL(file);
-                                    audio.src = url;
-                                    audioFileName.textContent = file.name;
-                                    userLoadedFile = true;
-                                    audio.load();
-                                    playPauseBtn.textContent = '▶️';
-                                    currentTimeSpan.textContent = '0:00';
-                                    durationSpan.textContent = '0:00';
-                                }
-                            };
-
-                            // Si hay un archivo de audio por defecto, mostrar el nombre
-                            if (audio.src && !userLoadedFile) {
-                                const parts = audio.src.split('/');
-                                const name = parts[parts.length-1];
-                                audioFileName.textContent = decodeURIComponent(name);
-                            }
-                        }
-
-                        // Llamar al setup cada vez que se renderiza la canción
-                        function afterRenderCancion() {
-                            setupAudioPlayer();
-                        }
-
-                        // Modificar renderizarCancion para llamar afterRenderCancion
-                        const _renderizarCancion = renderizarCancion;
-                        renderizarCancion = function() {
-                            _renderizarCancion.apply(this, arguments);
-                            setTimeout(afterRenderCancion, 0);
-                        };
+                    if (window.SPARouter) {
+                        SPARouter.navigateTo('buscar.html');
+                    } else {
+                        window.location.href = 'buscar.html';
+                    }
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1936,8 +1870,141 @@
             }
         });
 
+        async function eliminarPortada() {
+            if (!confirm('¿Deseas eliminar la portada personalizada? Se usará la imagen del álbum o del original si existe.')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/canciones/${idCancion}/portada?tipo=${tipoCancion}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    cargarCancion();
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la portada');
+            }
+        }
+
+        // Funciones para gestión de audio
+        async function subirAudio() {
+            const input = document.getElementById('inputArchivoAudio');
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validar tamaño (20MB)
+            if (file.size > 20 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Tamaño máximo: 20MB');
+                input.value = '';
+                return;
+            }
+
+            // Validar extensión
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['mp3', 'wav', 'm4a', 'flac', 'ogg'].includes(ext)) {
+                alert('Formato no soportado. Use: MP3, WAV, M4A, FLAC, OGG');
+                input.value = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const progreso = document.getElementById('progresoSubidaAudio');
+            const barra = document.getElementById('barraProgresoAudio');
+            const texto = document.getElementById('textoProgresoAudio');
+
+            progreso.style.display = 'block';
+            barra.style.width = '0%';
+            texto.textContent = 'Subiendo...';
+
+            try {
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const porcentaje = Math.round((e.loaded / e.total) * 100);
+                        barra.style.width = porcentaje + '%';
+                        texto.textContent = `Subiendo... ${porcentaje}%`;
+                    }
+                });
+
+                xhr.addEventListener('load', async () => {
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.exito) {
+                            texto.textContent = '¡Subida exitosa!';
+                            setTimeout(() => {
+                                progreso.style.display = 'none';
+                                cargarCancion();
+                            }, 1000);
+                        } else {
+                            alert('Error: ' + result.mensaje);
+                            progreso.style.display = 'none';
+                        }
+                    } else {
+                        alert('Error al subir el archivo');
+                        progreso.style.display = 'none';
+                    }
+                    input.value = '';
+                });
+
+                xhr.addEventListener('error', () => {
+                    alert('Error de conexión al subir el archivo');
+                    progreso.style.display = 'none';
+                    input.value = '';
+                });
+
+                xhr.open('POST', `/api/canciones/${idCancion}/audio?tipo=${tipoCancion}`);
+                xhr.send(formData);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al subir el audio');
+                progreso.style.display = 'none';
+                input.value = '';
+            }
+        }
+
+        function reproducirAudioLocal() {
+            if (window.reproducirCancion) {
+                window.reproducirCancion(parseInt(idCancion), tipoCancion);
+            } else {
+                alert('El reproductor global no está disponible');
+            }
+        }
+
+        async function eliminarAudio() {
+            if (!confirm('¿Estás seguro de que deseas eliminar el archivo de audio?')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/canciones/${idCancion}/audio?tipo=${tipoCancion}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    alert('Audio eliminado correctamente');
+                    cargarCancion();
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar el audio');
+            }
+        }
+
         // Cargar al iniciar
         cargarCancion();
     </script>
-</body>
-</html>
+
+</main>

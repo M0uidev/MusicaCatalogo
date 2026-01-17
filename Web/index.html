@@ -2,7 +2,8 @@
     <section class="seccion">
         <!-- Resumen rápido -->
         <section class="resumen-principal">
-            <h2>Resumen</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="layout-dashboard"
+                    style="width:20px;height:20px;"></i> Resumen</h2>
             <div class="resumen-grid" id="resumenColeccion">
                 <div class="resumen-card cargando">Cargando...</div>
             </div>
@@ -10,20 +11,21 @@
 
         <!-- Acceso rápido -->
         <section class="acceso-rapido">
-            <h2>Acceso rápido</h2>
+            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="zap"
+                    style="width:20px;height:20px;"></i> Acceso rápido</h2>
             <div class="botones-acceso">
                 <a href="buscar.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono">🔍</span>
+                    <span class="boton-icono"><i data-lucide="search" style="width:32px;height:32px;"></i></span>
                     <span class="boton-texto">Buscar Canciones</span>
                     <span class="boton-desc">Encuentra cualquier canción</span>
                 </a>
                 <a href="medios.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono">📼</span>
+                    <span class="boton-icono"><i data-lucide="cassette-tape" style="width:32px;height:32px;"></i></span>
                     <span class="boton-texto">Ver Cassettes y CDs</span>
                     <span class="boton-desc">Explora toda la colección</span>
                 </a>
                 <a href="interpretes.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono">🎤</span>
+                    <span class="boton-icono"><i data-lucide="mic" style="width:32px;height:32px;"></i></span>
                     <span class="boton-texto">Ver Intérpretes</span>
                     <span class="boton-desc">Busca por artista o banda</span>
                 </a>
@@ -32,12 +34,16 @@
 
         <!-- Sección QR siempre visible -->
         <section class="qr-section">
-            <h2>📱 Acceso desde tu Celular</h2>
+            <h2 style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                    data-lucide="smartphone" style="width:24px;height:24px;"></i> Acceso desde tu Celular</h2>
             <p>Escanea el código QR con la cámara de tu teléfono</p>
             <div class="qr-container">
                 <div id="codigoQR"></div>
             </div>
-            <p class="qr-instructions">💡 Asegúrate de estar conectado a la misma red WiFi</p>
+            <p class="qr-instructions"
+                style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                    data-lucide="lightbulb" style="width:16px;height:16px;"></i> Asegúrate de estar conectado a la misma
+                red WiFi</p>
         </section>
     </section>
 </main>

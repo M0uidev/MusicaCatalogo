@@ -408,5 +408,164 @@ public class BaseDatos
         Directory.CreateDirectory(carpetaAudioCassette);
         Directory.CreateDirectory(carpetaAudioCd);
         Console.WriteLine("[BaseDatos] Carpetas de audio creadas");
+        
+        // ==========================================
+        // MIGRACIÓN: Fotos de intérpretes y multi-artista
+        // ==========================================
+        
+        var columnasInterpretes = await conn.QueryAsync<string>(
+            "SELECT name FROM pragma_table_info('interpretes')");
+        var listaColumnasInterpretes = columnasInterpretes.ToList();
+        
+        // Agregar columna foto_blob (BLOB) para almacenar imágenes
+        if (!listaColumnasInterpretes.Contains("foto_blob"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN foto_blob BLOB");
+            Console.WriteLine("[BaseDatos] Columna foto_blob agregada a interpretes");
+        }
+        
+        // Agregar columna biografia para descripción del artista
+        if (!listaColumnasInterpretes.Contains("biografia"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN biografia TEXT");
+            Console.WriteLine("[BaseDatos] Columna biografia agregada a interpretes");
+        }
+        
+        // Crear tabla cancion_artistas para relación muchos-a-muchos
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS cancion_artistas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_cancion INTEGER NOT NULL,
+                tipo_cancion TEXT NOT NULL,
+                id_interprete INTEGER NOT NULL,
+                es_principal INTEGER DEFAULT 0,
+                rol TEXT,
+                UNIQUE(id_cancion, tipo_cancion, id_interprete)
+            )
+        """);
+        
+        // Crear índices para la tabla cancion_artistas
+        try
+        {
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_cancion_artistas_cancion ON cancion_artistas(id_cancion, tipo_cancion)");
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_cancion_artistas_interprete ON cancion_artistas(id_interprete)");
+        }
+        catch { /* Índices ya existen */ }
+        
+        Console.WriteLine("[BaseDatos] Tabla cancion_artistas verificada");
+        
+        // ==========================================
+        // MIGRACIÓN: Perfiles de Artistas (tipo Spotify)
+        // ==========================================
+        
+        // Agregar nuevas columnas a interpretes
+        if (!listaColumnasInterpretes.Contains("tipo_artista"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN tipo_artista TEXT DEFAULT 'artista'");
+            Console.WriteLine("[BaseDatos] Columna tipo_artista agregada a interpretes");
+        }
+        if (!listaColumnasInterpretes.Contains("pais"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN pais TEXT");
+            Console.WriteLine("[BaseDatos] Columna pais agregada a interpretes");
+        }
+        if (!listaColumnasInterpretes.Contains("anio_inicio"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN anio_inicio INTEGER");
+            Console.WriteLine("[BaseDatos] Columna anio_inicio agregada a interpretes");
+        }
+        if (!listaColumnasInterpretes.Contains("anio_fin"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN anio_fin INTEGER");
+            Console.WriteLine("[BaseDatos] Columna anio_fin agregada a interpretes");
+        }
+        if (!listaColumnasInterpretes.Contains("discografica"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN discografica TEXT");
+            Console.WriteLine("[BaseDatos] Columna discografica agregada a interpretes");
+        }
+        if (!listaColumnasInterpretes.Contains("sitio_web"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE interpretes ADD COLUMN sitio_web TEXT");
+            Console.WriteLine("[BaseDatos] Columna sitio_web agregada a interpretes");
+        }
+        
+        // Crear tabla de géneros de artista
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS interprete_generos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_interprete INTEGER NOT NULL,
+                genero TEXT NOT NULL,
+                UNIQUE(id_interprete, genero)
+            )
+        """);
+        
+        // Crear tabla de miembros de banda
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS banda_miembros (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_banda INTEGER NOT NULL,
+                id_miembro INTEGER,
+                nombre_miembro TEXT NOT NULL,
+                rol TEXT NOT NULL,
+                anio_ingreso INTEGER,
+                anio_salida INTEGER,
+                es_fundador INTEGER DEFAULT 0
+            )
+        """);
+        
+        // Crear catálogo de roles
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS roles_artista (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL UNIQUE
+            )
+        """);
+        
+        // Crear catálogo de géneros
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS generos_musicales (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL UNIQUE
+            )
+        """);
+        
+        // Insertar roles semilla si la tabla está vacía
+        var countRoles = await conn.QueryFirstAsync<int>("SELECT COUNT(*) FROM roles_artista");
+        if (countRoles == 0)
+        {
+            var roles = new[] { "Vocalista", "Líder", "Guitarra", "Bajo", "Batería", 
+                               "Teclado", "Piano", "Saxofón", "Trompeta", "Productor",
+                               "Compositor", "DJ", "Violín", "Percusión", "Coros" };
+            foreach (var rol in roles)
+            {
+                await conn.ExecuteAsync("INSERT OR IGNORE INTO roles_artista (nombre) VALUES (@rol)", new { rol });
+            }
+            Console.WriteLine("[BaseDatos] Roles semilla insertados");
+        }
+        
+        // Insertar géneros semilla si la tabla está vacía
+        var countGeneros = await conn.QueryFirstAsync<int>("SELECT COUNT(*) FROM generos_musicales");
+        if (countGeneros == 0)
+        {
+            var generos = new[] { "Pop", "Rock", "Jazz", "Blues", "Clásica", "Electrónica",
+                                  "Hip-Hop", "R&B", "Country", "Folk", "Metal", "Punk",
+                                  "Reggae", "Soul", "Funk", "Disco", "Latino", "World" };
+            foreach (var genero in generos)
+            {
+                await conn.ExecuteAsync("INSERT OR IGNORE INTO generos_musicales (nombre) VALUES (@genero)", new { genero });
+            }
+            Console.WriteLine("[BaseDatos] Géneros semilla insertados");
+        }
+        
+        // Crear índices
+        try
+        {
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_interprete_generos ON interprete_generos(id_interprete)");
+            await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_banda_miembros ON banda_miembros(id_banda)");
+        }
+        catch { /* Índices ya existen */ }
+        
+        Console.WriteLine("[BaseDatos] Migración de perfiles de artistas completada");
     }
 }

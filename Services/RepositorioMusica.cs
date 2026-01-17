@@ -197,6 +197,7 @@ public class RepositorioMusica
     /// </summary>
     public async Task<List<TemaEnMedio>> ObtenerTemasDeMedioAsync(string numMedio)
     {
+        try {
         using var conn = _db.ObtenerConexion();
 
         // Verificar si es cassette
@@ -220,9 +221,7 @@ public class RepositorioMusica
                                       LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
                                       OR t2.es_original = 1
                                   )
-                                ORDER BY 
-                                  CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
-                                  t2.es_original DESC
+                                ORDER BY t2.es_original DESC
                                 LIMIT 1),
                                (SELECT t3.id_album FROM temas_cd t3 
                                 JOIN interpretes i3 ON t3.id_interprete = i3.id 
@@ -232,9 +231,7 @@ public class RepositorioMusica
                                       LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
                                       OR t3.es_original = 1
                                   )
-                                ORDER BY 
-                                  CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
-                                  t3.es_original DESC
+                                ORDER BY t3.es_original DESC
                                 LIMIT 1)
                            )
                        ) AS IdAlbum,
@@ -248,9 +245,7 @@ public class RepositorioMusica
                                       LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
                                       OR t2.es_original = 1
                                   )
-                                ORDER BY 
-                                  CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
-                                  t2.es_original DESC
+                                ORDER BY t2.es_original DESC
                                 LIMIT 1),
                                (SELECT a3.nombre FROM temas_cd t3 
                                 JOIN interpretes i3 ON t3.id_interprete = i3.id 
@@ -260,9 +255,7 @@ public class RepositorioMusica
                                       LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END)
                                       OR t3.es_original = 1
                                   )
-                                ORDER BY 
-                                  CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
-                                  t3.es_original DESC
+                                ORDER BY t3.es_original DESC
                                 LIMIT 1)
                            )
                        ) AS NombreAlbum,
@@ -294,7 +287,6 @@ public class RepositorioMusica
                                   OR t2.es_original = 1
                               )
                             ORDER BY 
-                              CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
                               t2.es_original DESC
                             LIMIT 1),
                            (SELECT t3.id_album FROM temas_cd t3 
@@ -306,7 +298,6 @@ public class RepositorioMusica
                                   OR t3.es_original = 1
                               )
                             ORDER BY 
-                              CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
                               t3.es_original DESC
                             LIMIT 1)
                        )
@@ -322,7 +313,6 @@ public class RepositorioMusica
                                   OR t2.es_original = 1
                               )
                             ORDER BY 
-                              CASE WHEN LOWER(i2.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
                               t2.es_original DESC
                             LIMIT 1),
                            (SELECT a3.nombre FROM temas_cd t3 
@@ -334,7 +324,6 @@ public class RepositorioMusica
                                   OR t3.es_original = 1
                               )
                             ORDER BY 
-                              CASE WHEN LOWER(i3.nombre) = LOWER(CASE WHEN t.artista_original IS NOT NULL AND t.artista_original != '' THEN t.artista_original ELSE i.nombre END) THEN 1 ELSE 2 END,
                               t3.es_original DESC
                             LIMIT 1)
                        )
@@ -350,6 +339,12 @@ public class RepositorioMusica
             ORDER BY t.ubicacion
             """, new { numMedio });
         return temasCd.ToList();
+        }
+        catch (Exception ex)
+        {
+             System.IO.File.WriteAllText("error_log_temas.txt", $"{DateTime.Now}: {ex.Message}\n{ex.StackTrace}");
+             throw;
+        }
     }
 
     /// <summary>
@@ -459,7 +454,12 @@ public class RepositorioMusica
         var sql = """
             SELECT i.id AS Id, i.nombre AS Interprete, 
                    (SELECT COUNT(*) FROM temas WHERE id_interprete = i.id) +
-                   (SELECT COUNT(*) FROM temas_cd WHERE id_interprete = i.id) AS TotalTemas
+                   (SELECT COUNT(*) FROM temas_cd WHERE id_interprete = i.id) AS TotalTemas,
+                   CASE WHEN i.foto_blob IS NOT NULL THEN 1 ELSE 0 END AS TieneFoto,
+                   (SELECT GROUP_CONCAT(b.nombre, ', ') 
+                    FROM banda_miembros bm 
+                    JOIN interpretes b ON bm.id_banda = b.id 
+                    WHERE bm.id_miembro = i.id) AS IntegranteDe
             FROM interpretes i
             """;
 
@@ -541,6 +541,20 @@ public class RepositorioMusica
             // Auto-migración: Marcar como originales las canciones que tienen álbum (lo que ya tenemos)
             await conn.ExecuteAsync("UPDATE temas SET es_original = 1 WHERE id_album IS NOT NULL");
             await conn.ExecuteAsync("UPDATE temas_cd SET es_original = 1 WHERE id_album IS NOT NULL");
+        }
+
+        // MIGRACIÓN: Verificar si existe columna es_cover
+        if (!infoTemas.Contains("es_cover"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN es_cover INTEGER DEFAULT 0");
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_cover INTEGER DEFAULT 0");
+        }
+
+        // MIGRACIÓN: Verificar si existe columna artista_original
+        if (!infoTemas.Contains("artista_original"))
+        {
+            await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN artista_original TEXT");
+            await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN artista_original TEXT");
         }
 
         // Conteos de tablas
@@ -1158,8 +1172,8 @@ public class RepositorioMusica
         return columnas.Contains("es_single");
     }
 
-    /// <summary>Lista todos los álbumes.</summary>
-    public async Task<List<AlbumResumen>> ListarAlbumesAsync(string? filtro = null, int limite = 100)
+    /// <summary>Lista todos los álbumes, opcionalmente filtrados por texto o artista.</summary>
+    public async Task<List<AlbumResumen>> ListarAlbumesAsync(string? filtro = null, int limite = 100, int? idInterprete = null)
     {
         using var conn = _db.ObtenerConexion();
         
@@ -1176,15 +1190,24 @@ public class RepositorioMusica
             LEFT JOIN interpretes i ON a.id_interprete = i.id
             """;
 
+        var whereClauses = new List<string>();
         if (!string.IsNullOrWhiteSpace(filtro))
         {
-            sql += " WHERE a.nombre LIKE @patron OR i.nombre LIKE @patron";
+            whereClauses.Add("(a.nombre LIKE @patron OR i.nombre LIKE @patron)");
+        }
+        if (idInterprete.HasValue)
+        {
+            whereClauses.Add("a.id_interprete = @idInterprete");
+        }
+        if (whereClauses.Count > 0)
+        {
+            sql += " WHERE " + string.Join(" AND ", whereClauses);
         }
 
         sql += " ORDER BY a.nombre LIMIT @limite";
 
         var patron = $"%{filtro}%";
-        var resultado = await conn.QueryAsync<AlbumResumen>(sql, new { patron, limite });
+        var resultado = await conn.QueryAsync<AlbumResumen>(sql, new { patron, limite, idInterprete });
         return resultado.ToList();
     }
 
@@ -3615,6 +3638,546 @@ public class RepositorioMusica
         }
         
         return canciones.OrderBy(c => c.EsCover).ThenBy(c => c.Interprete).ToList();
+    }
+
+    // ============================================
+    // INTÉRPRETES - FOTOS Y GESTIÓN EXTENDIDA
+    // ============================================
+
+    /// <summary>Obtiene la foto de un intérprete.</summary>
+    public async Task<byte[]?> ObtenerFotoInterpreteAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+        return await conn.QueryFirstOrDefaultAsync<byte[]?>(
+            "SELECT foto_blob FROM interpretes WHERE id = @id", new { id });
+    }
+
+    /// <summary>Guarda la foto de un intérprete.</summary>
+    public async Task<CrudResponse> GuardarFotoInterpreteAsync(int id, byte[] foto)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "UPDATE interpretes SET foto_blob = @foto WHERE id = @id",
+                new { id, foto });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Intérprete no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Foto guardada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Elimina la foto de un intérprete.</summary>
+    public async Task<CrudResponse> EliminarFotoInterpreteAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "UPDATE interpretes SET foto_blob = NULL WHERE id = @id",
+                new { id });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Intérprete no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Foto eliminada correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Actualiza los datos de un intérprete.</summary>
+    public async Task<CrudResponse> ActualizarInterpreteAsync(int id, InterpreteUpdateRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "UPDATE interpretes SET nombre = @Nombre, biografia = @Biografia WHERE id = @id",
+                new { id, request.Nombre, request.Biografia });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Intérprete no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Intérprete actualizado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Obtiene un intérprete por ID con información completa.</summary>
+    public async Task<InterpreteCompleto?> ObtenerInterpreteCompletoAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        var interprete = await conn.QueryFirstOrDefaultAsync<InterpreteCompleto>("""
+            SELECT id AS Id, nombre AS Nombre, foto_blob AS FotoBlob, biografia AS Biografia,
+                   (SELECT COUNT(*) FROM temas WHERE id_interprete = @id) AS TotalTemasCassette,
+                   (SELECT COUNT(*) FROM temas_cd WHERE id_interprete = @id) AS TotalTemasCd
+            FROM interpretes WHERE id = @id
+            """, new { id });
+
+        return interprete;
+    }
+
+    // ============================================
+    // MULTI-ARTISTA EN CANCIONES
+    // ============================================
+
+    /// <summary>Obtiene los artistas asociados a una canción.</summary>
+    public async Task<List<ArtistaEnCancion>> ObtenerArtistasDeCancionAsync(int idCancion, string tipo)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        var artistas = await conn.QueryAsync<ArtistaEnCancion>("""
+            SELECT ca.id_interprete AS IdInterprete, i.nombre AS Nombre, 
+                   ca.es_principal AS EsPrincipal, ca.rol AS Rol,
+                   CASE WHEN i.foto_blob IS NOT NULL THEN 1 ELSE 0 END AS TieneFoto
+            FROM cancion_artistas ca
+            JOIN interpretes i ON ca.id_interprete = i.id
+            WHERE ca.id_cancion = @idCancion AND ca.tipo_cancion = @tipo
+            ORDER BY ca.es_principal DESC, i.nombre
+            """, new { idCancion, tipo });
+
+        return artistas.ToList();
+    }
+
+    /// <summary>Asigna múltiples artistas a una canción.</summary>
+    public async Task<CrudResponse> AsignarArtistasACancionAsync(AsignarArtistasCancionRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+        using var trans = conn.BeginTransaction();
+
+        try
+        {
+            // Eliminar asignaciones anteriores
+            await conn.ExecuteAsync(
+                "DELETE FROM cancion_artistas WHERE id_cancion = @IdCancion AND tipo_cancion = @TipoCancion",
+                new { request.IdCancion, request.TipoCancion }, trans);
+
+            // Insertar nuevas asignaciones
+            foreach (var artista in request.Artistas)
+            {
+                await conn.ExecuteAsync("""
+                    INSERT INTO cancion_artistas (id_cancion, tipo_cancion, id_interprete, es_principal, rol)
+                    VALUES (@IdCancion, @TipoCancion, @IdInterprete, @EsPrincipal, @Rol)
+                    """, new
+                {
+                    request.IdCancion,
+                    request.TipoCancion,
+                    artista.IdInterprete,
+                    EsPrincipal = artista.EsPrincipal ? 1 : 0,
+                    artista.Rol
+                }, trans);
+            }
+
+            trans.Commit();
+            return new CrudResponse { Exito = true, Mensaje = $"{request.Artistas.Count} artista(s) asignados correctamente" };
+        }
+        catch (Exception ex)
+        {
+            trans.Rollback();
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Quita un artista de una canción.</summary>
+    public async Task<CrudResponse> QuitarArtistaDeCancionAsync(int idCancion, string tipo, int idInterprete)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "DELETE FROM cancion_artistas WHERE id_cancion = @idCancion AND tipo_cancion = @tipo AND id_interprete = @idInterprete",
+                new { idCancion, tipo, idInterprete });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Artista no encontrado en esta canción" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Artista removido de la canción" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    // ============================================
+    // PERFILES DE ARTISTAS (TIPO SPOTIFY)
+    // ============================================
+
+    /// <summary>Obtiene el perfil completo de un artista.</summary>
+    public async Task<PerfilArtista?> ObtenerPerfilArtistaAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        var datos = await conn.QueryFirstOrDefaultAsync<dynamic>("""
+            SELECT id AS Id, nombre AS Nombre, 
+                   COALESCE(tipo_artista, 'artista') AS TipoArtista,
+                   biografia AS Biografia, pais AS Pais,
+                   anio_inicio AS AnioInicio, anio_fin AS AnioFin,
+                   discografica AS Discografica, sitio_web AS SitioWeb,
+                   CASE WHEN foto_blob IS NOT NULL THEN 1 ELSE 0 END AS TieneFoto,
+                   (SELECT COUNT(*) FROM temas WHERE id_interprete = @id) AS TotalTemasCassette,
+                   (SELECT COUNT(*) FROM temas_cd WHERE id_interprete = @id) AS TotalTemasCd
+            FROM interpretes WHERE id = @id
+            """, new { id });
+
+        if (datos == null) return null;
+
+        var perfil = new PerfilArtista
+        {
+            Id = (int)(long)datos.Id,
+            Nombre = (string)datos.Nombre,
+            TipoArtista = (string?)datos.TipoArtista ?? "artista",
+            Biografia = (string?)datos.Biografia,
+            Pais = (string?)datos.Pais,
+            AnioInicio = datos.AnioInicio != null ? (int?)(long)datos.AnioInicio : null,
+            AnioFin = datos.AnioFin != null ? (int?)(long)datos.AnioFin : null,
+            Discografica = (string?)datos.Discografica,
+            SitioWeb = (string?)datos.SitioWeb,
+            TieneFoto = (long)datos.TieneFoto == 1,
+            TotalTemasCassette = (int)(long)datos.TotalTemasCassette,
+            TotalTemasCd = (int)(long)datos.TotalTemasCd
+        };
+
+        // Obtener géneros
+        var generos = await conn.QueryAsync<string>(
+            "SELECT genero FROM interprete_generos WHERE id_interprete = @id ORDER BY genero",
+            new { id });
+        perfil.Generos = generos.ToList();
+
+        // Obtener miembros (solo si es banda)
+        if (perfil.TipoArtista == "banda")
+        {
+            var miembros = await conn.QueryAsync<dynamic>("""
+                SELECT bm.id AS Id, bm.id_miembro AS IdMiembro, bm.nombre_miembro AS NombreMiembro,
+                       bm.rol AS Rol, bm.anio_ingreso AS AnioIngreso, bm.anio_salida AS AnioSalida,
+                       bm.es_fundador AS EsFundador,
+                       CASE WHEN i.foto_blob IS NOT NULL THEN 1 ELSE 0 END AS TieneFoto
+                FROM banda_miembros bm
+                LEFT JOIN interpretes i ON bm.id_miembro = i.id
+                WHERE bm.id_banda = @id
+                ORDER BY bm.es_fundador DESC, bm.anio_ingreso
+                """, new { id });
+
+            perfil.Miembros = miembros.Select(m => new MiembroBanda
+            {
+                Id = (int)(long)m.Id,
+                IdMiembro = m.IdMiembro != null ? (int?)(long)m.IdMiembro : null,
+                NombreMiembro = (string)m.NombreMiembro,
+                Rol = (string)m.Rol,
+                AnioIngreso = m.AnioIngreso != null ? (int?)(long)m.AnioIngreso : null,
+                AnioSalida = m.AnioSalida != null ? (int?)(long)m.AnioSalida : null,
+                EsFundador = m.EsFundador != null && (long)m.EsFundador == 1,
+                TieneFoto = m.TieneFoto != null && (long)m.TieneFoto == 1
+            }).ToList();
+        }
+
+        return perfil;
+    }
+
+    /// <summary>Actualiza el perfil de un artista.</summary>
+    public async Task<CrudResponse> ActualizarPerfilArtistaAsync(int id, ActualizarPerfilArtistaRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+        using var trans = conn.BeginTransaction();
+
+        try
+        {
+            // Actualizar campos básicos
+            var sql = """
+                UPDATE interpretes SET
+                    tipo_artista = COALESCE(@TipoArtista, tipo_artista),
+                    nombre = COALESCE(@Nombre, nombre),
+                    biografia = COALESCE(@Biografia, biografia),
+                    pais = COALESCE(@Pais, pais),
+                    anio_inicio = COALESCE(@AnioInicio, anio_inicio),
+                    anio_fin = @AnioFin,
+                    discografica = COALESCE(@Discografica, discografica),
+                    sitio_web = COALESCE(@SitioWeb, sitio_web)
+                WHERE id = @id
+                """;
+
+            var rows = await conn.ExecuteAsync(sql, new
+            {
+                id,
+                request.TipoArtista,
+                request.Nombre,
+                request.Biografia,
+                request.Pais,
+                request.AnioInicio,
+                request.AnioFin,
+                request.Discografica,
+                request.SitioWeb
+            }, trans);
+
+            if (rows == 0)
+            {
+                trans.Rollback();
+                return new CrudResponse { Exito = false, Mensaje = "Artista no encontrado" };
+            }
+
+            // Actualizar géneros si se proporcionan
+            if (request.Generos != null)
+            {
+                await conn.ExecuteAsync("DELETE FROM interprete_generos WHERE id_interprete = @id", new { id }, trans);
+                foreach (var genero in request.Generos)
+                {
+                    await conn.ExecuteAsync(
+                        "INSERT INTO interprete_generos (id_interprete, genero) VALUES (@id, @genero)",
+                        new { id, genero }, trans);
+                }
+            }
+
+            trans.Commit();
+            return new CrudResponse { Exito = true, Mensaje = "Perfil actualizado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            trans.Rollback();
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    // ============================================
+    // MIEMBROS DE BANDA
+    // ============================================
+
+    /// <summary>Obtiene los miembros de una banda.</summary>
+    public async Task<List<MiembroBanda>> ObtenerMiembrosBandaAsync(int idBanda)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        var miembros = await conn.QueryAsync<dynamic>("""
+            SELECT bm.id AS Id, bm.id_miembro AS IdMiembro, bm.nombre_miembro AS NombreMiembro,
+                   bm.rol AS Rol, bm.anio_ingreso AS AnioIngreso, bm.anio_salida AS AnioSalida,
+                   bm.es_fundador AS EsFundador,
+                   CASE WHEN i.foto_blob IS NOT NULL THEN 1 ELSE 0 END AS TieneFoto
+            FROM banda_miembros bm
+            LEFT JOIN interpretes i ON bm.id_miembro = i.id
+            WHERE bm.id_banda = @idBanda
+            ORDER BY bm.es_fundador DESC, bm.anio_ingreso
+            """, new { idBanda });
+
+        return miembros.Select(m => new MiembroBanda
+        {
+            Id = (int)(long)m.Id,
+            IdMiembro = m.IdMiembro != null ? (int?)(long)m.IdMiembro : null,
+            NombreMiembro = (string)m.NombreMiembro,
+            Rol = (string)m.Rol,
+            AnioIngreso = m.AnioIngreso != null ? (int?)(long)m.AnioIngreso : null,
+            AnioSalida = m.AnioSalida != null ? (int?)(long)m.AnioSalida : null,
+            EsFundador = m.EsFundador != null && (long)m.EsFundador == 1,
+            TieneFoto = m.TieneFoto != null && (long)m.TieneFoto == 1
+        }).ToList();
+    }
+
+    /// <summary>Agrega un miembro a una banda. Si no existe el intérprete, lo crea automáticamente.</summary>
+    public async Task<CrudResponse> AgregarMiembroBandaAsync(int idBanda, AgregarMiembroRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Verificar que sea una banda
+            var tipo = await conn.QueryFirstOrDefaultAsync<string>(
+                "SELECT tipo_artista FROM interpretes WHERE id = @idBanda", new { idBanda });
+            
+            if (tipo != "banda")
+            {
+                // Auto-convertir a banda
+                await conn.ExecuteAsync(
+                    "UPDATE interpretes SET tipo_artista = 'banda' WHERE id = @idBanda", 
+                    new { idBanda });
+            }
+
+            // Determinar ID y nombre del miembro
+            int? idMiembro = request.IdMiembro;
+            string nombreMiembro = request.NombreMiembro ?? "";
+
+            // Si no hay IdMiembro pero hay NombreMiembro, crear nuevo intérprete
+            if (!idMiembro.HasValue && !string.IsNullOrWhiteSpace(nombreMiembro))
+            {
+                // Verificar si ya existe un intérprete con ese nombre exacto
+                var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = @nombreMiembro",
+                    new { nombreMiembro });
+
+                if (existente.HasValue)
+                {
+                    // Usar el existente
+                    idMiembro = existente.Value;
+                }
+                else
+                {
+                    // Crear nuevo intérprete como artista solista
+                    idMiembro = await conn.QuerySingleAsync<int>("""
+                        INSERT INTO interpretes (nombre, tipo_artista)
+                        VALUES (@nombreMiembro, 'artista');
+                        SELECT last_insert_rowid();
+                        """, new { nombreMiembro });
+                }
+            }
+            
+            // Si hay IdMiembro pero no nombre, obtener el nombre del intérprete
+            if (idMiembro.HasValue && string.IsNullOrEmpty(nombreMiembro))
+            {
+                nombreMiembro = await conn.QueryFirstOrDefaultAsync<string>(
+                    "SELECT nombre FROM interpretes WHERE id = @id", 
+                    new { id = idMiembro }) ?? "";
+            }
+
+            await conn.ExecuteAsync("""
+                INSERT INTO banda_miembros (id_banda, id_miembro, nombre_miembro, rol, anio_ingreso, anio_salida, es_fundador)
+                VALUES (@idBanda, @idMiembro, @nombreMiembro, @Rol, @AnioIngreso, @AnioSalida, @EsFundador)
+                """, new
+            {
+                idBanda,
+                idMiembro,
+                nombreMiembro,
+                request.Rol,
+                request.AnioIngreso,
+                request.AnioSalida,
+                EsFundador = request.EsFundador ? 1 : 0
+            });
+
+            return new CrudResponse { Exito = true, Mensaje = "Miembro agregado correctamente", IdCreado = idMiembro };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Actualiza un miembro de banda.</summary>
+    public async Task<CrudResponse> ActualizarMiembroAsync(int idMiembro, ActualizarMiembroRequest request)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var sql = """
+                UPDATE banda_miembros SET
+                    nombre_miembro = COALESCE(@NombreMiembro, nombre_miembro),
+                    rol = COALESCE(@Rol, rol),
+                    anio_ingreso = COALESCE(@AnioIngreso, anio_ingreso),
+                    anio_salida = @AnioSalida,
+                    es_fundador = COALESCE(@EsFundador, es_fundador)
+                WHERE id = @idMiembro
+                """;
+
+            var rows = await conn.ExecuteAsync(sql, new
+            {
+                idMiembro,
+                request.NombreMiembro,
+                request.Rol,
+                request.AnioIngreso,
+                request.AnioSalida,
+                EsFundador = request.EsFundador.HasValue ? (request.EsFundador.Value ? 1 : 0) : (int?)null
+            });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Miembro no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Miembro actualizado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Quita un miembro de una banda.</summary>
+    public async Task<CrudResponse> QuitarMiembroAsync(int idMiembro)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            var rows = await conn.ExecuteAsync(
+                "DELETE FROM banda_miembros WHERE id = @idMiembro",
+                new { idMiembro });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Miembro no encontrado" };
+
+            return new CrudResponse { Exito = true, Mensaje = "Miembro removido correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    // ============================================
+    // CATÁLOGOS (ROLES Y GÉNEROS)
+    // ============================================
+
+    /// <summary>Lista todos los roles disponibles.</summary>
+    public async Task<List<ItemCatalogo>> ListarRolesAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        var roles = await conn.QueryAsync<ItemCatalogo>(
+            "SELECT id AS Id, nombre AS Nombre FROM roles_artista ORDER BY nombre");
+        return roles.ToList();
+    }
+
+    /// <summary>Lista todos los géneros disponibles.</summary>
+    public async Task<List<ItemCatalogo>> ListarGenerosAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        var generos = await conn.QueryAsync<ItemCatalogo>(
+            "SELECT id AS Id, nombre AS Nombre FROM generos_musicales ORDER BY nombre");
+        return generos.ToList();
+    }
+
+    /// <summary>Crea un nuevo rol.</summary>
+    public async Task<CrudResponse> CrearRolAsync(string nombre)
+    {
+        using var conn = _db.ObtenerConexion();
+        try
+        {
+            await conn.ExecuteAsync(
+                "INSERT INTO roles_artista (nombre) VALUES (@nombre)",
+                new { nombre });
+            return new CrudResponse { Exito = true, Mensaje = "Rol creado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Crea un nuevo género.</summary>
+    public async Task<CrudResponse> CrearGeneroAsync(string nombre)
+    {
+        using var conn = _db.ObtenerConexion();
+        try
+        {
+            await conn.ExecuteAsync(
+                "INSERT INTO generos_musicales (nombre) VALUES (@nombre)",
+                new { nombre });
+            return new CrudResponse { Exito = true, Mensaje = "Género creado correctamente" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
     }
 }
 

@@ -1,147 +1,1340 @@
 <main class="container">
-    <main class="container">
-        <a href="interpretes.html" class="btn btn-primario" data-spa-link style="margin-bottom: 1.5rem; display: inline-flex;">
+    <style>
+        /* Perfil tipo Spotify */
+        .perfil-header {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .perfil-foto-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .perfil-foto {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .perfil-foto-placeholder {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            font-weight: bold;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .perfil-info {
+            flex: 1;
+            min-width: 250px;
+            color: white;
+        }
+
+        .perfil-tipo {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #a0a0a0;
+        }
+
+        .perfil-nombre {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .perfil-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            color: #d0d0d0;
+            font-size: 0.95rem;
+        }
+
+        .perfil-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .perfil-generos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .genero-tag {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .perfil-acciones {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-editar-perfil {
+            background: transparent;
+            border: 1px solid #888;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-editar-perfil:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Sección de miembros - estilo tarjetas como álbumes */
+        .miembros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .miembro-card {
+            background: var(--color-fondo-card, #f8fafc);
+            border: 1px solid var(--color-borde, #e2e8f0);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .miembro-card:hover {
+            border-color: var(--color-primario, #6366f1);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .miembro-foto-container {
+            width: 100%;
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        .miembro-foto {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .miembro-foto-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 3rem;
+        }
+
+        .miembro-info {
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .miembro-info h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .miembro-info p {
+            margin: 0.25rem 0 0;
+            color: var(--color-texto-secundario);
+            font-size: 0.8rem;
+        }
+
+        .miembro-fundador {
+            color: #fbbf24;
+            margin-left: 0.3rem;
+        }
+
+        /* Album grid para discografía */
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .album-card {
+            background: var(--color-fondo-card, #f8fafc);
+            border: 1px solid var(--color-borde, #e2e8f0);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .album-card:hover {
+            border-color: var(--color-primario, #6366f1);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .album-portada {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: var(--color-fondo, #f1f5f9);
+        }
+
+        .album-portada-placeholder {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--color-texto-secundario, #64748b);
+            font-size: 3rem;
+        }
+
+        .album-info {
+            padding: 0.75rem;
+        }
+
+        .album-nombre {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .album-anio {
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario, #64748b);
+        }
+
+        .badge-single {
+            display: inline-block;
+            background: var(--color-acento, #10b981);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            margin-left: 0.3rem;
+            text-transform: uppercase;
+        }
+
+        /* Canciones - estilo lista de tracks */
+        .canciones-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--color-borde, #e2e8f0);
+        }
+
+        .canciones-section-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .track-list {
+            display: flex;
+            flex-direction: column;
+            background: var(--color-fondo-card, #ffffff);
+            border: 1px solid var(--color-borde, #e2e8f0);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .track-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: inherit;
+            border-bottom: 1px solid var(--color-borde, #e2e8f0);
+            transition: background 0.15s;
+        }
+
+        .track-item:last-child {
+            border-bottom: none;
+        }
+
+        .track-item:hover {
+            background: var(--color-fondo, #f8fafc);
+        }
+
+        .track-info {
+            min-width: 0;
+        }
+
+        .track-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--color-texto, #1e293b);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+
+        .track-item:hover .track-title {
+            color: var(--color-primario, #6366f1);
+        }
+
+        .track-medio {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.6rem;
+            background: var(--color-fondo, #f1f5f9);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-primario, #6366f1);
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .track-medio:hover {
+            background: var(--color-primario-claro, #e0e7ff);
+        }
+
+        .track-posicion {
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario, #64748b);
+            font-family: 'Consolas', 'Monaco', monospace;
+            min-width: 70px;
+            text-align: right;
+        }
+
+
+        .modal-perfil {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 1rem !important;
+            background: rgba(0, 0, 0, 0.9) !important;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999 !important;
+            box-sizing: border-box !important;
+        }
+
+        .modal-perfil.activo {
+            display: flex;
+        }
+
+        .modal-contenido {
+            background: #ffffff;
+            color: var(--color-texto, #1e293b);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-contenido h3 {
+            margin-top: 0;
+        }
+
+        .form-grupo {
+            margin-bottom: 1rem;
+        }
+
+        .form-grupo label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+
+        /* Selector de artista similar a cancion.html */
+        .artista-selector {
+            position: relative;
+        }
+
+        .artista-selector-btn {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.2s;
+        }
+
+        .artista-selector-btn:hover,
+        .artista-selector-btn:focus {
+            border-color: var(--color-primario);
+            outline: none;
+        }
+
+        .artista-selector-btn .artista-icono {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .artista-selector-btn .artista-btn-nombre {
+            flex: 1;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artista-selector-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            display: none;
+            max-height: 300px;
+            overflow: hidden;
+            flex-direction: column;
+            margin-top: 0.5rem;
+        }
+
+        .artista-selector-dropdown.visible {
+            display: flex;
+        }
+
+        .artista-selector-header {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--color-borde);
+        }
+
+        .artista-selector-header input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            font-size: 0.9rem;
+        }
+
+        .artista-selector-lista {
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .artista-selector-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .artista-selector-item:hover {
+            background: var(--color-fondo-hover);
+        }
+
+        .artista-selector-item .artista-icono {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .artista-selector-nuevo {
+            padding: 0.75rem;
+            border-top: 1px solid var(--color-borde);
+            background: var(--color-fondo);
+        }
+
+        .btn-nuevo-artista {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px dashed var(--color-borde);
+            border-radius: var(--radio);
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn-nuevo-artista:hover {
+            border-color: var(--color-primario);
+            background: var(--color-primario-claro);
+        }
+
+        .form-grupo input,
+        .form-grupo select,
+        .form-grupo textarea {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--color-borde);
+            border-radius: 0.5rem;
+            background: var(--color-fondo);
+            color: var(--color-texto);
+        }
+
+        .form-grupo textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .generos-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .genero-chip {
+            background: var(--color-fondo);
+            padding: 0.4rem 0.8rem;
+            border-radius: 1rem;
+            border: 1px solid var(--color-borde);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .genero-chip.seleccionado {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        .modal-acciones {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: flex-end;
+        }
+    </style>
+
+    <div class="contenido-principal">
+        <a href="interpretes.html" class="btn btn-primario" data-spa-link
+            style="margin-bottom: 1.5rem; display: inline-flex;">
             ← Volver a la lista
         </a>
 
-        <section id="detalleInterprete" class="seccion">
-            <p class="cargando">Cargando información...</p>
+        <div id="perfilHeader" class="perfil-header">
+            <p class="cargando">Cargando perfil...</p>
+        </div>
+
+        <section id="seccionBiografia" class="seccion" style="display: none;">
+            <h2>📝 Biografía</h2>
+            <p id="biografiaTexto" class="seccion-descripcion"></p>
+        </section>
+
+        <section id="seccionMiembros" class="seccion" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>👥 Miembros de la Banda</h2>
+                <button class="btn btn-primario" onclick="abrirModalMiembro()">+ Agregar miembro</button>
+            </div>
+            <div id="miembrosGrid" class="miembros-grid"></div>
+        </section>
+
+        <section id="seccionAlbumes" class="seccion" style="display: none;">
+            <h2>💿 Discografía</h2>
+            <div id="albumesGrid" class="album-grid"></div>
         </section>
 
         <section id="seccionTemas" class="seccion" style="display: none;">
-            <h2>🎵 Canciones de este intérprete</h2>
-            <p class="seccion-descripcion">Detalles del intérprete y sus canciones.</p>
+            <h2>🎵 <span id="temasTitulo">Canciones</span></h2>
             <div id="listaTemas"></div>
         </section>
-    </main>
 
+        <input type="file" id="inputFoto" accept="image/*" style="display:none">
+    </div>
 
-    <!-- Contenedor de notificaciones toast -->
-    <div id="notificaciones-component"></div>
+    <!-- Modal Editar Perfil -->
+    <div id="modalPerfil" class="modal-perfil">
+        <div class="modal-contenido">
+            <h3>✏️ Editar Perfil</h3>
+            <form id="formPerfil">
+                <div class="form-grupo">
+                    <label>Nombre</label>
+                    <input type="text" id="editNombre" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-grupo">
+                        <label>Tipo</label>
+                        <select id="editTipo">
+                            <option value="artista">🎤 Artista Solo</option>
+                            <option value="banda">🎸 Banda</option>
+                        </select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>País</label>
+                        <input type="text" id="editPais" placeholder="Ej: Argentina">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-grupo">
+                        <label>Año Inicio</label>
+                        <input type="number" id="editAnioInicio" min="1900" max="2100">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Año Fin (vacío si activo)</label>
+                        <input type="number" id="editAnioFin" min="1900" max="2100">
+                    </div>
+                </div>
+                <div class="form-grupo">
+                    <label>Discográfica</label>
+                    <input type="text" id="editDiscografica" placeholder="Ej: Sony Music">
+                </div>
+                <div class="form-grupo">
+                    <label>Sitio Web</label>
+                    <input type="url" id="editSitioWeb" placeholder="https://...">
+                </div>
+                <div class="form-grupo">
+                    <label>Biografía</label>
+                    <textarea id="editBiografia" placeholder="Descripción del artista..."></textarea>
+                </div>
+                <div class="form-grupo">
+                    <label>Géneros</label>
+                    <div id="generosSelector" class="generos-selector"></div>
+                </div>
+                <div class="modal-acciones">
+                    <button type="button" class="btn" onclick="cerrarModalPerfil()">Cancelar</button>
+                    <button type="submit" class="btn btn-primario">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- Footer generado dinámicamente -->
-    <div id="footer-component"></div>
+    <!-- Modal Agregar Miembro -->
+    <div id="modalMiembro" class="modal-perfil">
+        <div class="modal-contenido">
+            <h3 id="tituloModalMiembro">➕ Agregar Miembro</h3>
+            <form id="formMiembro">
+                <div class="form-grupo">
+                    <label>Nombre</label>
+                    <div class="artista-selector" id="selectorMiembro">
+                        <button type="button" class="artista-selector-btn" onclick="toggleSelectorMiembro()">
+                            <div class="artista-icono" id="iconoMiembroSeleccionado">👤</div>
+                            <div class="artista-btn-nombre" id="textoMiembroSeleccionado">Seleccionar miembro...</div>
+                        </button>
+                        <div class="artista-selector-dropdown" id="dropdownMiembro">
+                            <div class="artista-selector-header">
+                                <input type="text" id="busquedaMiembro" placeholder="Buscar artista..."
+                                    autocomplete="off">
+                            </div>
+                            <div class="artista-selector-lista" id="listaArtistasMiembro">
+                                <div class="artista-vacio-dropdown">Escribe para buscar...</div>
+                            </div>
+                            <div class="artista-selector-nuevo">
+                                <button type="button" class="btn-nuevo-artista" onclick="usarNombreComoNuevo()">
+                                    ➕ Usar como nombre directo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Inputs ocultos para el formulario -->
+                    <input type="hidden" id="miembroIdArtista"> <!-- ID seleccionado -->
+                    <input type="text" id="miembroNombre" style="display:none" required> <!-- Nombre final -->
+                </div>
+                <div class="form-grupo">
+                    <label>Rol</label>
+                    <input type="text" id="miembroRol" required list="listaRoles" placeholder="Ej: Vocalista">
+                    <datalist id="listaRoles"></datalist>
+                </div>
+                <div class="form-row">
+                    <div class="form-grupo">
+                        <label>Año Ingreso</label>
+                        <input type="number" id="miembroAnioIngreso" min="1900" max="2100">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Año Salida</label>
+                        <input type="number" id="miembroAnioSalida" min="1900" max="2100">
+                    </div>
+                </div>
+                <div class="form-grupo">
+                    <label><input type="checkbox" id="miembroFundador"> Miembro fundador</label>
+                </div>
+                <input type="hidden" id="miembroId">
+                <div class="modal-acciones">
+                    <button type="button" class="btn" onclick="cerrarModalMiembro()">Cancelar</button>
+                    <button type="submit" class="btn btn-primario">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
-        // Inicialización inmediata para SPA
+        // Limpiar modales globales previos para evitar duplicados y listeners múltiples
+        (function limpiarModalesAnteriores() {
+            const viejos = document.querySelectorAll('body > .modal-perfil[data-modal-global="true"]');
+            viejos.forEach(m => m.remove());
+        })();
+
+        let perfilActual = null;
+        let generosDisponibles = [];
+        let rolesDisponibles = [];
+        let generosSeleccionados = [];
+
+        // Inicialización
         (async () => {
             const params = new URLSearchParams(window.location.search);
-            // Soportar tanto 'nombre' (nuevo) como 'id' (compatibilidad)
             const nombre = params.get('nombre') || params.get('id');
+            const idParam = params.get('id');
 
-            if (!nombre) {
-                document.getElementById('detalleInterprete').innerHTML = '<p class="error">No se especificó un intérprete</p>';
+            if (!nombre && !idParam) {
+                document.getElementById('perfilHeader').innerHTML = '<p class="error">No se especificó un intérprete</p>';
                 return;
             }
 
-            await cargarInterprete(nombre);
+            // Cargar catálogos
+            await Promise.all([cargarGeneros(), cargarRoles()]);
+
+            // Cargar perfil
+            if (idParam) {
+                await cargarPerfilPorId(parseInt(idParam));
+            } else {
+                await cargarPerfilPorNombre(nombre);
+            }
         })();
 
-        async function cargarInterprete(nombre) {
+        // Inyectar estilos globales para modales (fuera del contenedor SPA)
+        (function inyectarEstilosModal() {
+            // Remover estilo viejo si existe para forzar actualización
+            const viejo = document.getElementById('modal-global-styles');
+            if (viejo) viejo.remove();
+
+            // Solo inyectar una vez el nuevo
+            if (document.getElementById('modal-global-styles-white')) return;
+
+            const estilos = document.createElement('style');
+            estilos.id = 'modal-global-styles-white';
+            estilos.textContent = `
+                /* Estilos globales para modales - IGNORAN el contenedor SPA */
+                body > .modal-perfil {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    margin: 0 !important;
+                    padding: 1rem !important;
+                    background: rgba(0, 0, 0, 0.92) !important;
+                    display: none;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 999999 !important;
+                    box-sizing: border-box !important;
+                    transform: none !important;
+                }
+                body > .modal-perfil.activo {
+                    display: flex !important;
+                }
+                body > .modal-perfil .modal-contenido {
+                    background: #ffffff !important;
+                    color: var(--color-texto, #1e293b) !important;
+                    border-radius: 12px;
+                    max-width: 600px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    padding: 2rem;
+                    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+                }
+                body > .modal-perfil .modal-contenido input,
+                body > .modal-perfil .modal-contenido select,
+                body > .modal-perfil .modal-contenido textarea {
+                    background: var(--color-fondo-card, #ffffff) !important;
+                    color: var(--color-texto, #1e293b) !important;
+                    border: 1px solid var(--color-borde, #e2e8f0) !important;
+                }
+                body > .modal-perfil .modal-contenido label {
+                    color: var(--color-texto, #1e293b) !important;
+                }
+            `;
+            document.head.appendChild(estilos);
+        })();
+
+        // Mover modales al body para que cubran toda la pantalla
+        function moverModalesAlBody() {
+            const modales = document.querySelectorAll('.modal-perfil');
+            modales.forEach(modal => {
+                if (modal.parentElement !== document.body) {
+                    // Marcar como movido para no ser limpiado por el router
+                    modal.setAttribute('data-modal-global', 'true');
+                    document.body.appendChild(modal);
+                }
+            });
+        }
+
+        // Ejecutar inmediatamente
+        moverModalesAlBody();
+        // Y también después de un pequeño delay por si el DOM no está listo
+        setTimeout(moverModalesAlBody, 50);
+        setTimeout(moverModalesAlBody, 200);
+
+        async function cargarGeneros() {
+            try {
+                const resp = await fetch('/api/catalogos/generos');
+                generosDisponibles = await resp.json();
+            } catch (e) { console.error('Error cargando géneros:', e); }
+        }
+
+        async function cargarRoles() {
+            try {
+                const resp = await fetch('/api/catalogos/roles');
+                rolesDisponibles = await resp.json();
+                const datalist = document.getElementById('listaRoles');
+                datalist.innerHTML = rolesDisponibles.map(r => `<option value="${escapeHtml(r.nombre)}">`).join('');
+            } catch (e) { console.error('Error cargando roles:', e); }
+        }
+
+        async function cargarPerfilPorNombre(nombre) {
             try {
                 const resp = await fetch(`/api/interpretes/${encodeURIComponent(nombre)}`);
-
-                if (!resp.ok) {
-                    document.getElementById('detalleInterprete').innerHTML = '<p class="error">Intérprete no encontrado</p>';
-                    return;
-                }
-
+                if (!resp.ok) throw new Error('No encontrado');
                 const interprete = await resp.json();
-
-                document.getElementById('detalleInterprete').innerHTML = `
-                    <div class="detalle-header">
-                        <div class="detalle-icono">${ICONOS.iconoInterprete}</div>
-                        <div class="detalle-titulo">
-                            <h2>${escapeHtml(interprete.nombre)}</h2>
-                            <div class="item-info">${formatearNumero(interprete.totalTemas || 0)} canciones en la colección</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">Total de Canciones</div>
-                            <div class="stat-value">${formatearNumero(interprete.totalTemas || 0)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">En Cassettes</div>
-                            <div class="stat-value">${formatearNumero(interprete.totalTemasCassette || 0)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">En CDs</div>
-                            <div class="stat-value">${formatearNumero(interprete.totalTemasCd || 0)}</div>
-                        </div>
-                    </div>
-                `;
-
-                // Mostrar temas
-                const seccionTemas = document.getElementById('seccionTemas');
-                const listaTemas = document.getElementById('listaTemas');
-
-                if (interprete.temas && interprete.temas.length > 0) {
-                    seccionTemas.style.display = 'block';
-
-                    // Agrupar por Medio
-                    const cassettes = interprete.temas.filter(t => t.tipo === 'cassette');
-                    const cds = interprete.temas.filter(t => t.tipo !== 'cassette');
-
-                    let html = '';
-
-                    if (cassettes.length > 0) {
-                        html += `<h3 style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="width: 32px; height: 32px;">${ICONOS.cassette}</span>
-                            En Cassettes (${cassettes.length})
-                        </h3>`;
-                        html += generarListaTemas(cassettes);
-                    }
-
-                    if (cds.length > 0) {
-                        html += `<h3 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="width: 32px; height: 32px;">${ICONOS.cd}</span>
-                            En CDs (${cds.length})
-                        </h3>`;
-                        html += generarListaTemas(cds);
-                    }
-
-                    listaTemas.innerHTML = html;
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('detalleInterprete').innerHTML = '<p class="error">Error al cargar el intérprete</p>';
+                await cargarPerfilPorId(interprete.id);
+            } catch (e) {
+                document.getElementById('perfilHeader').innerHTML = '<p class="error">Intérprete no encontrado</p>';
             }
         }
 
-        function generarListaTemas(temas) {
-            return `
-                <table class="tabla-temas">
-                    <thead>
-                        <tr>
-                            <th>Tema</th>
-                            <th>Medio</th>
-                            <th>Posición</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${temas.map(t => `
-                            <tr>
-                                <td>
-                                    <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" style="text-decoration: none; color: inherit;" data-spa-link>
-                                        <strong>${escapeHtml(t.tema)}</strong>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" 
-                                       style="color: var(--color-primario); text-decoration: none;" data-spa-link>
-                                        ${escapeHtml(t.numMedio)}
-                                    </a>
-                                </td>
-                                <td>${t.posicion || '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+        async function cargarPerfilPorId(id) {
+            try {
+                const resp = await fetch(`/api/interpretes/${id}/perfil`);
+                if (!resp.ok) throw new Error('No encontrado');
+                perfilActual = await resp.json();
+                renderizarPerfil();
+                await cargarTemas();
+            } catch (e) {
+                document.getElementById('perfilHeader').innerHTML = '<p class="error">Error cargando perfil</p>';
+            }
         }
+
+        function renderizarPerfil() {
+            const p = perfilActual;
+            const inicial = p.nombre.charAt(0).toUpperCase();
+
+            const fotoHtml = p.tieneFoto
+                ? `<img src="/api/interpretes/${p.id}/foto?t=${Date.now()}" class="perfil-foto" alt="${escapeHtml(p.nombre)}" onerror="this.outerHTML='<div class=\\'perfil-foto-placeholder\\'>${inicial}</div>'">`
+                : `<div class="perfil-foto-placeholder">${inicial}</div>`;
+
+            const tipoIcon = p.tipoArtista === 'banda' ? '🎸 Banda' : '🎤 Artista';
+            const anios = p.anioInicio ? (p.anioFin ? `${p.anioInicio} - ${p.anioFin}` : `${p.anioInicio} - presente`) : '';
+
+            document.getElementById('perfilHeader').innerHTML = `
+                <div class="perfil-foto-container">
+                    <div id="contenedorFoto">${fotoHtml}</div>
+                    <button class="btn-editar-perfil" onclick="subirFoto()">📷 Cambiar foto</button>
+                </div>
+                <div class="perfil-info">
+                    <div class="perfil-tipo">${tipoIcon}</div>
+                    <h1 class="perfil-nombre">${escapeHtml(p.nombre)}</h1>
+                    <div class="perfil-meta">
+                        ${p.pais ? `<span class="perfil-meta-item">🌍 ${escapeHtml(p.pais)}</span>` : ''}
+                        ${anios ? `<span class="perfil-meta-item">📅 ${anios}</span>` : ''}
+                        ${p.discografica ? `<span class="perfil-meta-item">🏢 ${escapeHtml(p.discografica)}</span>` : ''}
+                        <span class="perfil-meta-item">🎵 ${p.totalTemas} cancion${p.totalTemas !== 1 ? 'es' : ''}</span>
+                    </div>
+                    ${p.generos.length > 0 ? `
+                        <div class="perfil-generos">
+                            ${p.generos.map(g => `<span class="genero-tag">${escapeHtml(g)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="perfil-acciones">
+                        <button class="btn-editar-perfil" onclick="abrirModalPerfil()">✏️ Editar perfil</button>
+                        ${p.sitioWeb ? `<a href="${p.sitioWeb}" target="_blank" class="btn-editar-perfil">🔗 Sitio web</a>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Biografía
+            if (p.biografia) {
+                document.getElementById('biografiaTexto').textContent = p.biografia;
+                document.getElementById('seccionBiografia').style.display = 'block';
+            }
+
+            // Miembros (solo para bandas)
+            if (p.tipoArtista === 'banda') {
+                renderizarMiembros(p.miembros || []);
+                document.getElementById('seccionMiembros').style.display = 'block';
+            }
+
+            // Cargar álbumes del artista
+            cargarAlbumes(p.id);
+        }
+
+        async function cargarAlbumes(idArtista) {
+            try {
+                const resp = await fetch(`/api/albumes?idInterprete=${idArtista}`);
+                if (!resp.ok) return;
+                const albumes = await resp.json();
+
+                if (albumes && albumes.length > 0) {
+                    document.getElementById('seccionAlbumes').style.display = 'block';
+                    const grid = document.getElementById('albumesGrid');
+                    grid.innerHTML = albumes.map(a => {
+                        const portadaHtml = a.tienePortada
+                            ? `<img src="/api/albumes/${a.id}/portada?t=${Date.now()}" class="album-portada" alt="${escapeHtml(a.nombre)}">`
+                            : `<div class="album-portada-placeholder">💿</div>`;
+                        return `
+                            <a href="albumes.html?id=${a.id}" class="album-card" data-spa-link>
+                                ${portadaHtml}
+                                <div class="album-info">
+                                    <div class="album-nombre">${escapeHtml(a.nombre)}${a.esSingle ? '<span class="badge-single">Single</span>' : ''}</div>
+                                    ${a.anio ? `<div class="album-anio">${a.anio}</div>` : ''}
+                                </div>
+                            </a>
+                        `;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error('Error cargando álbumes:', e);
+            }
+        }
+
+        function renderizarMiembros(miembros) {
+            const grid = document.getElementById('miembrosGrid');
+            if (miembros.length === 0) {
+                grid.innerHTML = '<p style="color: var(--color-texto-secundario);">No hay miembros registrados. Haz clic en "Agregar miembro" para comenzar.</p>';
+                return;
+            }
+            grid.innerHTML = miembros.map(m => {
+                const inicial = m.nombreMiembro.charAt(0).toUpperCase();
+                const anios = m.anioIngreso ? (m.anioSalida ? `${m.anioIngreso}-${m.anioSalida}` : `desde ${m.anioIngreso}`) : '';
+
+                // Mostrar foto si el miembro tiene un intérprete vinculado con foto
+                const fotoHtml = m.idMiembro && m.tieneFoto
+                    ? `<img src="/api/interpretes/${m.idMiembro}/foto" class="miembro-foto" alt="${escapeHtml(m.nombreMiembro)}" onerror="this.outerHTML='<div class=\\'miembro-foto-placeholder\\'>${inicial}</div>'">`
+                    : `<div class="miembro-foto-placeholder">${inicial}</div>`;
+
+                // Card wrapper - clickeable si tiene intérprete vinculado
+                const cardLink = m.idMiembro ? `href="interprete.html?id=${m.idMiembro}" data-spa-link` : '';
+                const cardTag = m.idMiembro ? 'a' : 'div';
+
+                return `
+                    <${cardTag} ${cardLink} class="miembro-card">
+                        <div class="miembro-foto-container">
+                            ${fotoHtml}
+                        </div>
+                        <div class="miembro-info">
+                            <h4>${escapeHtml(m.nombreMiembro)}${m.esFundador ? '<span class="miembro-fundador">⭐</span>' : ''}</h4>
+                            <p>${escapeHtml(m.rol)}${anios ? ` • ${anios}` : ''}</p>
+                        </div>
+                        <button class="btn" style="width:100%; padding:0.4rem; font-size:0.75rem; border-radius:0; border-top:1px solid var(--color-borde, #e2e8f0);" onclick="event.preventDefault(); event.stopPropagation(); eliminarMiembro(${m.id})">🗑️ Eliminar</button>
+                    </${cardTag}>
+                `;
+            }).join('');
+        }
+
+        async function cargarTemas() {
+            try {
+                const resp = await fetch(`/api/interpretes/${encodeURIComponent(perfilActual.nombre)}`);
+                const data = await resp.json();
+                if (data.temas && data.temas.length > 0) {
+                    document.getElementById('seccionTemas').style.display = 'block';
+                    document.getElementById('temasTitulo').textContent = `Canciones (${data.temas.length})`;
+
+                    const cassettes = data.temas.filter(t => t.tipo === 'cassette');
+                    const cds = data.temas.filter(t => t.tipo !== 'cassette');
+
+                    let html = '';
+                    if (cassettes.length > 0) {
+                        html += `<div class="canciones-section-header">
+                            <h3><span style="width: 28px; height: 28px; display: inline-block;">${ICONOS.cassette}</span> En Cassettes (${cassettes.length})</h3>
+                        </div>`;
+                        html += generarTrackList(cassettes);
+                    }
+                    if (cds.length > 0) {
+                        html += `<div class="canciones-section-header">
+                            <h3><span style="width: 28px; height: 28px; display: inline-block;">${ICONOS.cd}</span> En CDs (${cds.length})</h3>
+                        </div>`;
+                        html += generarTrackList(cds);
+                    }
+                    document.getElementById('listaTemas').innerHTML = html;
+                }
+            } catch (e) { console.error('Error cargando temas:', e); }
+        }
+
+        function generarTrackList(temas) {
+            return `<div class="track-list">
+                ${temas.map(t => `
+                    <div class="track-item">
+                        <div class="track-info">
+                            <a href="cancion.html?id=${t.id}&tipo=${t.tipo}" class="track-title" data-spa-link>${escapeHtml(t.tema)}</a>
+                        </div>
+                        <a href="medio.html?num=${encodeURIComponent(t.numMedio)}" class="track-medio" data-spa-link>
+                            ${escapeHtml(t.numMedio)}
+                        </a>
+                        <span class="track-posicion">${t.posicion || '-'}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        // Modal Perfil
+        function abrirModalPerfil() {
+            const modal = document.getElementById('modalPerfil');
+            // Asegurar que esté en el body
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+
+            const p = perfilActual;
+            document.getElementById('editNombre').value = p.nombre;
+            document.getElementById('editTipo').value = p.tipoArtista;
+            document.getElementById('editPais').value = p.pais || '';
+            document.getElementById('editAnioInicio').value = p.anioInicio || '';
+            document.getElementById('editAnioFin').value = p.anioFin || '';
+            document.getElementById('editDiscografica').value = p.discografica || '';
+            document.getElementById('editSitioWeb').value = p.sitioWeb || '';
+            document.getElementById('editBiografia').value = p.biografia || '';
+
+            generosSeleccionados = [...p.generos];
+            renderizarSelectorGeneros();
+
+            modal.classList.add('activo');
+        }
+
+        function cerrarModalPerfil() {
+            document.getElementById('modalPerfil').classList.remove('activo');
+        }
+
+        function renderizarSelectorGeneros() {
+            const container = document.getElementById('generosSelector');
+            container.innerHTML = generosDisponibles.map(g => `
+                <span class="genero-chip ${generosSeleccionados.includes(g.nombre) ? 'seleccionado' : ''}" 
+                      onclick="toggleGenero('${escapeHtml(g.nombre)}')">${escapeHtml(g.nombre)}</span>
+            `).join('');
+        }
+
+        function toggleGenero(genero) {
+            const idx = generosSeleccionados.indexOf(genero);
+            if (idx >= 0) {
+                generosSeleccionados.splice(idx, 1);
+            } else {
+                generosSeleccionados.push(genero);
+            }
+            renderizarSelectorGeneros();
+        }
+
+        document.getElementById('formPerfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const request = {
+                nombre: document.getElementById('editNombre').value,
+                tipoArtista: document.getElementById('editTipo').value,
+                pais: document.getElementById('editPais').value || null,
+                anioInicio: parseInt(document.getElementById('editAnioInicio').value) || null,
+                anioFin: parseInt(document.getElementById('editAnioFin').value) || null,
+                discografica: document.getElementById('editDiscografica').value || null,
+                sitioWeb: document.getElementById('editSitioWeb').value || null,
+                biografia: document.getElementById('editBiografia').value || null,
+                generos: generosSeleccionados
+            };
+
+            try {
+                const resp = await fetch(`/api/interpretes/${perfilActual.id}/perfil`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                const result = await resp.json();
+                if (result.exito) {
+                    cerrarModalPerfil();
+                    mostrarNotificacion('Perfil actualizado', 'exito');
+                    await cargarPerfilPorId(perfilActual.id);
+                } else {
+                    mostrarNotificacion(result.mensaje, 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al guardar', 'error');
+            }
+        });
+
+        // Modal Miembro
+        function abrirModalMiembro(miembro = null) {
+            document.getElementById('tituloModalMiembro').textContent = miembro ? '✏️ Editar Miembro' : '➕ Agregar Miembro';
+
+            // Inicializar valores del formulario
+            const nombre = miembro?.nombreMiembro || '';
+            document.getElementById('miembroNombre').value = nombre;
+            document.getElementById('miembroIdArtista').value = '';
+
+            // Actualizar UI del selector
+            if (nombre) {
+                document.getElementById('textoMiembroSeleccionado').textContent = nombre;
+                document.getElementById('iconoMiembroSeleccionado').textContent = '👤';
+            } else {
+                document.getElementById('textoMiembroSeleccionado').textContent = 'Seleccionar miembro...';
+                document.getElementById('iconoMiembroSeleccionado').textContent = '👤';
+            }
+
+            // Resetear estado del dropdown
+            const dropdown = document.getElementById('dropdownMiembro');
+            if (dropdown) dropdown.classList.remove('visible');
+            document.getElementById('busquedaMiembro').value = '';
+            document.getElementById('listaArtistasMiembro').innerHTML = '<div class="artista-vacio-dropdown">Escribe para buscar...</div>';
+
+            document.getElementById('miembroRol').value = miembro?.rol || '';
+            document.getElementById('miembroAnioIngreso').value = miembro?.anioIngreso || '';
+            document.getElementById('miembroAnioSalida').value = miembro?.anioSalida || '';
+            document.getElementById('miembroFundador').checked = miembro?.esFundador || false;
+            document.getElementById('miembroId').value = miembro?.id || '';
+
+            const modal = document.getElementById('modalMiembro');
+            // Asegurar que esté en body
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal.classList.add('activo');
+        }
+
+        function cerrarModalMiembro() {
+            document.getElementById('modalMiembro').classList.remove('activo');
+        }
+
+        document.getElementById('formMiembro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const miembroId = document.getElementById('miembroId').value;
+            const idArtista = document.getElementById('miembroIdArtista').value;
+            const request = {
+                nombreMiembro: document.getElementById('miembroNombre').value,
+                idMiembro: idArtista ? parseInt(idArtista) : null,
+                rol: document.getElementById('miembroRol').value,
+                anioIngreso: parseInt(document.getElementById('miembroAnioIngreso').value) || null,
+                anioSalida: parseInt(document.getElementById('miembroAnioSalida').value) || null,
+                esFundador: document.getElementById('miembroFundador').checked
+            };
+
+            try {
+                const url = miembroId
+                    ? `/api/interpretes/${perfilActual.id}/miembros/${miembroId}`
+                    : `/api/interpretes/${perfilActual.id}/miembros`;
+                const resp = await fetch(url, {
+                    method: miembroId ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                const result = await resp.json();
+                if (result.exito) {
+                    cerrarModalMiembro();
+                    mostrarNotificacion(miembroId ? 'Miembro actualizado' : 'Miembro agregado', 'exito');
+                    await cargarPerfilPorId(perfilActual.id);
+                } else {
+                    mostrarNotificacion(result.mensaje, 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al guardar miembro', 'error');
+            }
+        });
+
+        async function eliminarMiembro(id) {
+            if (!confirm('¿Eliminar este miembro de la banda?')) return;
+            try {
+                const resp = await fetch(`/api/interpretes/${perfilActual.id}/miembros/${id}`, { method: 'DELETE' });
+                const result = await resp.json();
+                if (result.exito) {
+                    mostrarNotificacion('Miembro eliminado', 'exito');
+                    await cargarPerfilPorId(perfilActual.id);
+                } else {
+                    mostrarNotificacion(result.mensaje, 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al eliminar', 'error');
+            }
+        }
+
+        // Foto
+        function subirFoto() {
+            document.getElementById('inputFoto').click();
+        }
+
+        document.getElementById('inputFoto').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (!file || !perfilActual) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const resp = await fetch(`/api/interpretes/${perfilActual.id}/foto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await resp.json();
+                if (result.exito) {
+                    mostrarNotificacion('Foto actualizada', 'exito');
+                    await cargarPerfilPorId(perfilActual.id);
+                } else {
+                    mostrarNotificacion(result.mensaje, 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al subir foto', 'error');
+            }
+            e.target.value = '';
+        });
+
+        // Lógica del Selector de Miembro con Autocompletado
+        let timeoutBusquedaMiembro = null;
+
+        function toggleSelectorMiembro() {
+            const dropdown = document.getElementById('dropdownMiembro');
+            dropdown.classList.toggle('visible');
+            if (dropdown.classList.contains('visible')) {
+                setTimeout(() => document.getElementById('busquedaMiembro').focus(), 50);
+            }
+        }
+
+        function usarNombreComoNuevo() {
+            const texto = document.getElementById('busquedaMiembro').value.trim();
+            if (!texto) return;
+            seleccionarArtistaMiembro(null, texto);
+        }
+
+        function seleccionarArtistaMiembro(id, nombre) {
+            document.getElementById('miembroIdArtista').value = id || '';
+            document.getElementById('miembroNombre').value = nombre;
+
+            document.getElementById('textoMiembroSeleccionado').textContent = nombre;
+            document.getElementById('dropdownMiembro').classList.remove('visible');
+
+            // Resetear búsqueda
+            document.getElementById('busquedaMiembro').value = '';
+        }
+
+        // Búsqueda dinámica de miembros
+        const inputBusqueda = document.getElementById('busquedaMiembro');
+        if (inputBusqueda) {
+            inputBusqueda.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (timeoutBusquedaMiembro) clearTimeout(timeoutBusquedaMiembro);
+
+                if (query.length < 2) {
+                    document.getElementById('listaArtistasMiembro').innerHTML = '<div class="artista-vacio-dropdown">Escribe para buscar...</div>';
+                    return;
+                }
+
+                timeoutBusquedaMiembro = setTimeout(async () => {
+                    try {
+                        // Usar 'filtro' en lugar de 'q' para coincidir con la API
+                        const resp = await fetch(`/api/interpretes?filtro=${encodeURIComponent(query)}`);
+                        const resultados = await resp.json();
+
+                        const lista = document.getElementById('listaArtistasMiembro');
+                        if (resultados.length === 0) {
+                            lista.innerHTML = '<div class="artista-vacio-dropdown">No se encontraron artistas</div>';
+                            return;
+                        }
+
+                        lista.innerHTML = resultados.map(a => `
+                            <div class="artista-selector-item" onclick="seleccionarArtistaMiembro(${a.id}, '${a.interprete.replace(/'/g, "\\'")}')">
+                                <div class="artista-icono">👤</div>
+                                <div class="artista-item-nombre">${escapeHtml(a.interprete)}</div>
+                            </div>
+                        `).join('');
+                    } catch (e) {
+                        console.error('Error buscando artistas:', e);
+                    }
+                }, 300);
+            });
+            // Evitar que el click en el input cierre el dropdown
+            inputBusqueda.addEventListener('click', (e) => e.stopPropagation());
+        }
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', (e) => {
+            const selector = document.getElementById('selectorMiembro');
+            if (selector && !selector.contains(e.target)) {
+                const dropdown = document.getElementById('dropdownMiembro');
+                if (dropdown) dropdown.classList.remove('visible');
+            }
+        });
+
+        // Cerrar modales con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cerrarModalPerfil();
+                cerrarModalMiembro();
+            }
+        });
     </script>
 
+    <div id="notificaciones-component"></div>
+    <div id="footer-component"></div>
 </main>

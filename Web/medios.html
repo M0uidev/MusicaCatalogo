@@ -106,9 +106,9 @@
         .buscador-Medios input {
             width: 100%;
             padding: 1rem 1.25rem 1rem 3rem;
-            font-size: 1.1rem;
-            border: 2px solid var(--color-borde);
-            border-radius: var(--radio-grande);
+            font-size: 1rem;
+            border: 1px solid var(--color-borde);
+            border-radius: 2rem;
             background: white;
         }
 
@@ -363,27 +363,29 @@
             <div
                 style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
                 <div>
-                    <h2 style="margin: 0;">📼 Cassettes y CDs (Actualizado)</h2>
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i
+                            data-lucide="cassette-tape" style="width:24px;height:24px;"></i> Cassettes y CDs</h2>
                     <p class="seccion-descripcion" style="margin: 0.5rem 0 0;">Explora la colección de grabaciones.</p>
                 </div>
                 <button class="btn btn-acento" onclick="abrirModalNuevoMedio()"
                     style="display: flex; align-items: center; gap: 0.5rem;">
-                    ➕ Nuevo
+                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Nuevo
                 </button>
             </div>
 
             <!-- Buscador de Medios -->
             <div class="buscador-Medios" id="buscadorContainer">
-                <span class="icono-buscar">🔍</span>
+                <span class="icono-buscar"><i data-lucide="search"></i></span>
                 <input type="text" id="buscarMedio" placeholder="Buscar por número o marca..." autocomplete="off">
-                <button class="btn-limpiar" id="btnLimpiarBusqueda" title="Limpiar">✕</button>
+                <button class="btn-limpiar" id="btnLimpiarBusqueda" title="Limpiar"><i data-lucide="x"></i></button>
                 <div class="sugerencias-Medios" id="sugerenciasMedios"></div>
             </div>
 
             <div class="filtros-container">
                 <!-- Filtro por tipo -->
                 <div class="filtros-grupo">
-                    <div class="filtros-titulo">📦 Tipo de Medio</div>
+                    <div class="filtros-titulo"><i data-lucide="package" style="width:16px;height:16px;"></i> Tipo de
+                        Medio</div>
                     <div class="filtros-opciones" id="filtrosTipo">
                         <button class="filtro-chip activo" data-filtro="tipo" data-valor="todos">
                             Todos <span class="chip-count" id="countTodos">0</span>
@@ -401,7 +403,8 @@
 
                 <!-- Filtro por tipo de cinta (solo cassettes) -->
                 <div class="filtros-grupo" id="filtrosCinta" style="display: none;">
-                    <div class="filtros-titulo">🎞️ Tipo de cinta magnética</div>
+                    <div class="filtros-titulo"><i data-lucide="film" style="width:16px;height:16px;"></i> Tipo de cinta
+                        magnética</div>
                     <div class="filtros-opciones">
                         <button class="filtro-chip activo" data-filtro="cinta" data-valor="todas">
                             Todas
