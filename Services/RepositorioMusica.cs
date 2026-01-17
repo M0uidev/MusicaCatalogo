@@ -2144,9 +2144,30 @@ public class RepositorioMusica
                 Tipo = "organizacion",
                 Severidad = "info",
                 Mensaje = $"{totalSinAlbum} canciones aún no están en ningún álbum",
-                UrlArreglar = "buscar.html" // Debería ir un filtro, pero buscar está bien por ahora
+                UrlArreglar = "buscar.html"
             });
         }
+
+        // 6b. Canciones sin archivo de audio
+        var totalSinAudio = await conn.QueryFirstAsync<int>("""
+            SELECT (
+                (SELECT COUNT(*) FROM temas WHERE (archivo_audio IS NULL OR TRIM(archivo_audio) = '') AND id_interprete IS NOT NULL) + 
+                (SELECT COUNT(*) FROM temas_cd WHERE (archivo_audio IS NULL OR TRIM(archivo_audio) = '') AND id_interprete IS NOT NULL)
+            )
+            """);
+            
+        if (totalSinAudio > 0)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "audio",
+                Severidad = "info",
+                Mensaje = $"{totalSinAudio} canciones sin archivo de audio",
+                UrlArreglar = "buscar.html?sinAudio=1"
+            });
+        }
+
 
         // 7. Álbumes vacíos (sin canciones)
         var albumesVacios = await conn.QueryAsync<(int Id, string Nombre)>("""

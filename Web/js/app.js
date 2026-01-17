@@ -380,11 +380,56 @@ function renderizarNotificaciones(data) {
         return;
     }
 
-    lista.innerHTML = data.items.map(notif => {
+    // Agrupar notificaciones por categoría
+    const categorias = {
+        criticos: { titulo: '🚨 Problemas Críticos', items: [], clase: 'error' },
+        duplicados: { titulo: '🔀 Duplicados y Versiones', items: [], clase: 'warning' },
+        organizacion: { titulo: '📁 Organización', items: [], clase: 'info' },
+        informacion: { titulo: '💡 Mejoras Sugeridas', items: [], clase: 'info' }
+    };
+
+    // Clasificar cada notificación en su categoría
+    data.items.forEach(notif => {
+        if (notif.severidad === 'error') {
+            categorias.criticos.items.push(notif);
+        } else if (notif.tipo === 'duplicado') {
+            categorias.duplicados.items.push(notif);
+        } else if (notif.tipo === 'organizacion' || notif.tipo === 'album' && notif.mensaje.includes('vacío')) {
+            categorias.organizacion.items.push(notif);
+        } else {
+            categorias.informacion.items.push(notif);
+        }
+    });
+
+    // Función para obtener icono según el tipo
+    function obtenerIconoTipo(notif) {
+        const tipo = notif.tipo || '';
+        const mensaje = (notif.mensaje || '').toLowerCase();
+
+        if (tipo === 'cancion') {
+            if (mensaje.includes('intérprete')) return '🎤';
+            if (mensaje.includes('nombre')) return '🏷️';
+            return '🎵';
+        }
+        if (tipo === 'album') {
+            if (mensaje.includes('portada')) return '🖼️';
+            if (mensaje.includes('año')) return '📅';
+            if (mensaje.includes('vacío')) return '📂';
+            return '💿';
+        }
+        if (tipo === 'duplicado') return '🔀';
+        if (tipo === 'organizacion') return '📁';
+        if (tipo === 'audio') return '🔇';
+        if (tipo === 'formato') return '📼';
+        if (tipo === 'interprete') return '🎤';
+        return '📌';
+    }
+
+    // Generar HTML para una notificación individual
+    function generarNotifItem(notif) {
         const iconClass = notif.severidad === 'error' ? 'error' :
             notif.severidad === 'warning' ? 'warning' : 'info';
-        const icon = notif.severidad === 'error' ? '❌' :
-            notif.severidad === 'warning' ? '⚠️' : 'ℹ️';
+        const icon = obtenerIconoTipo(notif);
 
         // Notificación especial para duplicados multi-artista
         if (notif.tipo === 'duplicado' && notif.opcionesArtista && notif.opcionesArtista.length > 0) {
@@ -411,7 +456,7 @@ function renderizarNotificaciones(data) {
             }).join('')}
                         </div>
                         ${notif.urlArreglar ? `
-                            <a href="${notif.urlArreglar}" class="notif-action" style="margin-top: 0.5rem;">
+                            <a href="${notif.urlArreglar}" class="notif-action" data-spa-link style="margin-top: 0.5rem;">
                                 Ver todas las versiones →
                             </a>
                         ` : ''}
@@ -426,14 +471,35 @@ function renderizarNotificaciones(data) {
                 <div class="notif-content">
                     <div class="notif-message">${escapeHtml(notif.mensaje)}</div>
                     ${notif.urlArreglar ? `
-                        <a href="${notif.urlArreglar}" class="notif-action">
+                        <a href="${notif.urlArreglar}" class="notif-action" data-spa-link>
                             🔧 Arreglar →
                         </a>
                     ` : ''}
                 </div>
             </div>
         `;
-    }).join('');
+    }
+
+    // Construir HTML final con categorías
+    let html = '';
+
+    Object.values(categorias).forEach(cat => {
+        if (cat.items.length > 0) {
+            html += `
+                <div class="notif-categoria">
+                    <div class="notif-categoria-header notif-cat-${cat.clase}">
+                        <span>${cat.titulo}</span>
+                        <span class="notif-categoria-count">${cat.items.length}</span>
+                    </div>
+                    <div class="notif-categoria-items">
+                        ${cat.items.map(generarNotifItem).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    lista.innerHTML = html;
 }
 
 // Función para seleccionar artista original desde notificación

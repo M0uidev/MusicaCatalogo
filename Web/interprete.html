@@ -130,6 +130,7 @@
             color: inherit;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         .miembro-card:hover {
@@ -165,6 +166,10 @@
         .miembro-info {
             padding: 0.75rem;
             text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .miembro-info h4 {
@@ -600,25 +605,26 @@
         </div>
 
         <section id="seccionBiografia" class="seccion" style="display: none;">
-            <h2>📝 Biografía</h2>
+            <h2><i data-lucide="file-text"></i> Biografía</h2>
             <p id="biografiaTexto" class="seccion-descripcion"></p>
         </section>
 
         <section id="seccionMiembros" class="seccion" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>👥 Miembros de la Banda</h2>
-                <button class="btn btn-primario" onclick="abrirModalMiembro()">+ Agregar miembro</button>
+                <h2><i data-lucide="users"></i> Miembros de la Banda</h2>
+                <button class="btn btn-primario" onclick="abrirModalMiembro()"><i data-lucide="plus"
+                        style="width:16px;height:16px;"></i> Agregar miembro</button>
             </div>
             <div id="miembrosGrid" class="miembros-grid"></div>
         </section>
 
         <section id="seccionAlbumes" class="seccion" style="display: none;">
-            <h2>💿 Discografía</h2>
+            <h2><i data-lucide="disc-3"></i> Discografía</h2>
             <div id="albumesGrid" class="album-grid"></div>
         </section>
 
         <section id="seccionTemas" class="seccion" style="display: none;">
-            <h2>🎵 <span id="temasTitulo">Canciones</span></h2>
+            <h2><i data-lucide="music"></i> <span id="temasTitulo">Canciones</span></h2>
             <div id="listaTemas"></div>
         </section>
 
@@ -628,7 +634,7 @@
     <!-- Modal Editar Perfil -->
     <div id="modalPerfil" class="modal-perfil">
         <div class="modal-contenido">
-            <h3>✏️ Editar Perfil</h3>
+            <h3><i data-lucide="edit-3"></i> Editar Perfil</h3>
             <form id="formPerfil">
                 <div class="form-grupo">
                     <label>Nombre</label>
@@ -638,7 +644,7 @@
                     <div class="form-grupo">
                         <label>Tipo</label>
                         <select id="editTipo">
-                            <option value="artista">🎤 Artista Solo</option>
+                            <option value="artista">👤 Artista Solo</option>
                             <option value="banda">🎸 Banda</option>
                         </select>
                     </div>
@@ -684,13 +690,13 @@
     <!-- Modal Agregar Miembro -->
     <div id="modalMiembro" class="modal-perfil">
         <div class="modal-contenido">
-            <h3 id="tituloModalMiembro">➕ Agregar Miembro</h3>
+            <h3 id="tituloModalMiembro"><i data-lucide="plus"></i> Agregar Miembro</h3>
             <form id="formMiembro">
                 <div class="form-grupo">
                     <label>Nombre</label>
                     <div class="artista-selector" id="selectorMiembro">
                         <button type="button" class="artista-selector-btn" onclick="toggleSelectorMiembro()">
-                            <div class="artista-icono" id="iconoMiembroSeleccionado">👤</div>
+                            <div class="artista-icono" id="iconoMiembroSeleccionado"><i data-lucide="user"></i></div>
                             <div class="artista-btn-nombre" id="textoMiembroSeleccionado">Seleccionar miembro...</div>
                         </button>
                         <div class="artista-selector-dropdown" id="dropdownMiembro">
@@ -703,7 +709,7 @@
                             </div>
                             <div class="artista-selector-nuevo">
                                 <button type="button" class="btn-nuevo-artista" onclick="usarNombreComoNuevo()">
-                                    ➕ Usar como nombre directo
+                                    <i data-lucide="plus"></i> Usar como nombre directo
                                 </button>
                             </div>
                         </div>
@@ -897,22 +903,22 @@
                 ? `<img src="/api/interpretes/${p.id}/foto?t=${Date.now()}" class="perfil-foto" alt="${escapeHtml(p.nombre)}" onerror="this.outerHTML='<div class=\\'perfil-foto-placeholder\\'>${inicial}</div>'">`
                 : `<div class="perfil-foto-placeholder">${inicial}</div>`;
 
-            const tipoIcon = p.tipoArtista === 'banda' ? '🎸 Banda' : '🎤 Artista';
+            const tipoIcon = p.tipoArtista === 'banda' ? '<i data-lucide="music-2" style="width:16px;height:16px;"></i> Banda' : '<i data-lucide="mic-2" style="width:16px;height:16px;"></i> Artista';
             const anios = p.anioInicio ? (p.anioFin ? `${p.anioInicio} - ${p.anioFin}` : `${p.anioInicio} - presente`) : '';
 
             document.getElementById('perfilHeader').innerHTML = `
                 <div class="perfil-foto-container">
                     <div id="contenedorFoto">${fotoHtml}</div>
-                    <button class="btn-editar-perfil" onclick="subirFoto()">📷 Cambiar foto</button>
+                    <button class="btn-editar-perfil" onclick="subirFoto()"><i data-lucide="camera" style="width:14px;height:14px;"></i> Cambiar foto</button>
                 </div>
                 <div class="perfil-info">
                     <div class="perfil-tipo">${tipoIcon}</div>
                     <h1 class="perfil-nombre">${escapeHtml(p.nombre)}</h1>
                     <div class="perfil-meta">
-                        ${p.pais ? `<span class="perfil-meta-item">🌍 ${escapeHtml(p.pais)}</span>` : ''}
-                        ${anios ? `<span class="perfil-meta-item">📅 ${anios}</span>` : ''}
-                        ${p.discografica ? `<span class="perfil-meta-item">🏢 ${escapeHtml(p.discografica)}</span>` : ''}
-                        <span class="perfil-meta-item">🎵 ${p.totalTemas} cancion${p.totalTemas !== 1 ? 'es' : ''}</span>
+                        ${p.pais ? `<span class="perfil-meta-item"><i data-lucide="globe" style="width:14px;height:14px;"></i> ${escapeHtml(p.pais)}</span>` : ''}
+                        ${anios ? `<span class="perfil-meta-item"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ${anios}</span>` : ''}
+                        ${p.discografica ? `<span class="perfil-meta-item"><i data-lucide="building-2" style="width:14px;height:14px;"></i> ${escapeHtml(p.discografica)}</span>` : ''}
+                        <span class="perfil-meta-item"><i data-lucide="music" style="width:14px;height:14px;"></i> ${p.totalTemas} cancion${p.totalTemas !== 1 ? 'es' : ''}</span>
                     </div>
                     ${p.generos.length > 0 ? `
                         <div class="perfil-generos">
@@ -920,11 +926,14 @@
                         </div>
                     ` : ''}
                     <div class="perfil-acciones">
-                        <button class="btn-editar-perfil" onclick="abrirModalPerfil()">✏️ Editar perfil</button>
-                        ${p.sitioWeb ? `<a href="${p.sitioWeb}" target="_blank" class="btn-editar-perfil">🔗 Sitio web</a>` : ''}
+                        <button class="btn-editar-perfil" onclick="abrirModalPerfil()"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Editar perfil</button>
+                        ${p.sitioWeb ? `<a href="${p.sitioWeb}" target="_blank" class="btn-editar-perfil"><i data-lucide="external-link" style="width:14px;height:14px;"></i> Sitio web</a>` : ''}
                     </div>
                 </div>
             `;
+
+            // Actualizar iconos dinámicos
+            if (window.lucide) window.lucide.createIcons();
 
             // Biografía
             if (p.biografia) {
@@ -954,7 +963,7 @@
                     grid.innerHTML = albumes.map(a => {
                         const portadaHtml = a.tienePortada
                             ? `<img src="/api/albumes/${a.id}/portada?t=${Date.now()}" class="album-portada" alt="${escapeHtml(a.nombre)}">`
-                            : `<div class="album-portada-placeholder">💿</div>`;
+                            : `<div class="album-portada-placeholder"><i data-lucide="disc"></i></div>`;
                         return `
                             <a href="albumes.html?id=${a.id}" class="album-card" data-spa-link>
                                 ${portadaHtml}
@@ -965,6 +974,7 @@
                             </a>
                         `;
                     }).join('');
+                    if (window.lucide) window.lucide.createIcons();
                 }
             } catch (e) {
                 console.error('Error cargando álbumes:', e);
@@ -996,13 +1006,14 @@
                             ${fotoHtml}
                         </div>
                         <div class="miembro-info">
-                            <h4>${escapeHtml(m.nombreMiembro)}${m.esFundador ? '<span class="miembro-fundador">⭐</span>' : ''}</h4>
+                            <h4>${escapeHtml(m.nombreMiembro)}${m.esFundador ? '<span class="miembro-fundador"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></span>' : ''}</h4>
                             <p>${escapeHtml(m.rol)}${anios ? ` • ${anios}` : ''}</p>
                         </div>
-                        <button class="btn" style="width:100%; padding:0.4rem; font-size:0.75rem; border-radius:0; border-top:1px solid var(--color-borde, #e2e8f0);" onclick="event.preventDefault(); event.stopPropagation(); eliminarMiembro(${m.id})">🗑️ Eliminar</button>
+                        <button class="btn" style="width:100%; padding:0.4rem; font-size:0.75rem; border-radius:0; border-top:1px solid var(--color-borde, #e2e8f0);" onclick="event.preventDefault(); event.stopPropagation(); eliminarMiembro(${m.id})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Eliminar</button>
                     </${cardTag}>
                 `;
             }).join('');
+            if (window.lucide) window.lucide.createIcons();
         }
 
         async function cargarTemas() {
@@ -1030,6 +1041,7 @@
                         html += generarTrackList(cds);
                     }
                     document.getElementById('listaTemas').innerHTML = html;
+                    if (window.lucide) window.lucide.createIcons();
                 }
             } catch (e) { console.error('Error cargando temas:', e); }
         }
@@ -1131,7 +1143,8 @@
 
         // Modal Miembro
         function abrirModalMiembro(miembro = null) {
-            document.getElementById('tituloModalMiembro').textContent = miembro ? '✏️ Editar Miembro' : '➕ Agregar Miembro';
+            document.getElementById('tituloModalMiembro').innerHTML = miembro ? '<i data-lucide="edit-3"></i> Editar Miembro' : '<i data-lucide="plus"></i> Agregar Miembro';
+            if (window.lucide) window.lucide.createIcons();
 
             // Inicializar valores del formulario
             const nombre = miembro?.nombreMiembro || '';
@@ -1141,11 +1154,12 @@
             // Actualizar UI del selector
             if (nombre) {
                 document.getElementById('textoMiembroSeleccionado').textContent = nombre;
-                document.getElementById('iconoMiembroSeleccionado').textContent = '👤';
+                document.getElementById('iconoMiembroSeleccionado').innerHTML = '<i data-lucide="user" style="width:18px;height:18px;"></i>';
             } else {
                 document.getElementById('textoMiembroSeleccionado').textContent = 'Seleccionar miembro...';
-                document.getElementById('iconoMiembroSeleccionado').textContent = '👤';
+                document.getElementById('iconoMiembroSeleccionado').innerHTML = '<i data-lucide="user" style="width:18px;height:18px;"></i>';
             }
+            if (window.lucide) window.lucide.createIcons();
 
             // Resetear estado del dropdown
             const dropdown = document.getElementById('dropdownMiembro');
@@ -1304,10 +1318,11 @@
 
                         lista.innerHTML = resultados.map(a => `
                             <div class="artista-selector-item" onclick="seleccionarArtistaMiembro(${a.id}, '${a.interprete.replace(/'/g, "\\'")}')">
-                                <div class="artista-icono">👤</div>
+                                <div class="artista-icono"><i data-lucide="user"></i></div>
                                 <div class="artista-item-nombre">${escapeHtml(a.interprete)}</div>
                             </div>
                         `).join('');
+                        if (window.lucide) window.lucide.createIcons();
                     } catch (e) {
                         console.error('Error buscando artistas:', e);
                     }

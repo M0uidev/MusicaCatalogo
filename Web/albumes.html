@@ -851,6 +851,7 @@
 
 
     <!-- Contenedor de notificaciones toast -->
+    <div id="toastContainer" class="toast-container"></div>
     <div id="notificaciones-component"></div>
 
     <!-- Footer generado dinámicamente -->
@@ -992,6 +993,7 @@
 
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
+    <div id="toastContainer" class="toast-container"></div>
     <script>
         // Envolver en IIFE para evitar contaminación de scope global
         (function () {
@@ -1589,6 +1591,18 @@
                         })
                     });
 
+                    if (!resp.ok) {
+                        const errorText = await resp.text();
+                        console.error('Error HTTP:', resp.status, errorText);
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            alert('Error: ' + (errorJson.mensaje || errorJson.Mensaje || errorText));
+                        } catch (e) {
+                            alert('Error del servidor (' + resp.status + '): ' + errorText.substring(0, 100));
+                        }
+                        return;
+                    }
+
                     const result = await resp.json();
                     if (result.exito || result.Exito) {
                         cerrarModalEditar();
@@ -1599,7 +1613,7 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error al actualizar el álbum');
+                    alert('Error al actualizar el álbum: ' + error.message);
                 }
             }
 

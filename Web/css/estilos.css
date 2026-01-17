@@ -977,8 +977,8 @@ footer p {
     border: 1px solid var(--color-borde);
     border-radius: var(--radio-lg);
     box-shadow: var(--sombra-lg);
-    width: 380px;
-    max-height: 450px;
+    width: 420px;
+    max-height: 500px;
     overflow-y: auto;
     z-index: 1000;
     display: none;
@@ -1114,6 +1114,73 @@ footer p {
 .notif-empty-icon {
     font-size: 2rem;
     margin-bottom: 0.5rem;
+}
+
+/* Categorías de notificaciones */
+.notif-categoria {
+    border-bottom: 1px solid var(--color-borde);
+}
+
+.notif-categoria:last-child {
+    border-bottom: none;
+}
+
+.notif-categoria-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: var(--color-fondo);
+    border-bottom: 1px solid var(--color-borde);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.notif-categoria-header.notif-cat-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.08));
+    color: var(--color-error);
+    border-left: 3px solid var(--color-error);
+}
+
+.notif-categoria-header.notif-cat-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.08));
+    color: var(--color-warning);
+    border-left: 3px solid var(--color-warning);
+}
+
+.notif-categoria-header.notif-cat-info {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(79, 70, 229, 0.06));
+    color: var(--color-primario);
+    border-left: 3px solid var(--color-primario);
+}
+
+.notif-categoria-count {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.notif-cat-error .notif-categoria-count {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.notif-cat-warning .notif-categoria-count {
+    background: rgba(245, 158, 11, 0.25);
+}
+
+.notif-cat-info .notif-categoria-count {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.notif-categoria-items .notif-item:first-child {
+    border-top: none;
 }
 
 /* ==========================================

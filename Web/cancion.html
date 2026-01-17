@@ -848,6 +848,14 @@
             font-size: 0.85rem;
         }
 
+        .artista-foto-mini {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--color-borde);
+        }
+
         .artista-selector-item .artista-item-nombre {
             flex: 1;
             font-weight: 500;
@@ -1549,7 +1557,10 @@
             lista.innerHTML = artistas.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaSeleccionado ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtista('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
-                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    ${a.tieneFoto
+                    ? `<img src="/api/interpretes/${a.id}/foto" class="artista-foto-mini" alt="" onerror="this.outerHTML='<div class=\\'artista-icono\\'>${a.interprete.charAt(0).toUpperCase()}</div>'">`
+                    : `<div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>`
+                }
                     <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
                     <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
                 </div>
@@ -1666,7 +1677,10 @@
             lista.innerHTML = artistas.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaSeleccionadoModal ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtistaModal('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
-                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    ${a.tieneFoto
+                    ? `<img src="/api/interpretes/${a.id}/foto" class="artista-foto-mini" alt="" onerror="this.outerHTML='<div class=\\'artista-icono\\'>${a.interprete.charAt(0).toUpperCase()}</div>'">`
+                    : `<div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>`
+                }
                     <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
                     <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
                 </div>
