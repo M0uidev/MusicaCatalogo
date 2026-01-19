@@ -567,5 +567,30 @@ public class BaseDatos
         catch { /* Índices ya existen */ }
         
         Console.WriteLine("[BaseDatos] Migración de perfiles de artistas completada");
+        
+        // ==========================================
+        // MIGRACIÓN: Estado de reproducción del player móvil
+        // ==========================================
+        
+        // Tabla para guardar el estado de reproducción (última canción, posición, etc.)
+        await conn.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS player_state (
+                id INTEGER PRIMARY KEY DEFAULT 1,
+                cancion_id INTEGER,
+                cancion_tipo TEXT,
+                posicion_segundos REAL DEFAULT 0,
+                ultima_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                playlist_json TEXT,
+                shuffle INTEGER DEFAULT 0,
+                repeat_mode TEXT DEFAULT 'off'
+            )
+        """);
+        
+        // Insertar fila única si no existe
+        await conn.ExecuteAsync("""
+            INSERT OR IGNORE INTO player_state (id) VALUES (1)
+        """);
+        
+        Console.WriteLine("[BaseDatos] Tabla player_state verificada");
     }
 }

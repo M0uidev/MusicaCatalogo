@@ -871,4 +871,18 @@ public class ItemCatalogo
     public string Nombre { get; set; } = "";
 }
 
+/// <summary>DTO para canción unificada (cassette o CD) - usado en favoritos del player móvil</summary>
+public class CancionUnificada
+{
+    public int Id { get; set; }
+    public string Tipo { get; set; } = ""; // "cassette" o "cd"
+    public string Tema { get; set; } = "";
+    public string Interprete { get; set; } = "";
+    public string NumFormato { get; set; } = "";
+    public string? ArchivoAudio { get; set; }
+    public int? DuracionSegundos { get; set; }
+    public bool TienePortada { get; set; }
+    public bool EsFavorito { get; set; }
+}
+
 

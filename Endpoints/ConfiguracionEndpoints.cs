@@ -908,6 +908,16 @@ public static class ConfiguracionEndpoints
         .WithName("SincronizarAlbumes")
         .WithTags("Sistema");
 
+        // Sincronizar archivos de audio existentes con la base de datos
+        app.MapPost("/api/mantenimiento/sincronizar-audio", async () =>
+        {
+            var resultado = await repo.SincronizarArchivosAudioAsync();
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("SincronizarAudio")
+        .WithTags("Sistema");
+
+
         // ==========================================
         // COMPOSICIONES (Agrupar versiones/covers)
         // ==========================================
@@ -956,5 +966,36 @@ public static class ConfiguracionEndpoints
         })
         .WithName("UnirAComposicion")
         .WithTags("Composiciones");
+
+        // ==========================================
+        // PLAYER MÓVIL
+        // ==========================================
+
+        // Obtener estado del player
+        app.MapGet("/api/player/estado", async () =>
+        {
+            var estado = await repo.ObtenerEstadoPlayerAsync();
+            return Results.Ok(estado);
+        })
+        .WithName("ObtenerEstadoPlayer")
+        .WithTags("Player");
+
+        // Guardar estado del player
+        app.MapPost("/api/player/estado", async (PlayerState estado) =>
+        {
+            var resultado = await repo.GuardarEstadoPlayerAsync(estado);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("GuardarEstadoPlayer")
+        .WithTags("Player");
+
+        // Obtener canciones favoritas
+        app.MapGet("/api/player/favoritos", async () =>
+        {
+            var favoritos = await repo.ObtenerFavoritosAsync();
+            return Results.Ok(favoritos);
+        })
+        .WithName("ObtenerFavoritos")
+        .WithTags("Player");
     }
 }

@@ -3125,6 +3125,117 @@ public class RepositorioMusica
     }
 
     /// <summary>
+    /// Sincroniza los archivos de audio existentes en el sistema de archivos con la base de datos.
+    /// Escanea las carpetas audio/cd/ y audio/cassette/ y actualiza la columna archivo_audio.
+    /// </summary>
+    public async Task<CrudResponse> SincronizarArchivosAudioAsync()
+    {
+        try
+        {
+            var directorioBase = AppContext.BaseDirectory;
+            var carpetaAudio = Path.Combine(directorioBase, "audio");
+            
+            if (!Directory.Exists(carpetaAudio))
+            {
+                return new CrudResponse 
+                { 
+                    Exito = false, 
+                    Mensaje = $"La carpeta de audio no existe: {carpetaAudio}" 
+                };
+            }
+
+            using var conn = _db.ObtenerConexion();
+            int actualizados = 0;
+            var errores = new List<string>();
+
+            // Procesar CDs
+            var carpetaCd = Path.Combine(carpetaAudio, "cd");
+            if (Directory.Exists(carpetaCd))
+            {
+                foreach (var archivo in Directory.GetFiles(carpetaCd))
+                {
+                    var nombreArchivo = Path.GetFileName(archivo);
+                    // Formato: cd_ID.extension (ej: cd_1179.mp3)
+                    var match = System.Text.RegularExpressions.Regex.Match(nombreArchivo, @"^cd_(\d+)\.(mp3|wav|m4a|flac|ogg)$");
+                    if (match.Success)
+                    {
+                        var id = int.Parse(match.Groups[1].Value);
+                        var extension = match.Groups[2].Value;
+                        var rutaRelativa = $"audio/cd/{nombreArchivo}";
+                        
+                        // Calcular duración aproximada
+                        var fileInfo = new FileInfo(archivo);
+                        int duracionAproximada = (int)(fileInfo.Length / 16000);
+                        
+                        var rows = await conn.ExecuteAsync(
+                            """
+                            UPDATE temas_cd 
+                            SET archivo_audio = @rutaRelativa, 
+                                duracion_segundos = @duracion, 
+                                formato_audio = @formato 
+                            WHERE id = @id
+                            """,
+                            new { id, rutaRelativa, duracion = duracionAproximada, formato = extension });
+                        
+                        if (rows > 0) actualizados++;
+                        Console.WriteLine($"[Audio] Sincronizado CD {id}: {nombreArchivo}");
+                    }
+                }
+            }
+
+            // Procesar Cassettes
+            var carpetaCassette = Path.Combine(carpetaAudio, "cassette");
+            if (Directory.Exists(carpetaCassette))
+            {
+                foreach (var archivo in Directory.GetFiles(carpetaCassette))
+                {
+                    var nombreArchivo = Path.GetFileName(archivo);
+                    // Formato: cassette_ID.extension (ej: cassette_234.mp3)
+                    var match = System.Text.RegularExpressions.Regex.Match(nombreArchivo, @"^cassette_(\d+)\.(mp3|wav|m4a|flac|ogg)$");
+                    if (match.Success)
+                    {
+                        var id = int.Parse(match.Groups[1].Value);
+                        var extension = match.Groups[2].Value;
+                        var rutaRelativa = $"audio/cassette/{nombreArchivo}";
+                        
+                        // Calcular duración aproximada
+                        var fileInfo = new FileInfo(archivo);
+                        int duracionAproximada = (int)(fileInfo.Length / 16000);
+                        
+                        var rows = await conn.ExecuteAsync(
+                            """
+                            UPDATE temas 
+                            SET archivo_audio = @rutaRelativa, 
+                                duracion_segundos = @duracion, 
+                                formato_audio = @formato 
+                            WHERE id = @id
+                            """,
+                            new { id, rutaRelativa, duracion = duracionAproximada, formato = extension });
+                        
+                        if (rows > 0) actualizados++;
+                        Console.WriteLine($"[Audio] Sincronizado Cassette {id}: {nombreArchivo}");
+                    }
+                }
+            }
+            
+            return new CrudResponse 
+            { 
+                Exito = true, 
+                Mensaje = $"Sincronización completada. {actualizados} archivos de audio vinculados a canciones." 
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse 
+            { 
+                Exito = false, 
+                Mensaje = $"Error al sincronizar audio: {ex.Message}" 
+            };
+        }
+    }
+
+
+    /// <summary>
     /// Marca o desmarca una canción como favorita
     /// </summary>
     public async Task<CrudResponse> MarcarComoFavoritoAsync(int id, string tipo, bool esFavorito)
@@ -4200,6 +4311,105 @@ public class RepositorioMusica
             return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
         }
     }
+
+    // ==========================================
+    // PLAYER MÓVIL - Estado de reproducción
+    // ==========================================
+
+    /// <summary>
+    /// Obtiene el estado actual del player móvil
+    /// </summary>
+    public async Task<PlayerState?> ObtenerEstadoPlayerAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        return await conn.QueryFirstOrDefaultAsync<PlayerState>(
+            "SELECT cancion_id AS CancionId, cancion_tipo AS CancionTipo, posicion_segundos AS PosicionSegundos, " +
+            "ultima_actualizacion AS UltimaActualizacion, playlist_json AS PlaylistJson, " +
+            "shuffle AS Shuffle, repeat_mode AS RepeatMode FROM player_state WHERE id = 1"
+        );
+    }
+
+    /// <summary>
+    /// Guarda el estado actual del player móvil
+    /// </summary>
+    public async Task<CrudResponse> GuardarEstadoPlayerAsync(PlayerState estado)
+    {
+        using var conn = _db.ObtenerConexion();
+        try
+        {
+            await conn.ExecuteAsync(
+                @"UPDATE player_state SET 
+                    cancion_id = @CancionId,
+                    cancion_tipo = @CancionTipo,
+                    posicion_segundos = @PosicionSegundos,
+                    ultima_actualizacion = datetime('now'),
+                    playlist_json = @PlaylistJson,
+                    shuffle = @Shuffle,
+                    repeat_mode = @RepeatMode
+                WHERE id = 1",
+                new
+                {
+                    estado.CancionId,
+                    estado.CancionTipo,
+                    estado.PosicionSegundos,
+                    estado.PlaylistJson,
+                    Shuffle = estado.Shuffle ? 1 : 0,
+                    estado.RepeatMode
+                }
+            );
+            return new CrudResponse { Exito = true, Mensaje = "Estado guardado" };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>
+    /// Obtiene todas las canciones marcadas como favoritas
+    /// </summary>
+    public async Task<List<CancionUnificada>> ObtenerFavoritosAsync()
+    {
+        using var conn = _db.ObtenerConexion();
+        
+        var sql = @"
+            SELECT 
+                t.id AS Id,
+                'cassette' AS Tipo,
+                t.tema AS Tema,
+                i.nombre AS Interprete,
+                t.num_formato AS NumFormato,
+                t.archivo_audio AS ArchivoAudio,
+                t.duracion_segundos AS DuracionSegundos,
+                CASE WHEN t.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                1 AS EsFavorito
+            FROM temas t
+            LEFT JOIN interpretes i ON t.id_interprete = i.id
+            WHERE t.es_favorito = 1
+            
+            UNION ALL
+            
+            SELECT 
+                tc.id AS Id,
+                'cd' AS Tipo,
+                tc.tema AS Tema,
+                i.nombre AS Interprete,
+                tc.num_formato AS NumFormato,
+                tc.archivo_audio AS ArchivoAudio,
+                tc.duracion_segundos AS DuracionSegundos,
+                CASE WHEN tc.portada IS NOT NULL THEN 1 ELSE 0 END AS TienePortada,
+                1 AS EsFavorito
+            FROM temas_cd tc
+            LEFT JOIN interpretes i ON tc.id_interprete = i.id
+            WHERE tc.es_favorito = 1
+            
+            ORDER BY Tema
+        ";
+        
+        var resultado = await conn.QueryAsync<CancionUnificada>(sql);
+        return resultado.ToList();
+    }
 }
+
 
 

@@ -232,8 +232,12 @@ app.Use(async (context, next) =>
     var isAjaxRequest = context.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
     var path = context.Request.Path.Value ?? "";
     
-    // Redirigir peticiones HTML normales (no AJAX, excepto app.html) al shell SPA
-    if (!isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) && path != "/app.html")
+    // Páginas que NO deben redirigirse al SPA (se sirven directamente)
+    var paginasExcluidas = new[] { "/app.html", "/player.html" };
+    var esExcluida = paginasExcluidas.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase));
+    
+    // Redirigir peticiones HTML normales (no AJAX, excepto las excluidas) al shell SPA
+    if (!isAjaxRequest && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) && !esExcluida)
     {
         // Incluir query string en la redirección
         var fullPath = path + context.Request.QueryString;
@@ -243,6 +247,7 @@ app.Use(async (context, next) =>
     
     await next();
 });
+
 
 // Servir archivos estáticos desde la carpeta Web
 if (Directory.Exists(rutaWeb))
