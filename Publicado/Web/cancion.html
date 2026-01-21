@@ -644,8 +644,8 @@
         .modal-album-contenido {
             background: white;
             border-radius: var(--radio-lg);
-            width: 90%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 600px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
 
@@ -848,6 +848,14 @@
             font-size: 0.85rem;
         }
 
+        .artista-foto-mini {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--color-borde);
+        }
+
         .artista-selector-item .artista-item-nombre {
             flex: 1;
             font-weight: 500;
@@ -921,38 +929,57 @@
                 <h3 id="modalAlbumTitulo">💿 Nuevo Álbum</h3>
                 <button class="modal-album-cerrar" onclick="cerrarModalAlbum()">&times;</button>
             </div>
-            <div class="modal-album-body">
-                <div class="form-grupo">
-                    <label for="nuevoAlbumNombre">Nombre</label>
-                    <input type="text" id="nuevoAlbumNombre" placeholder="Nombre del álbum o single">
-                </div>
-                <div class="form-row">
-                    <div class="form-grupo artista-selector">
-                        <label>Artista</label>
-                        <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaModal()">
-                            <div class="artista-icono">🎤</div>
-                            <span class="artista-btn-nombre" id="nuevoAlbumArtistaNombre">Sin artista</span>
-                            <span>▼</span>
-                        </button>
-                        <div class="artista-selector-dropdown" id="artistaDropdownModal">
-                            <div class="artista-selector-header">
-                                <input type="text" id="buscarArtistaInputModal" placeholder="Buscar artista..."
-                                    oninput="filtrarArtistasSelectorModal()">
-                            </div>
-                            <div class="artista-selector-lista" id="listaArtistasSelectorModal">
-                                <p class="artista-vacio-dropdown">Cargando...</p>
-                            </div>
-                            <div class="artista-nuevo-inline" id="artistaNuevoInlineModal" style="display: none;">
-                                <input type="text" id="inputNuevoArtistaModal"
-                                    placeholder="Nombre del nuevo artista...">
-                                <button onclick="crearNuevoArtistaModal()">✓</button>
-                            </div>
-                        </div>
-                        <input type="hidden" id="nuevoAlbumArtista" value="">
+            <div class="modal-album-body" style="display: flex; gap: 1.5rem; align-items: flex-start;">
+                <div class="album-detalle-portada"
+                    style="position: relative; width: 140px; height: 140px; cursor: pointer; flex-shrink: 0;"
+                    onclick="document.getElementById('inputPortadaNuevoAlbum').click()">
+                    <img id="previewPortadaNuevo"
+                        style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radio-lg);">
+                    <div class="placeholder" id="placeholderPortadaNuevo"
+                        style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--color-fondo); border: 2px dashed var(--color-borde); border-radius: var(--radio-lg); transition: all 0.2s;">
+                        <i data-lucide="image-plus"
+                            style="width: 32px; height: 32px; opacity: 0.4; margin-bottom: 0.5rem;"></i>
+                        <span
+                            style="font-size: 0.75rem; color: var(--color-texto-secundario); text-align: center;">Click
+                            para<br>subir portada</span>
                     </div>
+                    <input type="file" id="inputPortadaNuevoAlbum" accept="image/*" style="display: none;"
+                        onchange="previsualizarPortadaModal(this)">
+                </div>
+
+                <div style="flex: 1;">
                     <div class="form-grupo">
-                        <label for="nuevoAlbumAnio">Año</label>
-                        <input type="text" id="nuevoAlbumAnio" placeholder="Ej: 1985">
+                        <label for="nuevoAlbumNombre">Nombre</label>
+                        <input type="text" id="nuevoAlbumNombre" placeholder="Nombre del álbum o single">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-grupo artista-selector">
+                            <label>Artista</label>
+                            <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaModal()">
+                                <div class="artista-icono">🎤</div>
+                                <span class="artista-btn-nombre" id="nuevoAlbumArtistaNombre">Sin artista</span>
+                                <span>▼</span>
+                            </button>
+                            <div class="artista-selector-dropdown" id="artistaDropdownModal">
+                                <div class="artista-selector-header">
+                                    <input type="text" id="buscarArtistaInputModal" placeholder="Buscar artista..."
+                                        oninput="filtrarArtistasSelectorModal()">
+                                </div>
+                                <div class="artista-selector-lista" id="listaArtistasSelectorModal">
+                                    <p class="artista-vacio-dropdown">Cargando...</p>
+                                </div>
+                                <div class="artista-nuevo-inline" id="artistaNuevoInlineModal" style="display: none;">
+                                    <input type="text" id="inputNuevoArtistaModal"
+                                        placeholder="Nombre del nuevo artista...">
+                                    <button onclick="crearNuevoArtistaModal()">✓</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="nuevoAlbumArtista" value="">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="nuevoAlbumAnio">Año</label>
+                            <input type="text" id="nuevoAlbumAnio" placeholder="Ej: 1985">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1150,63 +1177,66 @@
                                     </div>
                                 </div>
 
-                                <div class="form-grupo">
+                                <!-- Fila: Audio y Original -->
+                                <div class="form-row" style="align-items: stretch; margin-top: 1rem;">
+                                    <!-- Sección Archivo de Audio -->
+                                    <div class="form-grupo" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); padding: 1rem; margin: 0; display: flex; flex-direction: column; justify-content: center;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                            <label style="font-weight: 500; color: #3b82f6; margin: 0;">📀 Archivo de Audio</label>
+                                            ${c.tieneArchivoAudio ? `
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <span style="font-size: 0.85rem; color: var(--color-texto-secundario);">
+                                                        ${c.duracionSegundos ? Math.floor(c.duracionSegundos / 60) + ':' + (c.duracionSegundos % 60).toString().padStart(2, '0') : '--:--'}
+                                                    </span>
+                                                    <span style="display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-radius: 4px; font-weight: 600;">
+                                                        ${escapeHtml(c.formatoAudio || 'AUDIO').toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        ${c.tieneArchivoAudio ? `
+                                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                <button type="button" class="btn-reproducir-audio" onclick="reproducirAudioLocal()" style="flex: 1; min-width: 120px; padding: 0.6rem 1rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; border-radius: var(--radio); font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                                    ▶️ Reproducir
+                                                </button>
+                                                <button type="button" class="btn-eliminar-audio" onclick="eliminarAudio()" style="padding: 0.6rem 1rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
+                                                    🗑️ Eliminar
+                                                </button>
+                                            </div>
+                                        ` : `
+                                            <div>
+                                                <input type="file" id="inputArchivoAudio" accept=".mp3,.wav,.m4a,.flac,.ogg" style="display: none;" onchange="subirAudio()">
+                                                <button type="button" onclick="document.getElementById('inputArchivoAudio').click()" style="width: 100%; padding: 0.6rem 1rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
+                                                    📤 Subir archivo de audio
+                                                </button>
+                                                <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Formatos: MP3, WAV, M4A, FLAC, OGG (máx. 20MB)</p>
+                                            </div>
+                                            <div id="progresoSubidaAudio" style="display: none; margin-top: 0.75rem;">
+                                                <div style="width: 100%; height: 8px; background: rgba(59, 130, 246, 0.2); border-radius: 4px; overflow: hidden;">
+                                                    <div id="barraProgresoAudio" style="height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); width: 0%; transition: width 0.3s;"></div>
+                                                </div>
+                                                <p id="textoProgresoAudio" style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Subiendo...</p>
+                                            </div>
+                                        `}
+                                    </div>
+
+                                    <!-- Sección Original -->
+                                    <div class="form-grupo-cover-cancion" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
+                                        <div class="cover-toggle">
+                                            <label class="checkbox-cover-label">
+                                                <input type="checkbox" id="inputEsOriginal" ${c.esOriginal ? 'checked' : ''}>
+                                                <span class="cover-toggle-texto">⭐ Esta canción es la versión original</span>
+                                            </label>
+                                            <p style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">
+                                                💡 Si marcas esta canción como original, las demás versiones se clasificarán automáticamente como covers o versiones.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grupo" style="margin-top: 1rem;">
                                     <label for="inputLink">Link externo (YouTube, Spotify, etc.)</label>
                                     <input type="url" id="inputLink" value="${escapeHtml(c.linkExterno || '')}" placeholder="https://...">
-                                </div>
-
-                                <!-- Sección Archivo de Audio -->
-                                <div class="form-grupo" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); padding: 1rem; margin: 0.5rem 0;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                                        <label style="font-weight: 500; color: #3b82f6; margin: 0;">📀 Archivo de Audio</label>
-                                        ${c.tieneArchivoAudio ? `
-                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <span style="font-size: 0.85rem; color: var(--color-texto-secundario);">
-                                                    ${c.duracionSegundos ? Math.floor(c.duracionSegundos / 60) + ':' + (c.duracionSegundos % 60).toString().padStart(2, '0') : '--:--'}
-                                                </span>
-                                                <span style="display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-radius: 4px; font-weight: 600;">
-                                                    ${escapeHtml(c.formatoAudio || 'AUDIO').toUpperCase()}
-                                                </span>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    ${c.tieneArchivoAudio ? `
-                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                            <button type="button" class="btn-reproducir-audio" onclick="reproducirAudioLocal()" style="flex: 1; min-width: 120px; padding: 0.6rem 1rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; border-radius: var(--radio); font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                                                ▶️ Reproducir
-                                            </button>
-                                            <button type="button" class="btn-eliminar-audio" onclick="eliminarAudio()" style="padding: 0.6rem 1rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
-                                                🗑️ Eliminar
-                                            </button>
-                                        </div>
-                                    ` : `
-                                        <div>
-                                            <input type="file" id="inputArchivoAudio" accept=".mp3,.wav,.m4a,.flac,.ogg" style="display: none;" onchange="subirAudio()">
-                                            <button type="button" onclick="document.getElementById('inputArchivoAudio').click()" style="width: 100%; padding: 0.6rem 1rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
-                                                📤 Subir archivo de audio
-                                            </button>
-                                            <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Formatos: MP3, WAV, M4A, FLAC, OGG (máx. 20MB)</p>
-                                        </div>
-                                        <div id="progresoSubidaAudio" style="display: none; margin-top: 0.75rem;">
-                                            <div style="width: 100%; height: 8px; background: rgba(59, 130, 246, 0.2); border-radius: 4px; overflow: hidden;">
-                                                <div id="barraProgresoAudio" style="height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); width: 0%; transition: width 0.3s;"></div>
-                                            </div>
-                                            <p id="textoProgresoAudio" style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Subiendo...</p>
-                                        </div>
-                                    `}
-                                </div>
-
-                                <!-- Sección Original -->
-                                <div class="form-grupo-cover-cancion">
-                                    <div class="cover-toggle">
-                                        <label class="checkbox-cover-label">
-                                            <input type="checkbox" id="inputEsOriginal" ${c.esOriginal ? 'checked' : ''}>
-                                            <span class="cover-toggle-texto">⭐ Esta canción es la versión original</span>
-                                        </label>
-                                        <p style="font-size: 0.85rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">
-                                            💡 Si marcas esta canción como original, las demás versiones se clasificarán automáticamente como covers o versiones.
-                                        </p>
-                                    </div>
                                 </div>
 
                                 ${esCassette ? `
@@ -1236,7 +1266,7 @@
 
                                 <div class="botones-accion">
                                     <button class="btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
-                                    <button class="btn-cancelar" onclick="cargarCancion()">Cancelar</button>
+                                    <a href="buscar.html" class="btn-cancelar" data-spa-link style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
                                 </div>
                             </div>
                         </div>
@@ -1422,6 +1452,12 @@
             document.getElementById('nuevoAlbumNombre').value = '';
             document.getElementById('nuevoAlbumAnio').value = '';
 
+            // Limpiar portada
+            document.getElementById('inputPortadaNuevoAlbum').value = '';
+            document.getElementById('previewPortadaNuevo').style.display = 'none';
+            document.getElementById('previewPortadaNuevo').src = '';
+            document.getElementById('placeholderPortadaNuevo').style.display = 'flex';
+
             // Cerrar cualquier dropdown abierto
             const dropdownModal = document.getElementById('artistaDropdownModal');
             if (dropdownModal) dropdownModal.classList.remove('visible');
@@ -1445,6 +1481,7 @@
             const nombre = document.getElementById('nuevoAlbumNombre').value.trim();
             const artista = document.getElementById('nuevoAlbumArtista').value.trim();
             const anio = document.getElementById('nuevoAlbumAnio').value.trim();
+            const archivoPortada = document.getElementById('inputPortadaNuevoAlbum').files[0];
 
             if (!nombre) {
                 alert('El nombre es obligatorio');
@@ -1465,10 +1502,25 @@
 
                 const result = await resp.json();
                 if (result.exito) {
-                    cerrarModalAlbum();
-
-                    // Obtener el ID del álbum creado
                     const nuevoAlbumId = result.idCreado || result.id;
+
+                    // Subir portada si existe
+                    if (archivoPortada && nuevoAlbumId) {
+                        const formData = new FormData();
+                        formData.append('file', archivoPortada);
+
+                        try {
+                            await fetch(`/api/albumes/${nuevoAlbumId}/portada`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                        } catch (e) {
+                            console.error('Error subiendo portada:', e);
+                            // No bloqueamos el flujo si falla la portada, es opcional
+                        }
+                    }
+
+                    cerrarModalAlbum();
 
                     // Recargar álbumes 
                     await cargarAlbumesSelector();
@@ -1483,6 +1535,20 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error al crear el álbum');
+            }
+        }
+
+        function previsualizarPortadaModal(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('previewPortadaNuevo');
+                    const placeholder = document.getElementById('placeholderPortadaNuevo');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
@@ -1549,7 +1615,10 @@
             lista.innerHTML = artistas.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaSeleccionado ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtista('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
-                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    ${a.tieneFoto
+                    ? `<img src="/api/interpretes/${a.id}/foto" class="artista-foto-mini" alt="" onerror="this.outerHTML='<div class=\\'artista-icono\\'>${a.interprete.charAt(0).toUpperCase()}</div>'">`
+                    : `<div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>`
+                }
                     <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
                     <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
                 </div>
@@ -1666,7 +1735,10 @@
             lista.innerHTML = artistas.map(a => `
                 <div class="artista-selector-item ${a.interprete === artistaSeleccionadoModal ? 'seleccionado' : ''}" 
                      onclick="seleccionarArtistaModal('${escapeHtml(a.interprete).replace(/'/g, "\\'")}')">
-                    <div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>
+                    ${a.tieneFoto
+                    ? `<img src="/api/interpretes/${a.id}/foto" class="artista-foto-mini" alt="" onerror="this.outerHTML='<div class=\\'artista-icono\\'>${a.interprete.charAt(0).toUpperCase()}</div>'">`
+                    : `<div class="artista-icono">${a.interprete.charAt(0).toUpperCase()}</div>`
+                }
                     <span class="artista-item-nombre">${escapeHtml(a.interprete)}</span>
                     <span class="artista-item-canciones">${a.totalCanciones} 🎵</span>
                 </div>
@@ -1826,7 +1898,6 @@
 
                 const result = await resp.json();
                 if (result.exito) {
-                    alert('Cambios guardados correctamente');
                     if (window.SPARouter) {
                         SPARouter.navigateTo('buscar.html');
                     } else {

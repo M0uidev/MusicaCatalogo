@@ -851,6 +851,7 @@
 
 
     <!-- Contenedor de notificaciones toast -->
+    <div id="toastContainer" class="toast-container"></div>
     <div id="notificaciones-component"></div>
 
     <!-- Footer generado dinámicamente -->
@@ -864,43 +865,61 @@
                         style="width:20px;height:20px;"></i> Nuevo Álbum / Single</h2>
                 <button class="modal-cerrar" onclick="cerrarModal()">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="form-grupo">
-                    <label for="nuevoNombre">Nombre *</label>
-                    <input type="text" id="nuevoNombre" placeholder="Nombre del álbum o single">
-                </div>
-                <div class="form-row">
-                    <div class="form-grupo artista-selector">
-                        <label>Artista</label>
-                        <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaNuevo()">
-                            <div class="artista-icono"><i data-lucide="mic" style="width:16px;height:16px;"></i></div>
-                            <span class="artista-btn-nombre sin-artista" id="nuevoArtistaTexto">Seleccionar
-                                artista...</span>
-                            <span>▼</span>
-                        </button>
-                        <div class="artista-selector-dropdown" id="nuevoArtistaDropdown">
-                            <div class="artista-selector-header">
-                                <input type="text" id="buscarArtistaNuevo" placeholder="Buscar artista..."
-                                    oninput="filtrarArtistasNuevo()">
-                            </div>
-                            <div class="artista-selector-lista" id="listaArtistasNuevo"></div>
-                            <div class="artista-nuevo-inline" id="artistaNuevoInlineNuevo" style="display: none;">
-                                <input type="text" id="inputNuevoArtistaNuevo" placeholder="Nuevo artista...">
-                                <button onclick="usarNuevoArtistaNuevo()">✓</button>
-                            </div>
-                        </div>
-                        <input type="hidden" id="nuevoArtista" value="">
+            <div class="modal-body" style="display: flex; gap: 1.5rem; align-items: flex-start;">
+                <div class="album-detalle-portada" style="width: 150px; height: 150px; cursor: pointer; flex-shrink: 0;"
+                    onclick="document.getElementById('inputPortadaNuevoAlbum').click()">
+                    <img id="previewPortadaNuevo"
+                        style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radio-lg);">
+                    <div class="placeholder" id="placeholderPortadaNuevo"
+                        style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--color-fondo); border: 2px dashed var(--color-borde); border-radius: var(--radio-lg); transition: all 0.2s;">
+                        <i data-lucide="image-plus"
+                            style="width: 32px; height: 32px; opacity: 0.4; margin-bottom: 0.5rem;"></i>
+                        <span
+                            style="font-size: 0.75rem; color: var(--color-texto-secundario); text-align: center;">Click
+                            para<br>subir portada</span>
                     </div>
+                    <input type="file" id="inputPortadaNuevoAlbum" accept="image/*" style="display: none;"
+                        onchange="previsualizarPortadaModal(this)">
+                </div>
+                <div style="flex: 1;">
                     <div class="form-grupo">
-                        <label for="nuevoAnio">Año</label>
-                        <input type="text" id="nuevoAnio" placeholder="Ej: 1985">
+                        <label for="nuevoNombre">Nombre *</label>
+                        <input type="text" id="nuevoNombre" placeholder="Nombre del álbum o single">
                     </div>
-                </div>
-                <div class="form-grupo" style="margin-top: 0.5rem;">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="nuevoEsSingle">
-                        <span>Es un Single (canción individual)</span>
-                    </label>
+                    <div class="form-row">
+                        <div class="form-grupo artista-selector">
+                            <label>Artista</label>
+                            <button type="button" class="artista-selector-btn" onclick="toggleSelectorArtistaNuevo()">
+                                <div class="artista-icono"><i data-lucide="mic" style="width:16px;height:16px;"></i>
+                                </div>
+                                <span class="artista-btn-nombre sin-artista" id="nuevoArtistaTexto">Seleccionar
+                                    artista...</span>
+                                <span>▼</span>
+                            </button>
+                            <div class="artista-selector-dropdown" id="nuevoArtistaDropdown">
+                                <div class="artista-selector-header">
+                                    <input type="text" id="buscarArtistaNuevo" placeholder="Buscar artista..."
+                                        oninput="filtrarArtistasNuevo()">
+                                </div>
+                                <div class="artista-selector-lista" id="listaArtistasNuevo"></div>
+                                <div class="artista-nuevo-inline" id="artistaNuevoInlineNuevo" style="display: none;">
+                                    <input type="text" id="inputNuevoArtistaNuevo" placeholder="Nuevo artista...">
+                                    <button onclick="usarNuevoArtistaNuevo()">✓</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="nuevoArtista" value="">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="nuevoAnio">Año</label>
+                            <input type="text" id="nuevoAnio" placeholder="Ej: 1985">
+                        </div>
+                    </div>
+                    <div class="form-grupo" style="margin-top: 0.5rem;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="nuevoEsSingle">
+                            <span>Es un Single (canción individual)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -992,6 +1011,7 @@
 
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
+    <div id="toastContainer" class="toast-container"></div>
     <script>
         // Envolver en IIFE para evitar contaminación de scope global
         (function () {
@@ -1262,6 +1282,13 @@
                 document.getElementById('nuevoArtista').value = '';
                 document.getElementById('nuevoAnio').value = '';
                 document.getElementById('nuevoEsSingle').checked = false;
+
+                // Limpiar portada
+                document.getElementById('inputPortadaNuevoAlbum').value = '';
+                document.getElementById('previewPortadaNuevo').style.display = 'none';
+                document.getElementById('previewPortadaNuevo').src = '';
+                document.getElementById('placeholderPortadaNuevo').style.display = 'flex';
+
                 actualizarBotonArtistaNuevo('');
 
                 document.getElementById('modalNuevoAlbum').classList.add('activo');
@@ -1286,6 +1313,7 @@
                 const artista = document.getElementById('nuevoArtista').value.trim();
                 const anio = document.getElementById('nuevoAnio').value.trim();
                 const esSingle = document.getElementById('nuevoEsSingle').checked;
+                const archivoPortada = document.getElementById('inputPortadaNuevoAlbum').files[0];
 
                 if (!nombre) {
                     alert('El nombre es obligatorio');
@@ -1306,15 +1334,45 @@
 
                     const result = await resp.json();
                     if (result.exito) {
+                        // Subir portada si existe
+                        if (archivoPortada) {
+                            const formData = new FormData();
+                            formData.append('file', archivoPortada);
+
+                            try {
+                                await fetch(`/api/albumes/${result.idCreado}/portada`, {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                            } catch (e) {
+                                console.error('Error subiendo portada:', e);
+                                mostrarToast('Álbum creado pero falló la subida de portada', 'error');
+                            }
+                        }
+
                         cerrarModal();
                         // Ir al detalle del nuevo álbum
-                        window.SPARouter.navigate(`albumes.html?id=${result.idCreado}`);
+                        window.SPARouter.navigateTo(`albumes.html?id=${result.idCreado}`);
                     } else {
                         alert('Error: ' + result.mensaje);
                     }
                 } catch (error) {
                     console.error('Error:', error);
                     alert('Error al crear el álbum');
+                }
+            }
+
+            function previsualizarPortadaModal(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = document.getElementById('previewPortadaNuevo');
+                        const placeholder = document.getElementById('placeholderPortadaNuevo');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        placeholder.style.display = 'none';
+                    }
+                    reader.readAsDataURL(input.files[0]);
                 }
             }
 
@@ -1327,7 +1385,7 @@
                     const resp = await fetch(`/api/albumes/${id}`, { method: 'DELETE' });
                     const result = await resp.json();
                     if (result.exito) {
-                        window.SPARouter.navigate('albumes.html');
+                        window.SPARouter.navigateTo('albumes.html');
                     } else {
                         alert('Error: ' + result.mensaje);
                     }
@@ -1589,6 +1647,18 @@
                         })
                     });
 
+                    if (!resp.ok) {
+                        const errorText = await resp.text();
+                        console.error('Error HTTP:', resp.status, errorText);
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            alert('Error: ' + (errorJson.mensaje || errorJson.Mensaje || errorText));
+                        } catch (e) {
+                            alert('Error del servidor (' + resp.status + '): ' + errorText.substring(0, 100));
+                        }
+                        return;
+                    }
+
                     const result = await resp.json();
                     if (result.exito || result.Exito) {
                         cerrarModalEditar();
@@ -1599,7 +1669,7 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error al actualizar el álbum');
+                    alert('Error al actualizar el álbum: ' + error.message);
                 }
             }
 
@@ -1844,6 +1914,7 @@
             window.toggleCancionSeleccion = toggleCancionSeleccion;
             window.quitarCancionDelAlbum = quitarCancionDelAlbum;
             window.cargarAlbum = cargarDetalleAlbum;
+            window.previsualizarPortadaModal = previsualizarPortadaModal;
 
             // Mover modales al body para asegurar que cubran toda la pantalla
             ['modalNuevoAlbum', 'modalAgregarCanciones', 'modalEditarAlbum'].forEach(id => {

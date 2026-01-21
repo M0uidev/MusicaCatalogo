@@ -592,6 +592,59 @@
             margin-top: 1.5rem;
             justify-content: flex-end;
         }
+
+        .perfil-navegacion {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            align-self: stretch;
+        }
+
+        .perfil-navegacion-flechas {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+            border-color: white;
+        }
+
+        .btn-eliminar-interprete {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.7);
+            color: #ef4444;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-eliminar-interprete:hover {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
     </style>
 
     <div class="contenido-principal">
@@ -756,6 +809,7 @@
         let generosDisponibles = [];
         let rolesDisponibles = [];
         let generosSeleccionados = [];
+        let listaInterpretesCache = null;
 
         // Inicialización
         (async () => {
@@ -883,19 +937,43 @@
             }
         }
 
+        async function obtenerVecinos(idActual) {
+            if (!listaInterpretesCache) {
+                try {
+                    const resp = await fetch('/api/interpretes?limite=10000');
+                    listaInterpretesCache = await resp.json();
+                    listaInterpretesCache.sort((a, b) => a.interprete.localeCompare(b.interprete, undefined, { sensitivity: 'base' }));
+                } catch (e) {
+                    console.error(e);
+                    return { prev: null, next: null };
+                }
+            }
+
+            const idx = listaInterpretesCache.findIndex(i => i.id === idActual);
+            if (idx === -1) return { prev: null, next: null };
+
+            return {
+                prev: idx > 0 ? listaInterpretesCache[idx - 1] : null,
+                next: idx < listaInterpretesCache.length - 1 ? listaInterpretesCache[idx + 1] : null
+            };
+        }
+
         async function cargarPerfilPorId(id) {
             try {
                 const resp = await fetch(`/api/interpretes/${id}/perfil`);
                 if (!resp.ok) throw new Error('No encontrado');
                 perfilActual = await resp.json();
-                renderizarPerfil();
+
+                const vecinos = await obtenerVecinos(perfilActual.id);
+                renderizarPerfil(vecinos);
+
                 await cargarTemas();
             } catch (e) {
                 document.getElementById('perfilHeader').innerHTML = '<p class="error">Error cargando perfil</p>';
             }
         }
 
-        function renderizarPerfil() {
+        function renderizarPerfil(vecinos = { prev: null, next: null }) {
             const p = perfilActual;
             const inicial = p.nombre.charAt(0).toUpperCase();
 
@@ -929,6 +1007,15 @@
                         <button class="btn-editar-perfil" onclick="abrirModalPerfil()"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Editar perfil</button>
                         ${p.sitioWeb ? `<a href="${p.sitioWeb}" target="_blank" class="btn-editar-perfil"><i data-lucide="external-link" style="width:14px;height:14px;"></i> Sitio web</a>` : ''}
                     </div>
+                </div>
+                <div class="perfil-navegacion">
+                    <div class="perfil-navegacion-flechas">
+                        ${vecinos.prev ? `<button onclick="if(window.SPARouter){SPARouter.navigateTo('interprete.html?id=${vecinos.prev.id}')}else{window.location.href='interprete.html?id=${vecinos.prev.id}'}" class="btn-nav" title="Anterior: ${escapeHtml(vecinos.prev.interprete)}"><i data-lucide="chevron-left"></i></button>` : ''}
+                        ${vecinos.next ? `<button onclick="if(window.SPARouter){SPARouter.navigateTo('interprete.html?id=${vecinos.next.id}')}else{window.location.href='interprete.html?id=${vecinos.next.id}'}" class="btn-nav" title="Siguiente: ${escapeHtml(vecinos.next.interprete)}"><i data-lucide="chevron-right"></i></button>` : ''}
+                    </div>
+                    <button class="btn-eliminar-interprete" onclick="eliminarInterprete()" title="Eliminar intérprete">
+                        <i data-lucide="trash-2" style="width:12px;height:12px;"></i> Eliminar
+                    </button>
                 </div>
             `;
 
@@ -1263,6 +1350,41 @@
             }
             e.target.value = '';
         });
+
+        async function eliminarInterprete() {
+            if (!perfilActual) return;
+            if (!confirm(`¿Estás seguro de que deseas eliminar a ${perfilActual.nombre}?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/interpretes/${perfilActual.id}`, { method: 'DELETE' });
+
+                // Si el status es 200/204, asumimos éxito aunque no devuelva json
+                // Pero intentemos leer json primero
+                let result = {};
+                try {
+                    result = await resp.json();
+                } catch (e) {
+                    if (!resp.ok) throw new Error(resp.statusText);
+                    result = { exito: true };
+                }
+
+                if (resp.ok && (result.exito || result.Exito)) {
+                    mostrarNotificacion('Intérprete eliminado', 'exito');
+                    if (window.SPARouter) {
+                        SPARouter.navigateTo('interpretes.html');
+                    } else {
+                        window.location.href = 'interpretes.html';
+                    }
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarNotificacion('Error al conectar con el servidor', 'error');
+            }
+        }
 
         // Lógica del Selector de Miembro con Autocompletado
         let timeoutBusquedaMiembro = null;

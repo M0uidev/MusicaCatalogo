@@ -8,11 +8,35 @@
 
         .buscador-container input {
             width: 100%;
-            padding: 1rem 1.5rem 1rem 3rem;
+            padding: 1rem 3rem 1rem 3rem;
             font-size: 1rem;
             border: 1px solid var(--color-borde);
             border-radius: 2rem;
             background: white;
+        }
+
+        .btn-limpiar-busqueda {
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: none;
+            padding: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-limpiar-busqueda:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
         }
 
         .buscador-container input:focus {
@@ -911,6 +935,9 @@
 
             <div class="buscador-container">
                 <input type="text" id="inputBusqueda" placeholder="Buscar..." autocomplete="off">
+                <button id="btnLimpiarBusqueda" class="btn-limpiar-busqueda" title="Borrar búsqueda">
+                    <i data-lucide="x" style="width:18px;height:18px;"></i>
+                </button>
             </div>
 
             <div class="filtros-container">
@@ -1060,6 +1087,8 @@
                 document.getElementById('selectAlbum').value = filtros.album;
                 document.getElementById('selectOrden').value = filtros.orden;
                 document.getElementById('selectTipo').value = filtros.tipo;
+
+                actualizarBotonLimpiar();
             }
 
             function sincronizarURL() {
@@ -1521,6 +1550,7 @@
                 filtros = { busqueda: '', artista: 'todos', anio: 'todos', album: 'todos', orden: 'tema', tipo: 'todos' };
                 paginaActual = 1;
                 document.getElementById('inputBusqueda').value = '';
+                actualizarBotonLimpiar();
                 document.getElementById('selectArtista').value = 'todos';
                 document.getElementById('selectAnio').value = 'todos';
                 document.getElementById('selectAlbum').value = 'todos';
@@ -1601,9 +1631,26 @@
             window.togglePlayCancion = togglePlayCancion;
             window.togglePlayCard = togglePlayCard;
 
+            function actualizarBotonLimpiar() {
+                const btn = document.getElementById('btnLimpiarBusqueda');
+                const input = document.getElementById('inputBusqueda');
+                if (btn && input) btn.style.display = input.value.trim().length > 0 ? 'flex' : 'none';
+                if (window.lucide) window.lucide.createIcons();
+            }
+
             document.getElementById('inputBusqueda').addEventListener('input', e => {
+                actualizarBotonLimpiar();
                 filtros.busqueda = e.target.value; clearTimeout(timeoutBusqueda);
                 timeoutBusqueda = setTimeout(aplicarFiltros, 300);
+            });
+
+            document.getElementById('btnLimpiarBusqueda').addEventListener('click', () => {
+                const input = document.getElementById('inputBusqueda');
+                input.value = '';
+                input.focus();
+                filtros.busqueda = '';
+                actualizarBotonLimpiar();
+                aplicarFiltros();
             });
             document.getElementById('selectArtista').addEventListener('change', e => { filtros.artista = e.target.value; aplicarFiltros(); });
             document.getElementById('selectAnio').addEventListener('change', e => { filtros.anio = e.target.value; aplicarFiltros(); });

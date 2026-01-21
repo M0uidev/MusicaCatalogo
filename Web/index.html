@@ -1,107 +1,130 @@
 <main class="container">
-    <section class="seccion">
-        <!-- Resumen rápido -->
-        <section class="resumen-principal">
-            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="layout-dashboard"
-                    style="width:20px;height:20px;"></i> Resumen</h2>
-            <div class="resumen-grid" id="resumenColeccion">
-                <div class="resumen-card cargando">Cargando...</div>
-            </div>
-        </section>
+    <div class="dashboard-grid">
+        <!-- Columna Izquierda: Contenido Principal -->
+        <div class="main-content">
+            <section class="seccion">
+                <!-- Resumen rápido -->
+                <section class="resumen-principal">
+                    <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="layout-dashboard"
+                            style="width:20px;height:20px;"></i> Resumen</h2>
+                    <div class="resumen-grid" id="resumenColeccion">
+                        <div class="resumen-card cargando">Cargando...</div>
+                    </div>
+                </section>
 
-        <!-- Acceso rápido -->
-        <section class="acceso-rapido">
-            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="zap"
-                    style="width:20px;height:20px;"></i> Acceso rápido</h2>
-            <div class="botones-acceso">
-                <a href="buscar.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono"><i data-lucide="search" style="width:32px;height:32px;"></i></span>
-                    <span class="boton-texto">Buscar Canciones</span>
-                    <span class="boton-desc">Encuentra cualquier canción</span>
-                </a>
-                <a href="medios.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono"><i data-lucide="cassette-tape" style="width:32px;height:32px;"></i></span>
-                    <span class="boton-texto">Ver Cassettes y CDs</span>
-                    <span class="boton-desc">Explora toda la colección</span>
-                </a>
-                <a href="interpretes.html" class="boton-grande" data-spa-link>
-                    <span class="boton-icono"><i data-lucide="mic" style="width:32px;height:32px;"></i></span>
-                    <span class="boton-texto">Ver Intérpretes</span>
-                    <span class="boton-desc">Busca por artista o banda</span>
-                </a>
-            </div>
-        </section>
+                <!-- Acceso rápido -->
+                <section class="acceso-rapido" style="margin-top: 2rem;">
+                    <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="zap"
+                            style="width:20px;height:20px;"></i> Acceso rápido</h2>
+                    <div class="botones-acceso">
+                        <a href="buscar.html" class="boton-grande" data-spa-link>
+                            <span class="boton-icono"><i data-lucide="search"
+                                    style="width:32px;height:32px;"></i></span>
+                            <span class="boton-texto">Buscar Canciones</span>
+                            <span class="boton-desc">Encuentra cualquier canción</span>
+                        </a>
+                        <a href="medios.html" class="boton-grande" data-spa-link>
+                            <span class="boton-icono"><i data-lucide="cassette-tape"
+                                    style="width:32px;height:32px;"></i></span>
+                            <span class="boton-texto">Ver Cassettes y CDs</span>
+                            <span class="boton-desc">Explora toda la colección</span>
+                        </a>
+                        <a href="interpretes.html" class="boton-grande" data-spa-link>
+                            <span class="boton-icono"><i data-lucide="mic" style="width:32px;height:32px;"></i></span>
+                            <span class="boton-texto">Ver Intérpretes</span>
+                            <span class="boton-desc">Busca por artista o banda</span>
+                        </a>
+                    </div>
+                </section>
+            </section>
+        </div>
 
-        <!-- Sección QR siempre visible -->
-        <section class="qr-section">
-            <h2 style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
-                    data-lucide="smartphone" style="width:24px;height:24px;"></i> Acceso desde tu Celular</h2>
-            <p>Escanea el código QR con la cámara de tu teléfono</p>
-            <div class="qr-container">
-                <div id="codigoQR"></div>
-            </div>
-            <p class="qr-instructions"
-                style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
-                    data-lucide="lightbulb" style="width:16px;height:16px;"></i> Asegúrate de estar conectado a la misma
-                red WiFi</p>
-        </section>
-    </section>
+        <!-- Columna Derecha: QR -->
+        <div class="sidebar-content">
+            <section class="qr-section">
+                <h2 style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                        data-lucide="smartphone" style="width:24px;height:24px;"></i> Remote Player</h2>
+                <p>Escanea para controlar desde tu celular</p>
+                <div class="qr-center-container">
+                    <div class="qr-container">
+                        <div id="codigoQR"></div>
+                    </div>
+                </div>
+                <p class="qr-instructions"
+                    style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                        data-lucide="wifi" style="width:16px;height:16px;"></i> Misma red WiFi</p>
+            </section>
+        </div>
+    </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        /* Columna principal, QR fijo un poco más ancho */
+        gap: 1.5rem;
+        align-items: start;
+        width: 100%;
+    }
+
+    /* Ajustes para móviles */
+    @media (max-width: 900px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .qr-section {
         background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
         border-radius: var(--radio-lg);
-        padding: 2rem;
+        padding: 1.5rem;
         color: white;
         text-align: center;
-        margin-top: 2rem;
+        height: 100%;
+        /* Llenar altura */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .qr-section h2 {
         color: white;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
     }
 
     .qr-section p {
         opacity: 0.9;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .qr-center-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
     }
 
     .qr-container {
         background: white;
-        padding: 1rem;
+        padding: 0.75rem;
         border-radius: var(--radio);
         display: inline-block;
-        margin-bottom: 1rem;
-    }
-
-    .qr-url {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 0.75rem 1.5rem;
-        border-radius: var(--radio);
-        font-family: monospace;
-        font-size: 1.1rem;
-        display: inline-block;
-        word-break: break-all;
     }
 
     .qr-instructions {
-        margin-top: 1rem;
-        font-size: 0.9rem;
+        margin-top: auto;
+        /* Empujar hacia abajo si sobra espacio */
+        font-size: 0.85rem;
         opacity: 0.8;
     }
 
-    @media (max-width: 600px) {
-        .qr-section {
-            padding: 1.5rem 1rem;
-        }
-
-        .qr-url {
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-        }
+    /* Asegurar que el contenido principal llene su espacio */
+    .main-content .seccion {
+        height: 100%;
+        margin-bottom: 0;
     }
 </style>
 
@@ -148,14 +171,13 @@
         }
     }
 
-    // Generar QR con URL de red local
+    // Generar QR con URL de red local apuntando a PLAYER.HTML
     async function generarQR() {
         try {
             // Obtener IPs del servidor
             const resp = await fetch('/api/red');
             const data = await resp.json();
 
-            // Usar la primera IP de la red local (no localhost)
             let url = window.location.origin;
             if (data.ips && data.ips.length > 0) {
                 // Preferir IP que empiece con 192.168
@@ -163,29 +185,29 @@
                 url = `http://${ipLocal}:${data.puerto}`;
             }
 
+            // AÑADIR /player.html AL FINAL
+            url += '/player.html';
+
             new QRCode(document.getElementById('codigoQR'), {
                 text: url,
-                width: 180,
-                height: 180,
+                width: 160,
+                height: 160,
                 colorDark: '#1e293b',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M
             });
         } catch (err) {
-            // Fallback a la URL actual
-            const url = window.location.origin;
+            // Fallback
+            const url = window.location.origin + '/player.html';
             new QRCode(document.getElementById('codigoQR'), {
                 text: url,
-                width: 180,
-                height: 180,
+                width: 160,
+                height: 160,
                 colorDark: '#1e293b',
                 colorLight: '#ffffff'
             });
         }
     }
 
-    // Inicializar
-    // Las funciones se llaman desde PageInitializers.js para evitar duplicación en SPA
-    // cargarResumen();
-    // generarQR();
+    // Las funciones se llaman desde PageInitializers.js
 </script>

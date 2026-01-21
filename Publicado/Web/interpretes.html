@@ -65,8 +65,7 @@
 
             <div class="buscador">
                 <input type="text" id="filtroInterprete" placeholder="Escriba el nombre del intérprete..."
-                    autocomplete="off">
-                <button id="btnFiltrar" class="btn btn-primario">Buscar</button>
+                    autocomplete="off" style="width: 100%;">
             </div>
         </section>
 
@@ -93,12 +92,6 @@
             await cargarInterpretes();
 
             const filtro = document.getElementById('filtroInterprete');
-            const btnFiltrar = document.getElementById('btnFiltrar');
-
-            btnFiltrar.addEventListener('click', () => cargarInterpretes(filtro.value));
-            filtro.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') cargarInterpretes(filtro.value);
-            });
 
             let timeout;
             filtro.addEventListener('input', () => {
