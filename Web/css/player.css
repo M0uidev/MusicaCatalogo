@@ -244,6 +244,32 @@ body.player-body {
     color: var(--player-text);
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header .section-title {
+    margin-bottom: 0;
+}
+
+.section-action-btn {
+    background: none;
+    border: none;
+    color: var(--player-text-subdued);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.section-action-btn:active {
+    color: var(--player-text);
+    opacity: 0.7;
+}
+
 .stats-row {
     display: flex;
     gap: 0.75rem;

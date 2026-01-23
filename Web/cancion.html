@@ -994,6 +994,7 @@
         const params = new URLSearchParams(window.location.search);
         const idCancion = params.get('id');
         const tipoCancion = params.get('tipo') || 'cassette';
+        const fromPage = params.get('fromPage') || '1';
         let cancionActual = null;
         let modoEdicion = false;
 
@@ -1266,7 +1267,7 @@
 
                                 <div class="botones-accion">
                                     <button class="btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
-                                    <a href="buscar.html" class="btn-cancelar" data-spa-link style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+                                    <a href="buscar.html?p=${fromPage}" class="btn-cancelar" data-spa-link style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
                                 </div>
                             </div>
                         </div>
@@ -1898,10 +1899,12 @@
 
                 const result = await resp.json();
                 if (result.exito) {
+                    // Redirigir a buscar.html con la página y highlight de la canción editada
+                    const returnUrl = `buscar.html?p=${fromPage}&highlight=${idCancion}&highlightTipo=${tipoCancion}`;
                     if (window.SPARouter) {
-                        SPARouter.navigateTo('buscar.html');
+                        SPARouter.navigateTo(returnUrl);
                     } else {
-                        window.location.href = 'buscar.html';
+                        window.location.href = returnUrl;
                     }
                 } else {
                     alert('Error: ' + result.mensaje);

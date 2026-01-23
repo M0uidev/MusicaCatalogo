@@ -282,6 +282,8 @@ public record CancionRequest
     public required string Tema { get; init; }
     public string? NombreInterprete { get; init; } // Si no existe, se crea
     public int? IdInterprete { get; init; } // Si ya existe
+    public int? IdAlbum { get; init; }
+    public string? LinkExterno { get; init; }
     // Para cassettes
     public string? Lado { get; init; }
     public int? Desde { get; init; }

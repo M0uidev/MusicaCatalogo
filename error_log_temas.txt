@@ -1,0 +1,5 @@
+21/01/2026 00:30:50: Error parsing column 8 (IdAlbum=3 - Int64)
+   at Dapper.SqlMapper.ThrowDataException(Exception ex, Int32 index, IDataReader reader, Object value) in /_/Dapper/SqlMapper.cs:line 3925
+   at Deserialize73aaf482-b052-4f26-88b8-f09798865255(DbDataReader)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 454
+   at MusicaCatalogo.Services.RepositorioMusica.ObtenerTemasDeMedioAsync(String numMedio)

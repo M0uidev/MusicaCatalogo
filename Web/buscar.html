@@ -374,6 +374,69 @@
             color: var(--color-texto-secundario);
         }
 
+        .paginacion-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .paginacion-input {
+            width: 3.5rem;
+            padding: 0.4rem 0.5rem;
+            text-align: center;
+            border: 1px solid var(--color-borde);
+            border-radius: var(--radio);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .paginacion-input:focus {
+            outline: none;
+            border-color: var(--color-primario);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        .paginacion-input.error {
+            border-color: #ef4444;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            75% {
+                transform: translateX(4px);
+            }
+        }
+
+        /* Highlight animación para canción editada */
+        @keyframes highlightPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+            }
+        }
+
+        .cancion-card.highlight-cancion {
+            animation: highlightPulse 1.5s ease-out;
+            border-color: var(--color-primario);
+        }
+
         .cargando-mas {
             text-align: center;
             padding: 2rem;
@@ -992,13 +1055,29 @@
         </section>
 
         <section class="seccion">
+            <div class="paginacion" id="paginacionTop" style="display: none; margin-top: 0; margin-bottom: 1rem;">
+                <button onclick="paginaAnterior()">← Anterior</button>
+                <div class="paginacion-info">
+                    <span>Página</span>
+                    <input type="text" class="paginacion-input" id="inputPaginaTop" value="1"
+                        onkeydown="manejarInputPagina(event, this)" onblur="restaurarInputPagina(this)">
+                    <span>de <span id="totalPaginasTop">1</span></span>
+                </div>
+                <button onclick="paginaSiguiente()">Siguiente →</button>
+            </div>
+
             <div class="canciones-grid" id="cancionesGrid">
                 <div class="cargando-mas">Cargando canciones...</div>
             </div>
 
             <div class="paginacion" id="paginacion" style="display: none;">
                 <button id="btnAnterior" onclick="paginaAnterior()">← Anterior</button>
-                <span id="infoPagina">Página 1</span>
+                <div class="paginacion-info">
+                    <span>Página</span>
+                    <input type="text" class="paginacion-input" id="inputPagina" value="1"
+                        onkeydown="manejarInputPagina(event, this)" onblur="restaurarInputPagina(this)">
+                    <span>de <span id="totalPaginas">1</span></span>
+                </div>
                 <button id="btnSiguiente" onclick="paginaSiguiente()">Siguiente →</button>
             </div>
         </section>
@@ -1316,6 +1395,7 @@
                 if (total === 0) {
                     grid.innerHTML = '<div class="sin-resultados" style="grid-column:1/-1"><p>No hay resultados</p></div>';
                     document.getElementById('paginacion').style.display = 'none';
+                    document.getElementById('paginacionTop').style.display = 'none';
                     return;
                 }
 
@@ -1337,7 +1417,7 @@
                         : '';
 
                     return `
-                    <div class="cancion-card" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
+                    <div class="cancion-card" data-song-id="${ins.id}" data-song-tipo="${ins.tipo}" onclick="abrirModalVersiones(${(paginaActual - 1) * cancionesPorPagina + idx})">
                         ${p.totalArtistas > 1 ? `<div class="badge-multi-artista"><i data-lucide="mic-2"></i> ${p.totalArtistas} ver.</div>` : ''}
                         <div class="cancion-imagen-container">
                             ${playButton}
@@ -1356,10 +1436,22 @@
 
                 if (window.lucide) window.lucide.createIcons();
 
-                document.getElementById('paginacion').style.display = totalPaginas > 1 ? 'flex' : 'none';
-                document.getElementById('infoPagina').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+                // Actualizar ambas paginaciones
+                const mostrarPaginacion = totalPaginas > 1 ? 'flex' : 'none';
+                document.getElementById('paginacion').style.display = mostrarPaginacion;
+                document.getElementById('paginacionTop').style.display = mostrarPaginacion;
+
+                // Actualizar inputs y totales
+                document.getElementById('inputPagina').value = paginaActual;
+                document.getElementById('inputPaginaTop').value = paginaActual;
+                document.getElementById('totalPaginas').textContent = totalPaginas;
+                document.getElementById('totalPaginasTop').textContent = totalPaginas;
+
                 document.getElementById('btnAnterior').disabled = paginaActual === 1;
                 document.getElementById('btnSiguiente').disabled = paginaActual === totalPaginas;
+
+                // Highlight de canción si viene de edición
+                aplicarHighlightSiCorresponde();
             }
 
             function abrirModalVersiones(idx) {
@@ -1447,7 +1539,7 @@
                                 <i data-lucide="ellipsis"></i>
                             </button>
                             <div class="dropdown-menu">
-                                <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}'}">
+                            <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual())}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual()}">
                                     <i data-lucide="settings"></i> Editar Canción
                                 </button>
                                 <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">
@@ -1468,6 +1560,80 @@
             function cerrarModalVersiones() { document.getElementById('modalVersiones').classList.remove('visible'); document.body.style.overflow = ''; }
             function paginaAnterior() { if (paginaActual > 1) { paginaActual--; aplicarFiltros(); window.scrollTo(0, 0); } }
             function paginaSiguiente() { if (paginaActual < Math.ceil(perfilesFiltrados.length / cancionesPorPagina)) { paginaActual++; aplicarFiltros(); window.scrollTo(0, 0); } }
+
+            // Funciones para input de página editable
+            function manejarInputPagina(event, input) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const totalPaginas = Math.ceil(perfilesFiltrados.length / cancionesPorPagina);
+                    const valor = parseInt(input.value);
+
+                    if (isNaN(valor) || valor < 1 || valor > totalPaginas) {
+                        input.classList.add('error');
+                        setTimeout(() => input.classList.remove('error'), 300);
+                        input.value = paginaActual;
+                        return;
+                    }
+
+                    irAPagina(valor);
+                    input.blur();
+                }
+            }
+
+            function restaurarInputPagina(input) {
+                input.value = paginaActual;
+                input.classList.remove('error');
+            }
+
+            function irAPagina(pagina) {
+                const totalPaginas = Math.ceil(perfilesFiltrados.length / cancionesPorPagina);
+                if (pagina >= 1 && pagina <= totalPaginas && pagina !== paginaActual) {
+                    paginaActual = pagina;
+                    aplicarFiltros();
+                    window.scrollTo(0, 0);
+                }
+            }
+
+            // Highlight de canción editada
+            let highlightPendiente = null;
+
+            function aplicarHighlightSiCorresponde() {
+                const params = new URLSearchParams(window.location.search);
+                const highlightId = params.get('highlight');
+                const highlightTipo = params.get('highlightTipo');
+
+                if (!highlightId || highlightPendiente === highlightId) return;
+                highlightPendiente = highlightId;
+
+                // Buscar la tarjeta de la canción
+                setTimeout(() => {
+                    const card = document.querySelector(`.cancion-card[data-song-id="${highlightId}"]`);
+                    if (card) {
+                        // Scroll suave a la tarjeta
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // Aplicar animación de highlight
+                        setTimeout(() => {
+                            card.classList.add('highlight-cancion');
+
+                            // Remover clase después de la animación
+                            setTimeout(() => {
+                                card.classList.remove('highlight-cancion');
+                            }, 1500);
+                        }, 300);
+
+                        // Limpiar parámetros de URL para no repetir
+                        limpiarParametrosHighlight();
+                    }
+                }, 100);
+            }
+
+            function limpiarParametrosHighlight() {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('highlight');
+                url.searchParams.delete('highlightTipo');
+                window.history.replaceState({}, '', url.toString());
+            }
 
             let cancionActualBtn = null;
 
@@ -1630,6 +1796,10 @@
             window.limpiarFiltros = limpiarFiltros;
             window.togglePlayCancion = togglePlayCancion;
             window.togglePlayCard = togglePlayCard;
+            window.manejarInputPagina = manejarInputPagina;
+            window.restaurarInputPagina = restaurarInputPagina;
+            window.irAPagina = irAPagina;
+            window.getPaginaActual = function () { return paginaActual; };
 
             function actualizarBotonLimpiar() {
                 const btn = document.getElementById('btnLimpiarBusqueda');

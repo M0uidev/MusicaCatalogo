@@ -446,11 +446,13 @@ public class RepositorioMusica
 
     /// <summary>
     /// Obtiene lista de intérpretes con búsqueda opcional.
+    /// "Desconocido" aparece primero si tiene canciones, y no aparece si tiene 0.
     /// </summary>
     public async Task<List<InterpreteResumen>> ListarInterpretesAsync(string? filtro = null, int limite = 100)
     {
         using var conn = _db.ObtenerConexion();
 
+        // Consulta que excluye "Desconocido" si tiene 0 canciones y lo ordena primero si tiene canciones
         var sql = """
             SELECT i.id AS Id, i.nombre AS Interprete, 
                    (SELECT COUNT(*) FROM temas WHERE id_interprete = i.id) +
@@ -461,14 +463,27 @@ public class RepositorioMusica
                     JOIN interpretes b ON bm.id_banda = b.id 
                     WHERE bm.id_miembro = i.id) AS IntegranteDe
             FROM interpretes i
+            WHERE (
+                LOWER(TRIM(i.nombre)) != 'desconocido' 
+                OR (
+                    (SELECT COUNT(*) FROM temas WHERE id_interprete = i.id) +
+                    (SELECT COUNT(*) FROM temas_cd WHERE id_interprete = i.id)
+                ) > 0
+            )
             """;
 
         if (!string.IsNullOrWhiteSpace(filtro))
         {
-            sql += " WHERE i.nombre LIKE @patron";
+            sql += " AND i.nombre LIKE @patron";
         }
 
-        sql += " ORDER BY i.nombre LIMIT @limite";
+        // Ordenar: "Desconocido" primero (si tiene canciones), luego alfabéticamente
+        sql += """
+             ORDER BY 
+                CASE WHEN LOWER(TRIM(i.nombre)) = 'desconocido' THEN 0 ELSE 1 END,
+                i.nombre
+            LIMIT @limite
+            """;
 
         var patron = $"%{filtro}%";
         var resultado = await conn.QueryAsync<InterpreteResumen>(sql, new { patron, limite });
@@ -929,8 +944,8 @@ public class RepositorioMusica
             if (request.TipoMedio.ToLower() == "cassette")
             {
                 await conn.ExecuteAsync("""
-                    INSERT INTO temas (num_formato, id_interprete, tema, lado, desde, hasta, es_cover, es_original, artista_original)
-                    VALUES (@numMedio, @idInterprete, @Tema, @Lado, @Desde, @Hasta, @EsCover, @EsOriginal, @ArtistaOriginal)
+                    INSERT INTO temas (num_formato, id_interprete, tema, lado, desde, hasta, es_cover, es_original, artista_original, id_album, link_externo)
+                    VALUES (@numMedio, @idInterprete, @Tema, @Lado, @Desde, @Hasta, @EsCover, @EsOriginal, @ArtistaOriginal, @IdAlbum, @LinkExterno)
                     """, new
                 {
                     request.numMedio,
@@ -941,7 +956,9 @@ public class RepositorioMusica
                     Hasta = request.Hasta ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
                     EsOriginal = request.EsOriginal ? 1 : 0,
-                    request.ArtistaOriginal
+                    request.ArtistaOriginal,
+                    request.IdAlbum,
+                    request.LinkExterno
                 });
                 idCreado = await conn.QueryFirstAsync<long>("SELECT last_insert_rowid()");
             }
@@ -953,8 +970,8 @@ public class RepositorioMusica
                     new { request.numMedio }) ?? 0;
 
                 await conn.ExecuteAsync("""
-                    INSERT INTO temas_cd (num_formato, id_interprete, tema, ubicacion, es_cover, es_original, artista_original)
-                    VALUES (@numMedio, @idInterprete, @Tema, @ubicacion, @EsCover, @EsOriginal, @ArtistaOriginal)
+                    INSERT INTO temas_cd (num_formato, id_interprete, tema, ubicacion, es_cover, es_original, artista_original, id_album, link_externo)
+                    VALUES (@numMedio, @idInterprete, @Tema, @ubicacion, @EsCover, @EsOriginal, @ArtistaOriginal, @IdAlbum, @LinkExterno)
                     """, new
                 {
                     request.numMedio,
@@ -963,7 +980,9 @@ public class RepositorioMusica
                     ubicacion = request.Ubicacion ?? (maxUbicacion + 1),
                     EsCover = request.EsCover ? 1 : 0,
                     EsOriginal = request.EsOriginal ? 1 : 0,
-                    request.ArtistaOriginal
+                    request.ArtistaOriginal,
+                    request.IdAlbum,
+                    request.LinkExterno
                 });
                 idCreado = await conn.QueryFirstAsync<long>("SELECT last_insert_rowid()");
             }
@@ -1018,7 +1037,8 @@ public class RepositorioMusica
             {
                 rows = await conn.ExecuteAsync("""
                     UPDATE temas SET id_interprete = @idInterprete, tema = @Tema, lado = @Lado, desde = @Desde, hasta = @Hasta,
-                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
+                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal,
+                           id_album = @IdAlbum, link_externo = @LinkExterno
                     WHERE id = @id
                     """, new
                 {
@@ -1030,14 +1050,17 @@ public class RepositorioMusica
                     Hasta = request.Hasta ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
                     EsOriginal = request.EsOriginal ? 1 : 0,
-                    ArtistaOriginal = request.ArtistaOriginal
+                    ArtistaOriginal = request.ArtistaOriginal,
+                    request.IdAlbum,
+                    request.LinkExterno
                 });
             }
             else
             {
                 rows = await conn.ExecuteAsync("""
                     UPDATE temas_cd SET id_interprete = @idInterprete, tema = @Tema, ubicacion = @Ubicacion,
-                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal
+                           es_cover = @EsCover, es_original = @EsOriginal, artista_original = @ArtistaOriginal,
+                           id_album = @IdAlbum, link_externo = @LinkExterno
                     WHERE id = @id
                     """, new
                 {
@@ -1047,7 +1070,9 @@ public class RepositorioMusica
                     Ubicacion = request.Ubicacion ?? 1,
                     EsCover = request.EsCover ? 1 : 0,
                     EsOriginal = request.EsOriginal ? 1 : 0,
-                    request.ArtistaOriginal
+                    request.ArtistaOriginal,
+                    request.IdAlbum,
+                    request.LinkExterno
                 });
             }
 
@@ -1154,6 +1179,95 @@ public class RepositorioMusica
                 new { id = nuevoId, nombre });
 
             return new CrudResponse { Exito = true, Mensaje = "Intérprete creado correctamente", IdCreado = nuevoId };
+        }
+        catch (Exception ex)
+        {
+            return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
+        }
+    }
+
+    /// <summary>Elimina un intérprete, desasociando las canciones que tenga.</summary>
+    public async Task<CrudResponse> EliminarInterpreteAsync(int id)
+    {
+        using var conn = _db.ObtenerConexion();
+
+        try
+        {
+            // Verificar si el intérprete existe
+            var existe = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT id FROM interpretes WHERE id = @id", new { id });
+            
+            if (!existe.HasValue)
+                return new CrudResponse { Exito = false, Mensaje = "Intérprete no encontrado" };
+
+            // Contar canciones asociadas
+            var cancionesCassette = await conn.QueryFirstOrDefaultAsync<int>(
+                "SELECT COUNT(*) FROM temas WHERE id_interprete = @id", new { id });
+            
+            var cancionesCd = await conn.QueryFirstOrDefaultAsync<int>(
+                "SELECT COUNT(*) FROM temas_cd WHERE id_interprete = @id", new { id });
+            
+            var totalCanciones = cancionesCassette + cancionesCd;
+            
+            // Si hay canciones, obtener o crear el intérprete "Desconocido"
+            int idDesconocido = 1; // ID por defecto
+            if (totalCanciones > 0)
+            {
+                var desconocido = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = 'Desconocido'");
+                
+                if (!desconocido.HasValue)
+                {
+                    // Crear el intérprete "Desconocido"
+                    var maxId = await conn.QueryFirstOrDefaultAsync<int?>("SELECT MAX(id) FROM interpretes") ?? 0;
+                    idDesconocido = maxId + 1;
+                    await conn.ExecuteAsync(
+                        "INSERT INTO interpretes (id, nombre) VALUES (@id, 'Desconocido')",
+                        new { id = idDesconocido });
+                }
+                else
+                {
+                    idDesconocido = desconocido.Value;
+                }
+                
+                // Desasociar canciones (moverlas al intérprete "Desconocido")
+                await conn.ExecuteAsync(
+                    "UPDATE temas SET id_interprete = @idDesconocido WHERE id_interprete = @id", 
+                    new { idDesconocido, id });
+                await conn.ExecuteAsync(
+                    "UPDATE temas_cd SET id_interprete = @idDesconocido WHERE id_interprete = @id", 
+                    new { idDesconocido, id });
+            }
+
+            // Eliminar miembros de banda si es una banda
+            await conn.ExecuteAsync("DELETE FROM banda_miembros WHERE id_banda = @id", new { id });
+            
+            // Eliminar géneros asociados
+            await conn.ExecuteAsync("DELETE FROM interprete_generos WHERE id_interprete = @id", new { id });
+            
+            // Eliminar álbumes del intérprete (desvinculando canciones primero)
+            var albumesIds = await conn.QueryAsync<int>("SELECT id FROM albumes WHERE id_interprete = @id", new { id });
+            foreach (var albumId in albumesIds)
+            {
+                await conn.ExecuteAsync("UPDATE temas SET id_album = NULL WHERE id_album = @albumId", new { albumId });
+                await conn.ExecuteAsync("UPDATE temas_cd SET id_album = NULL WHERE id_album = @albumId", new { albumId });
+            }
+            await conn.ExecuteAsync("DELETE FROM albumes WHERE id_interprete = @id", new { id });
+
+            // Finalmente eliminar el intérprete
+            var rows = await conn.ExecuteAsync("DELETE FROM interpretes WHERE id = @id", new { id });
+
+            if (rows == 0)
+                return new CrudResponse { Exito = false, Mensaje = "Error al eliminar el intérprete" };
+
+            // Construir mensaje de respuesta
+            var mensaje = "Intérprete eliminado correctamente";
+            if (totalCanciones > 0)
+            {
+                mensaje += $". {totalCanciones} canciones fueron movidas a 'Desconocido'";
+            }
+
+            return new CrudResponse { Exito = true, Mensaje = mensaje };
         }
         catch (Exception ex)
         {
@@ -2076,6 +2190,50 @@ public class RepositorioMusica
                 Tipo = "cancion",
                 Severidad = "error",
                 Mensaje = $"Canción '{c.Tema}' (CD {c.numMedio}) sin intérprete asignado",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cd",
+                CampoFaltante = "interprete",
+                UrlArreglar = $"cancion.html?id={c.Id}&tipo=cd"
+            });
+        }
+
+        // 3b. Canciones con intérprete "Desconocido" (cassettes)
+        var desconocidoCassette = await conn.QueryAsync<(int Id, string Tema, string numMedio)>("""
+            SELECT t.id, t.tema, t.num_formato 
+            FROM temas t 
+            JOIN interpretes i ON t.id_interprete = i.id 
+            WHERE LOWER(TRIM(i.nombre)) = 'desconocido'
+            """);
+        foreach (var c in desconocidoCassette)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "warning",
+                Mensaje = $"Canción '{c.Tema}' (Cassette {c.numMedio}) tiene intérprete 'Desconocido'",
+                EntidadId = c.Id.ToString(),
+                EntidadTipo = "cassette",
+                CampoFaltante = "interprete",
+                UrlArreglar = $"cancion.html?id={c.Id}&tipo=cassette"
+            });
+        }
+
+        // 3c. Canciones con intérprete "Desconocido" (CDs)
+        var desconocidoCd = await conn.QueryAsync<(int Id, string Tema, string numMedio)>("""
+            SELECT t.id, t.tema, t.num_formato 
+            FROM temas_cd t 
+            JOIN interpretes i ON t.id_interprete = i.id 
+            WHERE LOWER(TRIM(i.nombre)) = 'desconocido'
+            """);
+        foreach (var c in desconocidoCd)
+        {
+            notificaciones.Add(new NotificacionDatos
+            {
+                Id = $"notif-{++contador}",
+                Tipo = "cancion",
+                Severidad = "warning",
+                Mensaje = $"Canción '{c.Tema}' (CD {c.numMedio}) tiene intérprete 'Desconocido'",
                 EntidadId = c.Id.ToString(),
                 EntidadTipo = "cd",
                 CampoFaltante = "interprete",
@@ -4023,7 +4181,7 @@ public class RepositorioMusica
         return perfil;
     }
 
-    /// <summary>Actualiza el perfil de un artista.</summary>
+    /// <summary>Actualiza el perfil de un artista. Si el nuevo nombre ya existe, unifica ambos intérpretes.</summary>
     public async Task<CrudResponse> ActualizarPerfilArtistaAsync(int id, ActualizarPerfilArtistaRequest request)
     {
         using var conn = _db.ObtenerConexion();
@@ -4031,7 +4189,29 @@ public class RepositorioMusica
 
         try
         {
-            // Actualizar campos básicos
+            // Verificar si el nuevo nombre ya pertenece a otro intérprete
+            if (!string.IsNullOrWhiteSpace(request.Nombre))
+            {
+                var existente = await conn.QueryFirstOrDefaultAsync<int?>(
+                    "SELECT id FROM interpretes WHERE nombre = @nombre COLLATE NOCASE AND id != @id",
+                    new { nombre = request.Nombre, id }, trans);
+
+                if (existente.HasValue)
+                {
+                    // Unificar: mover todo del intérprete actual (id) al existente (existente.Value)
+                    await UnificarInterpretesAsync(conn, trans, id, existente.Value);
+
+                    trans.Commit();
+                    return new CrudResponse
+                    {
+                        Exito = true,
+                        Mensaje = $"Intérpretes unificados: '{request.Nombre}' ahora contiene todas las canciones",
+                        IdCreado = existente.Value // Devolver el ID del intérprete destino
+                    };
+                }
+            }
+
+            // No hay duplicado, actualizar normalmente
             var sql = """
                 UPDATE interpretes SET
                     tipo_artista = COALESCE(@TipoArtista, tipo_artista),
@@ -4084,6 +4264,61 @@ public class RepositorioMusica
             trans.Rollback();
             return new CrudResponse { Exito = false, Mensaje = $"Error: {ex.Message}" };
         }
+    }
+
+    /// <summary>Unifica dos intérpretes, moviendo todas las relaciones del origen al destino y eliminando el origen.</summary>
+    private async Task UnificarInterpretesAsync(System.Data.IDbConnection conn, System.Data.IDbTransaction trans, int idOrigen, int idDestino)
+    {
+        // Mover canciones de cassette
+        await conn.ExecuteAsync(
+            "UPDATE temas SET id_interprete = @dest WHERE id_interprete = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+
+        // Mover canciones de CD
+        await conn.ExecuteAsync(
+            "UPDATE temas_cd SET id_interprete = @dest WHERE id_interprete = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+
+        // Mover álbumes
+        await conn.ExecuteAsync(
+            "UPDATE albumes SET id_interprete = @dest WHERE id_interprete = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+
+        // Mover relaciones multi-artista (evitar duplicados con OR IGNORE)
+        await conn.ExecuteAsync(
+            "UPDATE OR IGNORE cancion_artistas SET id_interprete = @dest WHERE id_interprete = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+        await conn.ExecuteAsync(
+            "DELETE FROM cancion_artistas WHERE id_interprete = @orig",
+            new { orig = idOrigen }, trans);
+
+        // Mover miembros de banda (donde el origen era miembro de otra banda)
+        await conn.ExecuteAsync(
+            "UPDATE OR IGNORE banda_miembros SET id_miembro = @dest WHERE id_miembro = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+        // Limpiar referencias huérfanas
+        await conn.ExecuteAsync(
+            "DELETE FROM banda_miembros WHERE id_miembro = @orig",
+            new { orig = idOrigen }, trans);
+
+        // Si el origen era una banda, mover sus miembros al destino
+        await conn.ExecuteAsync(
+            "UPDATE banda_miembros SET id_banda = @dest WHERE id_banda = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+
+        // Fusionar géneros (evitar duplicados con OR IGNORE)
+        await conn.ExecuteAsync(@"
+            INSERT OR IGNORE INTO interprete_generos (id_interprete, genero)
+            SELECT @dest, genero FROM interprete_generos WHERE id_interprete = @orig",
+            new { dest = idDestino, orig = idOrigen }, trans);
+        await conn.ExecuteAsync(
+            "DELETE FROM interprete_generos WHERE id_interprete = @orig",
+            new { orig = idOrigen }, trans);
+
+        // Eliminar el intérprete origen
+        await conn.ExecuteAsync(
+            "DELETE FROM interpretes WHERE id = @orig",
+            new { orig = idOrigen }, trans);
     }
 
     // ============================================

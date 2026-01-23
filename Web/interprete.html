@@ -1218,8 +1218,25 @@
                 const result = await resp.json();
                 if (result.exito) {
                     cerrarModalPerfil();
-                    mostrarNotificacion('Perfil actualizado', 'exito');
-                    await cargarPerfilPorId(perfilActual.id);
+                    mostrarNotificacion(result.mensaje || 'Perfil actualizado', 'exito');
+
+                    // Si hubo unificación, redirigir al intérprete destino (el que se mantiene)
+                    if (result.idCreado && result.idCreado !== perfilActual.id) {
+                        // Limpiar cache de intérpretes para reflejar cambios
+                        listaInterpretesCache = null;
+
+                        // Usar el nombre que el usuario ingresó (el intérprete destino que se mantiene)
+                        const nombreDestino = encodeURIComponent(request.nombre);
+                        const urlDestino = `interprete.html?nombre=${nombreDestino}&id=${result.idCreado}`;
+
+                        if (window.SPARouter) {
+                            SPARouter.navigateTo(urlDestino);
+                        } else {
+                            window.location.href = urlDestino;
+                        }
+                    } else {
+                        await cargarPerfilPorId(perfilActual.id);
+                    }
                 } else {
                     mostrarNotificacion(result.mensaje, 'error');
                 }

@@ -340,6 +340,15 @@ public static class ConfiguracionEndpoints
         .WithName("ActualizarInterprete")
         .WithTags("Intérpretes");
 
+        // Eliminar intérprete
+        app.MapDelete("/api/interpretes/{id:int}", async (int id) =>
+        {
+            var resultado = await repo.EliminarInterpreteAsync(id);
+            return resultado.Exito ? Results.Ok(resultado) : Results.BadRequest(resultado);
+        })
+        .WithName("EliminarInterprete")
+        .WithTags("Intérpretes");
+
         // Foto de intérprete - Obtener
         app.MapGet("/api/interpretes/{id:int}/foto", async (int id) =>
         {

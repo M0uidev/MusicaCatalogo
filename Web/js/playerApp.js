@@ -96,6 +96,16 @@
         }
     };
 
+    // Iconos
+    const musicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+    const userIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    const discIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const tapeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M10 12h4"/></svg>`;
+    const searchIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
+    const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    const pauseIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+    const listMusicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>`;
+
     // Referencias DOM
     let elements = {};
 
@@ -274,6 +284,16 @@
             elements.libraryFilters.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filter === 'favorites');
             });
+        });
+
+        document.getElementById('btnShowAllAlbums')?.addEventListener('click', () => {
+            switchTab('library');
+            switchLibraryFilter('albums');
+        });
+
+        document.getElementById('btnShowAllArtists')?.addEventListener('click', () => {
+            switchTab('library');
+            switchLibraryFilter('artists');
         });
 
         // Keyboard shortcuts (for testing)
@@ -986,18 +1006,31 @@
         `).join('');
     }
 
+
+
     function renderMediosList(medios) {
         if (!medios || medios.length === 0) return '';
 
-        return medios.map(medio => `
-            <div class="medio-card" data-num="${medio.numero}" data-tipo="${medio.tipo}">
-                <div class="song-cover-placeholder">${medio.tipo === 'cd' ? discIcon : tapeIcon}</div>
+        return medios.map(medio => {
+            // La API devuelve numMedio y tipoMedio
+            const numero = medio.numMedio || medio.numero;
+            const tipo = medio.tipoMedio || medio.tipo;
+
+            const isCd = tipo?.toLowerCase() === 'cd';
+            const icon = isCd ? discIcon : tapeIcon;
+            const typeLabel = isCd ? 'CD' : 'Cassette';
+            // Mostrar "CD 1" o "Cassette C01" en lugar de solo el número
+            const displayName = `${typeLabel} ${numero}`;
+
+            return `
+            <div class="medio-card" data-num="${numero}" data-tipo="${tipo}">
+                <div class="song-cover-placeholder">${icon}</div>
                 <div class="song-info">
-                    <div class="medio-name">${escapeHtml(medio.numero)}</div>
-                    <div class="medio-info-sub">${medio.tipo === 'cd' ? 'CD' : 'Cassette'} • ${medio.totalTemas || 0} temas</div>
+                    <div class="medio-name">${escapeHtml(displayName)}</div>
+                    <div class="medio-info-sub">${typeLabel} • ${medio.totalTemas || 0} temas</div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function renderQueue() {
@@ -1657,21 +1690,7 @@
     // ICONOS SVG
     // ============================================
 
-    const musicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
 
-    const userIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-
-    const discIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>`;
-
-    const tapeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M10 12h4"/></svg>`;
-
-    const searchIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
-
-    const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-
-    const pauseIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
-
-    const listMusicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>`;
 
     // ============================================
     // RENDERIZADO DEL INICIO
