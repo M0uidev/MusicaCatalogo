@@ -879,7 +879,7 @@
     }
 
     /**
-     * Update queue display
+     * Update queue display - with editable queue functionality
      */
     function updateQueue() {
         const currentSongDiv = document.getElementById('queue-current-song');
@@ -895,7 +895,7 @@
         const placeholderSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#333" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="12" cy="12" r="3"/></svg>');
         const placeholderUrl = `data:image/svg+xml;charset=utf-8,${placeholderSvg}`;
 
-        // Current song
+        // Current song (not editable)
         if (state.currentSong) {
             const coverUrl = state.currentSong.tienePortada ?
                 `/api/canciones/${state.currentSong.id}/portada?tipo=${state.currentSong.tipo}` :
@@ -914,13 +914,8 @@
             currentSongDiv.innerHTML = '<div class="queue-empty">No hay canción reproduciéndose</div>';
         }
 
-        // Next songs
+        // Next songs with editable controls
         let nextSongsHTML = '';
-
-        // Determinar qué lista mostrar:
-        // 1. Si shuffle está activo: mostrar randomQueue
-        // 2. Si hay playlist activa y NO shuffle: mostrar playlist secuencial
-        // 3. Si no hay playlist activa (inicio): mostrar randomQueue (sugerencias)
 
         const showRandom = state.shuffleMode || state.playlist.length === 0;
 
@@ -928,9 +923,7 @@
             if (state.randomQueue && state.randomQueue.length > 0) {
                 const maxSongs = 20;
 
-                // Rellenar hasta 20 si hace falta
                 while (state.randomQueue.length < maxSongs) {
-                    // Si no hay más canciones disponibles para agregar, romper ciclo
                     const poolSize = state.playlist.length > 0 ? state.playlist.length : state.audioPool.length;
                     if (poolSize === 0) break;
                     addRandomSongToQueue();
@@ -943,18 +936,19 @@
                     const coverUrl = getCoverUrl(song) || placeholderUrl;
 
                     nextSongsHTML += `
-                        <div class="queue-song" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
+                        <div class="queue-song" data-queue-index="${i}" data-queue-type="random" draggable="true">
+                            <div class="queue-drag-handle" title="Arrastrar para reordenar">
+                                <i data-lucide="grip-vertical"></i>
+                            </div>
                             <img src="${coverUrl}" class="queue-song-cover" onerror="this.src='${placeholderUrl}'">
-                            <div class="queue-song-info">
+                            <div class="queue-song-info" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
                                 <span class="queue-song-title">${song.tema}</span>
                                 <span class="queue-song-artist">${song.interprete || ''}</span>
                             </div>
-                            <div class="queue-song-details">
-                                <a href="medio.html?num=${encodeURIComponent(song.numMedio)}&cancion=${song.id}&tipo=${song.tipo}" class="queue-source-badge ${song.tipo}" data-spa-link onclick="event.stopPropagation(); event.preventDefault(); if(window.SPARouter) window.SPARouter.navigateTo(this.getAttribute('href')); return false;" title="Ver medio">
-                                    <i data-lucide="${song.tipo === 'cd' ? 'disc-3' : 'cassette-tape'}"></i>
-                                    ${song.numMedio || (song.tipo === 'cd' ? 'CD' : 'CS')}
-                                </a>
-                                <div class="queue-pos-badge">${song.posicion}</div>
+                            <div class="queue-song-actions">
+                                <button class="queue-remove-btn" data-queue-index="${i}" data-queue-type="random" title="Quitar de la cola">
+                                    <i data-lucide="x"></i>
+                                </button>
                             </div>
                         </div>
                     `;
@@ -977,18 +971,19 @@
                     const coverUrl = getCoverUrl(song) || placeholderUrl;
 
                     nextSongsHTML += `
-                        <div class="queue-song" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
+                        <div class="queue-song" data-queue-index="${nextIdx}" data-queue-type="playlist" draggable="true">
+                            <div class="queue-drag-handle" title="Arrastrar para reordenar">
+                                <i data-lucide="grip-vertical"></i>
+                            </div>
                             <img src="${coverUrl}" class="queue-song-cover" onerror="this.src='${placeholderUrl}'">
-                            <div class="queue-song-info">
+                            <div class="queue-song-info" onclick="reproducirCancion(${song.id}, '${song.tipo}')">
                                 <span class="queue-song-title">${song.tema}</span>
                                 <span class="queue-song-artist">${song.interprete || ''}</span>
                             </div>
-                            <div class="queue-song-details">
-                                <div class="queue-source-badge ${song.tipo}" onclick="event.stopPropagation(); window.location.href='medio.html?num=${encodeURIComponent(song.numMedio)}&cancion=${song.id}&tipo=${song.tipo}'" title="Ver medio" style="cursor: pointer;">
-                                    <i data-lucide="${song.tipo === 'cd' ? 'disc-3' : 'cassette-tape'}"></i>
-                                    ${song.numMedio || (song.tipo === 'cd' ? 'CD' : 'CS')}
-                                </div>
-                                <div class="queue-pos-badge">${song.posicion}</div>
+                            <div class="queue-song-actions">
+                                <button class="queue-remove-btn" data-queue-index="${nextIdx}" data-queue-type="playlist" title="Quitar de la cola">
+                                    <i data-lucide="x"></i>
+                                </button>
                             </div>
                         </div>
                     `;
@@ -1005,6 +1000,132 @@
         nextSongsDiv.innerHTML = nextSongsHTML;
 
         if (window.lucide) window.lucide.createIcons();
+
+        // Attach editable queue listeners
+        attachQueueEditListeners();
+    }
+
+    /**
+     * Attach listeners for editable queue (desktop)
+     */
+    function attachQueueEditListeners() {
+        // Remove buttons
+        document.querySelectorAll('.queue-remove-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(btn.dataset.queueIndex);
+                const type = btn.dataset.queueType;
+                removeFromQueueGlobal(index, type);
+            });
+        });
+
+        // Drag & Drop
+        const queueSongs = document.querySelectorAll('.queue-song:not(.current)');
+        queueSongs.forEach(item => {
+            item.addEventListener('dragstart', handleGlobalQueueDragStart);
+            item.addEventListener('dragover', handleGlobalQueueDragOver);
+            item.addEventListener('dragenter', handleGlobalQueueDragEnter);
+            item.addEventListener('dragleave', handleGlobalQueueDragLeave);
+            item.addEventListener('drop', handleGlobalQueueDrop);
+            item.addEventListener('dragend', handleGlobalQueueDragEnd);
+        });
+    }
+
+    // Drag & Drop state for global player
+    let globalDraggedItem = null;
+    let globalDraggedIndex = null;
+    let globalDraggedType = null;
+
+    function handleGlobalQueueDragStart(e) {
+        globalDraggedItem = e.currentTarget;
+        globalDraggedIndex = parseInt(globalDraggedItem.dataset.queueIndex);
+        globalDraggedType = globalDraggedItem.dataset.queueType;
+        globalDraggedItem.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleGlobalQueueDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleGlobalQueueDragEnter(e) {
+        e.preventDefault();
+        const target = e.currentTarget;
+        if (target !== globalDraggedItem && !target.classList.contains('current')) {
+            target.classList.add('drag-over');
+        }
+    }
+
+    function handleGlobalQueueDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleGlobalQueueDrop(e) {
+        e.preventDefault();
+        const target = e.currentTarget;
+        target.classList.remove('drag-over');
+
+        if (target === globalDraggedItem || target.classList.contains('current')) return;
+
+        const toIndex = parseInt(target.dataset.queueIndex);
+        const toType = target.dataset.queueType;
+
+        if (globalDraggedType === toType && globalDraggedIndex !== toIndex) {
+            moveInQueueGlobal(globalDraggedIndex, toIndex, globalDraggedType);
+        }
+    }
+
+    function handleGlobalQueueDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        document.querySelectorAll('.queue-song.drag-over').forEach(el => el.classList.remove('drag-over'));
+        globalDraggedItem = null;
+        globalDraggedIndex = null;
+        globalDraggedType = null;
+    }
+
+    /**
+     * Remove a song from queue (global player)
+     */
+    function removeFromQueueGlobal(index, type) {
+        let removed;
+        if (type === 'random') {
+            removed = state.randomQueue.splice(index, 1)[0];
+        } else {
+            // For playlist, check we're not removing before current index
+            if (index <= state.currentIndex) {
+                console.warn('Cannot remove song at or before current index');
+                return;
+            }
+            removed = state.playlist.splice(index, 1)[0];
+        }
+
+        if (removed) {
+            console.log(`Removed from queue: ${removed.tema}`);
+            updateQueue();
+        }
+    }
+
+    /**
+     * Move a song within the queue (global player)
+     */
+    function moveInQueueGlobal(fromIndex, toIndex, type) {
+        const list = type === 'random' ? state.randomQueue : state.playlist;
+
+        // For playlist, don't allow moving to/from positions at or before current index
+        if (type === 'playlist') {
+            if (fromIndex <= state.currentIndex || toIndex <= state.currentIndex) {
+                console.warn('Cannot move songs at or before current index');
+                return;
+            }
+        }
+
+        const [movedSong] = list.splice(fromIndex, 1);
+        const adjustedToIndex = toIndex > fromIndex ? toIndex - 1 : toIndex;
+        list.splice(adjustedToIndex, 0, movedSong);
+
+        console.log(`Moved ${movedSong.tema} from ${fromIndex} to ${adjustedToIndex}`);
+        updateQueue();
     }
 
     /**

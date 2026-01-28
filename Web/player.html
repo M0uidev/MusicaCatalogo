@@ -24,6 +24,14 @@
             <!-- VISTA: INICIO -->
             <section id="view-home" class="player-view active">
                 <div class="home-header">
+                    <a href="index.html" class="back-catalogo-btn desktop-only" title="Volver al Catálogo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        <span>Volver al Catálogo</span>
+                    </a>
                     <h1 id="homeGreeting" class="home-greeting">Buenas tardes</h1>
                     <button id="btnSettings" class="settings-btn" title="Configuración">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -175,27 +183,92 @@
                 </div>
             </section>
 
+            <!-- VISTA: ESTADÍSTICAS -->
+            <section id="view-stats" class="player-view">
+                <div class="stats-header">
+                    <h1 class="stats-title">Estadísticas</h1>
+                    <p class="stats-subtitle">Tu historial de reproducción</p>
+                </div>
+
+                <div class="stats-overview">
+                    <div class="stats-card-main">
+                        <div class="stats-value" id="statsTotalTime">0h</div>
+                        <div class="stats-label">Tiempo escuchado</div>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h3 class="stats-section-title">Top Canciones</h3>
+                    <div id="statsTopSongs" class="stats-list">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h3 class="stats-section-title">Top Artistas</h3>
+                    <div id="statsTopArtists" class="stats-list">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <!-- ============================================
              MINI PLAYER (BARRA INFERIOR)
              ============================================ -->
         <div id="miniPlayer" class="mini-player hidden">
-            <img id="miniCover" class="mini-player-cover" src="" alt="" style="display: none;">
-            <div class="mini-player-info">
-                <div id="miniTitle" class="mini-player-title">Selecciona una canción</div>
-                <div id="miniArtist" class="mini-player-artist"></div>
+            <div class="mini-player-left">
+                <img id="miniCover" class="mini-player-cover" src="" alt="" style="display: none;">
+                <div class="mini-player-info">
+                    <div id="miniTitle" class="mini-player-title">Selecciona una canción</div>
+                    <div id="miniArtist" class="mini-player-artist"></div>
+                </div>
             </div>
-            <div class="mini-player-controls">
-                <button id="miniPlayBtn" class="mini-player-btn play-pause">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                </button>
+            <div class="mini-player-center">
+                <div class="mini-player-controls">
+                    <button id="miniShuffleBtn" class="mini-player-btn secondary-control desktop-only">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16 3 21 3 21 8" />
+                            <line x1="4" y1="20" x2="21" y2="3" />
+                            <polyline points="21 16 21 21 16 21" />
+                            <line x1="15" y1="15" x2="21" y2="21" />
+                            <line x1="4" y1="4" x2="9" y2="9" />
+                        </svg>
+                    </button>
+                    <button id="miniPrevBtn" class="mini-player-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="19 20 9 12 19 4 19 20" />
+                            <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button id="miniPlayBtn" class="mini-player-btn play-pause">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                    </button>
+                    <button id="miniNextBtn" class="mini-player-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 4 15 12 5 20 5 4" />
+                            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button id="miniRepeatBtn" class="mini-player-btn secondary-control desktop-only">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="17 1 21 5 17 9" />
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                            <polyline points="7 23 3 19 7 15" />
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mini-player-progress">
+                    <div id="miniProgressBar" class="mini-player-progress-bar"></div>
+                </div>
             </div>
-            <div class="mini-player-progress">
-                <div id="miniProgressBar" class="mini-player-progress-bar"></div>
-            </div>
+            <div class="mini-player-right"></div>
         </div>
 
         <!-- ============================================
@@ -238,6 +311,15 @@
                 </svg>
                 <span>Cola</span>
             </button>
+            <button class="tab-btn" data-tab="stats">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="14" width="6" height="8" rx="1" />
+                    <rect x="15" y="4" width="6" height="18" rx="1" />
+                    <rect x="9" y="9" width="6" height="13" rx="1" />
+                </svg>
+                <span>Stats</span>
+            </button>
         </nav>
 
     </div>
@@ -246,6 +328,8 @@
          REPRODUCTOR EXPANDIDO (FULL SCREEN)
          ============================================ -->
     <div id="fullPlayer" class="full-player">
+        <div id="visualizerContainer" class="visualizer-container"></div>
+
         <div class="full-player-header">
             <button id="fullCloseBtn" class="full-player-close">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -269,79 +353,83 @@
             </div>
         </div>
 
-        <div class="full-player-info">
-            <h2 id="fullTitle" class="full-player-title">Selecciona una canción</h2>
-            <p id="fullArtist" class="full-player-artist"></p>
-        </div>
-
-        <div class="full-player-progress">
-            <div id="fullProgressBar" class="full-player-progress-bar">
-                <div id="fullProgressFill" class="full-player-progress-fill"></div>
+        <div class="full-player-info-container">
+            <div class="full-player-info">
+                <h2 id="fullTitle" class="full-player-title">Selecciona una canción</h2>
+                <p id="fullArtist" class="full-player-artist"></p>
             </div>
-            <div class="full-player-times">
-                <span id="fullCurrentTime">0:00</span>
-                <span id="fullDuration">0:00</span>
+
+            <div class="full-player-controls-container">
+                <div class="full-player-progress">
+                    <div id="fullProgressBar" class="full-player-progress-bar">
+                        <div id="fullProgressFill" class="full-player-progress-fill"></div>
+                    </div>
+                    <div class="full-player-times">
+                        <span id="fullCurrentTime">0:00</span>
+                        <span id="fullDuration">0:00</span>
+                    </div>
+                </div>
+
+                <div class="full-player-controls">
+                    <button id="fullShuffleBtn" class="full-player-btn secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16 3 21 3 21 8" />
+                            <line x1="4" y1="20" x2="21" y2="3" />
+                            <polyline points="21 16 21 21 16 21" />
+                            <line x1="15" y1="15" x2="21" y2="21" />
+                            <line x1="4" y1="4" x2="9" y2="9" />
+                        </svg>
+                    </button>
+                    <button id="fullPrevBtn" class="full-player-btn skip">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="19 20 9 12 19 4 19 20" />
+                            <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button id="fullPlayBtn" class="full-player-btn play-pause">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                    </button>
+                    <button id="fullNextBtn" class="full-player-btn skip">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 4 15 12 5 20 5 4" />
+                            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button id="fullRepeatBtn" class="full-player-btn secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="17 1 21 5 17 9" />
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                            <polyline points="7 23 3 19 7 15" />
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="full-player-actions">
+                    <button id="fullLikeBtn" class="full-player-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                    </button>
+                    <button id="fullQueueBtn" class="full-player-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6" />
+                            <line x1="8" y1="12" x2="21" y2="12" />
+                            <line x1="8" y1="18" x2="21" y2="18" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                            <line x1="3" y1="12" x2="3.01" y2="12" />
+                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-        </div>
-
-        <div class="full-player-controls">
-            <button id="fullShuffleBtn" class="full-player-btn secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <polyline points="16 3 21 3 21 8" />
-                    <line x1="4" y1="20" x2="21" y2="3" />
-                    <polyline points="21 16 21 21 16 21" />
-                    <line x1="15" y1="15" x2="21" y2="21" />
-                    <line x1="4" y1="4" x2="9" y2="9" />
-                </svg>
-            </button>
-            <button id="fullPrevBtn" class="full-player-btn skip">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="19 20 9 12 19 4 19 20" />
-                    <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2" />
-                </svg>
-            </button>
-            <button id="fullPlayBtn" class="full-player-btn play-pause">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-            </button>
-            <button id="fullNextBtn" class="full-player-btn skip">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5 4 15 12 5 20 5 4" />
-                    <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2" />
-                </svg>
-            </button>
-            <button id="fullRepeatBtn" class="full-player-btn secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <polyline points="17 1 21 5 17 9" />
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                    <polyline points="7 23 3 19 7 15" />
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                </svg>
-            </button>
-        </div>
-
-        <div class="full-player-actions">
-            <button id="fullLikeBtn" class="full-player-action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-            </button>
-            <button id="fullQueueBtn" class="full-player-action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <line x1="8" y1="6" x2="21" y2="6" />
-                    <line x1="8" y1="12" x2="21" y2="12" />
-                    <line x1="8" y1="18" x2="21" y2="18" />
-                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
-            </button>
         </div>
     </div>
 
@@ -367,6 +455,23 @@
                     <input type="checkbox" id="settingShowWithoutAudio" class="setting-toggle">
                     <span class="toggle-slider"></span>
                 </label>
+                <label class="setting-item">
+                    <span class="setting-label">Crossfade (Transición suave)</span>
+                    <input type="checkbox" id="settingCrossfade" class="setting-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <div class="setting-item-column">
+                    <span class="setting-label">Tu Nombre</span>
+                    <input type="text" id="settingUserName" class="modal-input" placeholder="Introduce tu nombre">
+                </div>
+                <div class="setting-item-column">
+                    <span class="setting-label">Estilo del Visualizador</span>
+                    <select id="settingVisualizerStyle" class="setting-select">
+                        <option value="none">Apagado</option>
+                        <option value="spotify">Spotify Clásico</option>
+                        <option value="rainbow">Rainbow Premium</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -414,7 +519,7 @@
     </div>
 
     <!-- Script -->
-    <script src="js/playerApp.js"></script>
+    <script type="module" src="js/playerApp.js"></script>
 
 </body>
 

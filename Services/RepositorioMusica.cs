@@ -1,10 +1,12 @@
 using Dapper;
+using TagLibFile = TagLib.File;
 using MusicaCatalogo.Data;
 using MusicaCatalogo.Data.Entidades;
 using Microsoft.Data.Sqlite;
 using System.Data;
 using System.Globalization;
 using System.Text;
+using System.Collections.Concurrent; // Para el cache
 
 namespace MusicaCatalogo.Services;
 
@@ -14,6 +16,9 @@ namespace MusicaCatalogo.Services;
 public class RepositorioMusica
 {
     private readonly BaseDatos _db;
+    
+    // Cache para evitar leer metadatos de archivos repetidamente
+    private static readonly ConcurrentDictionary<string, bool> _cachePortadaEmbebida = new();
 
     public RepositorioMusica(BaseDatos db)
     {
@@ -49,15 +54,19 @@ public class RepositorioMusica
         var patron = $"%{consulta}%";
 
         var resultados = await conn.QueryAsync<ResultadoBusqueda>("""
-            SELECT t.id AS Id, 'cassette' AS Tipo, t.num_formato AS numMedio, t.tema AS Tema, 
+            SELECT t.id AS Id, LOWER(f.nombre) AS Tipo, t.num_formato AS numMedio, t.tema AS Tema, 
                    i.nombre AS Interprete, (t.lado || ':' || t.desde || '-' || t.hasta) AS Posicion
             FROM temas t
+            JOIN formato_grabado fg ON t.num_formato = fg.num_formato
+            JOIN formato f ON fg.id_formato = f.id_formato
             JOIN interpretes i ON t.id_interprete = i.id
             WHERE t.tema LIKE @patron OR i.nombre LIKE @patron OR t.num_formato LIKE @patron
             UNION ALL
-            SELECT t.id AS Id, 'cd' AS Tipo, t.num_formato AS numMedio, t.tema AS Tema,
+            SELECT t.id AS Id, LOWER(f.nombre) AS Tipo, t.num_formato AS numMedio, t.tema AS Tema,
                    i.nombre AS Interprete, CAST(t.ubicacion AS TEXT) AS Posicion
             FROM temas_cd t
+            JOIN formato_grabado_cd fg ON t.num_formato = fg.num_formato
+            JOIN formato f ON fg.id_formato = f.id_formato
             JOIN interpretes i ON t.id_interprete = i.id
             WHERE t.tema LIKE @patron OR i.nombre LIKE @patron OR t.num_formato LIKE @patron
             ORDER BY Tema
@@ -565,11 +574,17 @@ public class RepositorioMusica
             await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN es_cover INTEGER DEFAULT 0");
         }
 
-        // MIGRACIÓN: Verificar si existe columna artista_original
         if (!infoTemas.Contains("artista_original"))
         {
             await conn.ExecuteAsync("ALTER TABLE temas ADD COLUMN artista_original TEXT");
             await conn.ExecuteAsync("ALTER TABLE temas_cd ADD COLUMN artista_original TEXT");
+        }
+
+        // MIGRACIÓN: Verificar si existe formato 'otro'
+        var existeOtro = await conn.QueryFirstOrDefaultAsync<int>("SELECT COUNT(*) FROM formato WHERE LOWER(nombre) = 'otro'");
+        if (existeOtro == 0)
+        {
+            await conn.ExecuteAsync("INSERT INTO formato (nombre) VALUES ('otro')");
         }
 
         // Conteos de tablas
@@ -672,6 +687,18 @@ public class RepositorioMusica
             var idFuente = await ResolverIdAsync(conn, "fuente", "id_fuente", 
                 request.IdFuente, request.NombreFuente);
 
+            // Obtener ID del formato
+            var idFormato = await conn.QueryFirstOrDefaultAsync<int>(
+                "SELECT id_formato FROM formato WHERE LOWER(nombre) = @nombre", 
+                new { nombre = request.TipoMedio.ToLower() });
+            
+            if (idFormato == 0) // Fallback si no existe (no debería pasar si se valida antes)
+            {
+                if (request.TipoMedio.ToLower() == "cassette") idFormato = 1;
+                else if (request.TipoMedio.ToLower() == "cd") idFormato = 2;
+                else idFormato = 3; // Otro
+            }
+
             if (request.TipoMedio.ToLower() == "cassette")
             {
                 var idEcual = await ResolverIdAsync(conn, "ecualizador", "id_ecual",
@@ -685,10 +712,11 @@ public class RepositorioMusica
 
                 await conn.ExecuteAsync("""
                     INSERT INTO formato_grabado (num_formato, id_formato, id_marca, id_deck, id_ecual, id_dolby, id_bias, id_modo, id_fuente, fecha_inicio, fecha_termino)
-                    VALUES (@numMedio, 1, @idMarca, @idDeck, @idEcual, @idDolby, @idBias, @idModo, @idFuente, @FechaInicio, @FechaTermino)
+                    VALUES (@numMedio, @idFormato, @idMarca, @idDeck, @idEcual, @idDolby, @idBias, @idModo, @idFuente, @FechaInicio, @FechaTermino)
                     """, new
                 {
                     request.numMedio,
+                    idFormato,
                     idMarca,
                     idDeck,
                     idEcual,
@@ -702,12 +730,14 @@ public class RepositorioMusica
             }
             else
             {
+                // CD u Otro
                 await conn.ExecuteAsync("""
                     INSERT INTO formato_grabado_cd (num_formato, id_formato, id_marca, id_deck, id_fuente, fecha_grabacion)
-                    VALUES (@numMedio, 2, @idMarca, @idDeck, @idFuente, @FechaInicio)
+                    VALUES (@numMedio, @idFormato, @idMarca, @idDeck, @idFuente, @FechaInicio)
                     """, new
                 {
                     request.numMedio,
+                    idFormato,
                     idMarca,
                     idDeck,
                     idFuente,
@@ -1571,9 +1601,11 @@ public class RepositorioMusica
         var formatoAudioCol = tieneFormatoAudio ? "t.formato_audio" : "NULL";
         var esFavoritoCol = tieneEsFavorito ? "COALESCE(t.es_favorito, 0)" : "0";
 
+        CancionDetalle? cancion = null;
+
         if (tipo.ToLower() == "cassette")
         {
-            return await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
+            cancion = await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
                 SELECT t.id AS Id, 'cassette' AS Tipo, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
                        t.num_formato AS numMedio, t.lado AS Lado, t.desde AS Desde, t.hasta AS Hasta, NULL AS Ubicacion,
                        t.id_album AS IdAlbum, a.nombre AS NombreAlbum, ia.nombre AS ArtistaAlbum, a.anio AS AnioAlbum,
@@ -1592,7 +1624,7 @@ public class RepositorioMusica
         }
         else
         {
-            return await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
+            cancion = await conn.QueryFirstOrDefaultAsync<CancionDetalle>($"""
                 SELECT t.id AS Id, 'cd' AS Tipo, t.tema AS Tema, i.nombre AS Interprete, t.id_interprete AS IdInterprete,
                        t.num_formato AS numMedio, NULL AS Lado, NULL AS Desde, NULL AS Hasta, t.ubicacion AS Ubicacion,
                        t.id_album AS IdAlbum, a.nombre AS NombreAlbum, ia.nombre AS ArtistaAlbum, a.anio AS AnioAlbum,
@@ -1609,6 +1641,13 @@ public class RepositorioMusica
                 WHERE t.id = @id
                 """, new { id });
         }
+
+        if (cancion != null)
+        {
+            cancion.TienePortadaEmbebida = VerificarPortadaEmbebida(cancion.ArchivoAudio);
+        }
+
+        return cancion;
     }
 
     /// <summary>Actualiza una canción con información extendida.</summary>
@@ -1800,38 +1839,68 @@ public class RepositorioMusica
     }
 
 
-    /// <summary>Obtiene la portada de una canción (propia, heredada del álbum o de la versión original).</summary>
+    /// <summary>Obtiene la portada de una canción (prioridad: Embebida > Álbum > Manual > Original).</summary>
     public async Task<byte[]?> ObtenerPortadaCancionAsync(int id, string tipo)
     {
         using var conn = _db.ObtenerConexion();
 
         var tabla = tipo.ToLower() == "cassette" ? "temas" : "temas_cd";
         
-        // 1. Buscar portada propia
-        var datosCancion = await conn.QueryFirstOrDefaultAsync<(byte[]? Portada, int? IdAlbum, bool EsCover, string? ArtistaOriginal, string Tema)>(
-            $"SELECT portada, id_album, COALESCE(es_cover, 0) == 1, artista_original, tema FROM {tabla} WHERE id = @id", new { id });
+        // Obtener datos básicos para decidir
+        var datosCancion = await conn.QueryFirstOrDefaultAsync<dynamic>(
+            $"SELECT portada, id_album, archivo_audio, COALESCE(es_cover, 0) as es_cover, artista_original, tema FROM {tabla} WHERE id = @id", new { id });
         
-        if (datosCancion.Portada != null && datosCancion.Portada.Length > 0)
-            return datosCancion.Portada;
+        if (datosCancion == null) return null;
 
-        // 2. Si tiene álbum, buscar portada del álbum
-        if (datosCancion.IdAlbum.HasValue)
+        // 1. Portada EMBEBIDA (Metadatos del archivo de audio)
+        string? archivoAudio = (string?)datosCancion.archivo_audio;
+        if (!string.IsNullOrEmpty(archivoAudio))
+        {
+            var fullPath = Path.Combine(AppContext.BaseDirectory, archivoAudio);
+            
+            // Usamos VerificarPortadaEmbebida para chequear cache primero y evitar excepciones costosas si no hay tag
+            if (VerificarPortadaEmbebida(archivoAudio))
+            {
+                try
+                {
+                    using var file = TagLib.File.Create(fullPath);
+                    if (file.Tag.Pictures != null && file.Tag.Pictures.Length > 0)
+                    {
+                        return file.Tag.Pictures[0].Data.Data;
+                    }
+                }
+                catch { /* Ignorar errores de lectura en este punto */ }
+            }
+        }
+
+        // 2. Portada del ÁLBUM
+        int? idAlbum = (int?)datosCancion.id_album;
+        if (idAlbum.HasValue)
         {
             var portadaAlbum = await conn.QueryFirstOrDefaultAsync<byte[]?>(
-                "SELECT portada FROM albumes WHERE id = @id", new { id = datosCancion.IdAlbum.Value });
+                "SELECT portada FROM albumes WHERE id = @id", new { id = idAlbum.Value });
             
             if (portadaAlbum != null && portadaAlbum.Length > 0)
                 return portadaAlbum;
         }
 
-        // 3. Si es cover y no tiene imagen propia ni álbum, buscar la versión original
-        if (datosCancion.EsCover && !string.IsNullOrEmpty(datosCancion.ArtistaOriginal))
+        // 3. Portada MANUAL (Subida específicamente para la canción)
+        byte[]? portadaPropia = (byte[]?)datosCancion.portada;
+        if (portadaPropia != null && portadaPropia.Length > 0)
+            return portadaPropia;
+
+        // 4. Si es cover y no tiene imagen propia ni álbum, buscar la versión ORIGINAL
+        bool esCover = ((int)datosCancion.es_cover) == 1;
+        string? artistaOrig = (string?)datosCancion.artista_original;
+        string tema = (string)datosCancion.tema;
+
+        if (esCover && !string.IsNullOrEmpty(artistaOrig))
         {
-            var temaNorm = NormalizarTexto(datosCancion.Tema);
-            var artistaNorm = NormalizarTexto(datosCancion.ArtistaOriginal);
+            var temaNorm = NormalizarTexto(tema);
+            var artistaNorm = NormalizarTexto(artistaOrig);
 
             // Buscar primero en cassettes
-            var originalCassette = await conn.QueryFirstOrDefaultAsync<(int? IdAlbum, byte[]? Portada)?>(
+            var originalCassette = await conn.QueryFirstOrDefaultAsync<dynamic>(
                 """
                 SELECT t.id_album, t.portada 
                 FROM temas t
@@ -1840,25 +1909,24 @@ public class RepositorioMusica
                 LIMIT 1
                 """, new { temaNorm, artistaNorm });
 
-            // Verificar si encontramos algo en cassette
-            if (originalCassette.HasValue)
+            if (originalCassette != null)
             {
                 // Si la original tiene portada propia
-                if (originalCassette.Value.Portada != null && originalCassette.Value.Portada.Length > 0)
-                    return originalCassette.Value.Portada;
+                if (originalCassette.portada != null && ((byte[])originalCassette.portada).Length > 0)
+                    return originalCassette.portada;
                 
                 // Si la original tiene álbum, usar portada del álbum
-                if (originalCassette.Value.IdAlbum.HasValue)
+                if (originalCassette.id_album != null)
                 {
                     var portadaAlbumOrig = await conn.QueryFirstOrDefaultAsync<byte[]?>(
-                        "SELECT portada FROM albumes WHERE id = @id", new { id = originalCassette.Value.IdAlbum.Value });
+                        "SELECT portada FROM albumes WHERE id = @id", new { id = (int)originalCassette.id_album });
                     if (portadaAlbumOrig != null && portadaAlbumOrig.Length > 0)
                         return portadaAlbumOrig;
                 }
             }
 
             // Si no, buscar en CDs
-            var originalCd = await conn.QueryFirstOrDefaultAsync<(int? IdAlbum, byte[]? Portada)?>(
+            var originalCd = await conn.QueryFirstOrDefaultAsync<dynamic>(
                 """
                 SELECT t.id_album, t.portada 
                 FROM temas_cd t
@@ -1867,15 +1935,15 @@ public class RepositorioMusica
                 LIMIT 1
                 """, new { temaNorm, artistaNorm });
 
-            if (originalCd.HasValue)
+            if (originalCd != null)
             {
-                if (originalCd.Value.Portada != null && originalCd.Value.Portada.Length > 0)
-                    return originalCd.Value.Portada;
+                if (originalCd.portada != null && ((byte[])originalCd.portada).Length > 0)
+                    return originalCd.portada;
                 
-                if (originalCd.Value.IdAlbum.HasValue)
+                if (originalCd.id_album != null)
                 {
                     var portadaAlbumOrig = await conn.QueryFirstOrDefaultAsync<byte[]?>(
-                        "SELECT portada FROM albumes WHERE id = @id", new { id = originalCd.Value.IdAlbum.Value });
+                        "SELECT portada FROM albumes WHERE id = @id", new { id = (int)originalCd.id_album });
                     if (portadaAlbumOrig != null && portadaAlbumOrig.Length > 0)
                         return portadaAlbumOrig;
                 }
@@ -1926,7 +1994,15 @@ public class RepositorioMusica
         var sql = $"{sqlCassette} UNION ALL {sqlCd} ORDER BY Tema";
 
         var resultado = await conn.QueryAsync<CancionGaleria>(sql);
-        return resultado.ToList();
+        var lista = resultado.ToList();
+
+        // Enriquecer con información de portada embebida (usa cache interno)
+        foreach (var c in lista)
+        {
+            c.TienePortadaEmbebida = VerificarPortadaEmbebida(c.ArchivoAudio);
+        }
+
+        return lista;
     }
 
     /// <summary>Obtiene canciones disponibles para asignar a un álbum (con filtro opcional).</summary>
@@ -3056,6 +3132,45 @@ public class RepositorioMusica
     // ============================================
 
     /// <summary>
+    /// Verifica si un archivo de audio tiene portada embebida, usando caché.
+    /// </summary>
+    private bool VerificarPortadaEmbebida(string? rutaRelativa)
+    {
+        if (string.IsNullOrEmpty(rutaRelativa)) return false;
+
+        // Verificar cache memoria
+        if (_cachePortadaEmbebida.TryGetValue(rutaRelativa, out var cached))
+            return cached;
+
+        try
+        {
+            var fullPath = Path.Combine(AppContext.BaseDirectory, rutaRelativa);
+            
+            // Si el archivo no existe, no tiene portada
+            if (!System.IO.File.Exists(fullPath)) 
+            {
+                _cachePortadaEmbebida.TryAdd(rutaRelativa, false);
+                return false;
+            }
+
+            // Usar TagLib para leer metadatos
+            using var file = TagLib.File.Create(fullPath);
+            var tiene = file.Tag.Pictures != null && file.Tag.Pictures.Length > 0;
+            
+            // Guardar en cache
+            _cachePortadaEmbebida.TryAdd(rutaRelativa, tiene);
+            return tiene;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Error TagLib] {rutaRelativa}: {ex.Message}");
+            // En caso de error, asumir que no tiene portada para no bloquear
+            _cachePortadaEmbebida.TryAdd(rutaRelativa, false);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gestiona la lógica de original/cover/versión tras una actualización.
     /// Asegura que solo haya un original y clasifica el resto automáticamente.
     /// </summary>
@@ -3171,24 +3286,92 @@ public class RepositorioMusica
             // Guardar archivo
             await File.WriteAllBytesAsync(rutaCompleta, contenido);
             
-            // Calcular duración (aproximada basada en tamaño, para MP3 típico 128kbps)
-            // Nota: Para duración exacta se requeriría una biblioteca como TagLibSharp
-            int duracionAproximada = contenido.Length / (16000); // ~128kbps en segundos
+            // 1. Obtener datos actuales de la canción
+            using var conn = _db.ObtenerConexion();
+            var songData = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                $"SELECT id_interprete, id_album, tema FROM {tabla} WHERE id = @id", new { id });
+
+            // Calcular duración real usando TagLibSharp y extraer metadatos
+            int duracionReal = 0;
+            string metadataAlbum = null;
+            string metadataAnio = null;
+            byte[] portadaArchivo = null;
+
+            try 
+            {
+                using var tfile = TagLib.File.Create(rutaCompleta);
+                duracionReal = (int)tfile.Properties.Duration.TotalSeconds;
+                
+                // Extraer metadata
+                metadataAlbum = tfile.Tag.Album;
+                if (tfile.Tag.Year > 0) metadataAnio = tfile.Tag.Year.ToString();
+                
+                if (tfile.Tag.Pictures != null && tfile.Tag.Pictures.Length > 0)
+                {
+                    portadaArchivo = tfile.Tag.Pictures[0].Data.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fallback a aproximación si falla TagLib
+                Console.WriteLine($"Error al leer metadata con TagLib: {ex.Message}");
+                duracionReal = contenido.Length / (16000); // ~128kbps
+            }
+
+            // Lógica de Álbum automático
+            int? finalAlbumId = (int?)songData?.id_album;
+
+            if (!string.IsNullOrWhiteSpace(metadataAlbum) && songData != null)
+            {
+                // Solo si no tiene álbum asignado o es 0
+                if (finalAlbumId == null || finalAlbumId == 0)
+                {
+                    var albumExistente = await conn.QueryFirstOrDefaultAsync<int?>(
+                        "SELECT id FROM albumes WHERE LOWER(nombre) = LOWER(@nombre) AND id_interprete = @idInterprete",
+                        new { nombre = metadataAlbum.Trim(), idInterprete = (int)songData.id_interprete });
+
+                    if (albumExistente.HasValue)
+                    {
+                        finalAlbumId = albumExistente.Value;
+                    }
+                    else
+                    {
+                        // Crear el álbum automáticamente
+                        var respAlbum = await CrearAlbumAsync(new AlbumRequest {
+                            Nombre = metadataAlbum.Trim(),
+                            IdInterprete = (int)songData.id_interprete,
+                            Anio = metadataAnio,
+                            EsSingle = false
+                        });
+
+                        if (respAlbum.Exito)
+                        {
+                            finalAlbumId = respAlbum.IdCreado;
+                            // Si tenemos portada en el archivo, ponerla al álbum
+                            if (portadaArchivo != null && portadaArchivo.Length > 0)
+                            {
+                                await conn.ExecuteAsync("UPDATE albumes SET portada = @portada WHERE id = @id", 
+                                    new { portada = portadaArchivo, id = finalAlbumId });
+                            }
+                        }
+                    }
+                }
+            }
             
             // Actualizar base de datos con ruta relativa
             var rutaRelativa = $"audio/{tipo}/{nombreArchivoFinal}";
             var formato = extension.TrimStart('.');
             
-            using var conn = _db.ObtenerConexion();
             await conn.ExecuteAsync(
                 $"""
                 UPDATE {tabla} 
                 SET archivo_audio = @rutaRelativa, 
                     duracion_segundos = @duracion, 
-                    formato_audio = @formato 
+                    formato_audio = @formato,
+                    id_album = COALESCE(id_album, @idAlbum)
                 WHERE id = @id
                 """,
-                new { id, rutaRelativa, duracion = duracionAproximada, formato });
+                new { id, rutaRelativa, duracion = duracionReal, formato, idAlbum = finalAlbumId });
             
             return new CrudResponse 
             { 
@@ -4643,6 +4826,158 @@ public class RepositorioMusica
         
         var resultado = await conn.QueryAsync<CancionUnificada>(sql);
         return resultado.ToList();
+    }
+
+    // ============================================
+    // ESTADÍSTICAS Y TRACKING
+    // ============================================
+
+    /// <summary>
+    /// Registra una reproducción en el historial.
+    /// </summary>
+    /// <summary>
+    /// Registra una reproducción en el historial y devuelve el ID insertado.
+    /// </summary>
+    public async Task<long> RegistrarReproduccion(int id, string tipo, int segundos)
+    {
+        using var conn = _db.ObtenerConexion();
+        return await conn.QuerySingleAsync<long>("""
+            INSERT INTO reproducciones_historial (id_cancion, tipo_medio, fecha, segundos_reproducidos)
+            VALUES (@id, @tipo, DATETIME('now', 'localtime'), @segundos)
+            RETURNING id;
+            """, new { id, tipo, segundos });
+    }
+
+    /// <summary>
+    /// Actualiza el tiempo reproducido de una entrada del historial.
+    /// </summary>
+    public async Task ActualizarFilaReproduccion(long id, int segundos)
+    {
+        using var conn = _db.ObtenerConexion();
+        // Solo actualizamos si el nuevo valor es mayor (por seguridad, aunque el cliente debería manejarlo)
+        await conn.ExecuteAsync("""
+            UPDATE reproducciones_historial 
+            SET segundos_reproducidos = @segundos 
+            WHERE id = @id
+            """, new { id, segundos });
+    }
+
+    /// <summary>
+    /// Obtiene estadísticas de reproducciones del usuario.
+    /// </summary>
+    public async Task<EstadisticasUsuario> ObtenerEstadisticasUsuario()
+    {
+        using var conn = _db.ObtenerConexion();
+
+        // 1. Top 5 Canciones (por cantidad de reproducciones - plays)
+        var topCancionesRaw = await conn.QueryAsync<(int Id, string Tipo, int Conteo)>("""
+            SELECT id_cancion, tipo_medio, COUNT(*) as c
+            FROM reproducciones_historial
+            GROUP BY id_cancion, tipo_medio
+            ORDER BY c DESC
+            LIMIT 5
+            """);
+
+        var topCanciones = new List<ItemTop>();
+        foreach (var c in topCancionesRaw)
+        {
+            // Obtener detalles de la canción incluyendo portada y álbum
+            string sql = c.Tipo == "cassette" 
+                ? "SELECT t.tema, i.nombre, t.id_album, (t.portada IS NOT NULL OR t.id_album IS NOT NULL) as TieneImg FROM temas t JOIN interpretes i ON t.id_interprete = i.id WHERE t.id = @id"
+                : "SELECT t.tema, i.nombre, t.id_album, (t.portada IS NOT NULL OR t.id_album IS NOT NULL) as TieneImg FROM temas_cd t JOIN interpretes i ON t.id_interprete = i.id WHERE t.id = @id";
+            
+            var details = await conn.QueryFirstOrDefaultAsync<(string Tema, string Interprete, int? IdAlbum, bool TieneImg)>(sql, new { id = c.Id });
+            
+            if (details.Tema != null)
+            {
+                topCanciones.Add(new ItemTop
+                {
+                    Id = $"{c.Tipo}_{c.Id}",
+                    IdReferencia = c.Id,
+                    Tipo = c.Tipo,
+                    Nombre = details.Tema,
+                    Subtitulo = details.Interprete,
+                    Conteo = c.Conteo,
+                    TieneImagen = details.TieneImg,
+                    IdExtra = details.IdAlbum
+                });
+            }
+        }
+
+        // 2. Top 5 Artistas
+        var topArtistas = await conn.QueryAsync<ItemTop>("""
+            SELECT 
+                CAST(i.id AS TEXT) as Id, 
+                i.id as IdReferencia,
+                i.nombre as Nombre, 
+                COUNT(*) as Conteo,
+                (i.foto_blob IS NOT NULL) as TieneImagen
+            FROM reproducciones_historial h
+            JOIN (
+                SELECT id, id_interprete, 'cassette' as tipo FROM temas 
+                UNION ALL 
+                SELECT id, id_interprete, 'cd' as tipo FROM temas_cd
+            ) t ON h.id_cancion = t.id AND h.tipo_medio = t.tipo
+            JOIN interpretes i ON t.id_interprete = i.id
+            GROUP BY i.id
+            ORDER BY Conteo DESC
+            LIMIT 5
+            """);
+
+        // 3. Tiempo Total Escuchado (Real, de la columna segundos_reproducidos)
+        // Para registros viejos o sin duración, asumimos 0 (o podríamos asumir un promedio si quisiéramos)
+        var totalSegundos = await conn.ExecuteScalarAsync<long?>("""
+            SELECT SUM(segundos_reproducidos) FROM reproducciones_historial
+            """);
+        
+        long segundosReales = totalSegundos ?? 0;
+
+        // 4. Actividad últimos 7 días
+        var diasRaw = await conn.QueryAsync<(string Fecha, int Total)>("""
+            SELECT date(fecha) as f, count(*) as c
+            FROM reproducciones_historial
+            WHERE fecha >= date('now', 'localtime', '-6 days')
+            GROUP BY date(fecha)
+            ORDER BY f
+            """);
+
+        // Rellenar ceros para los 7 días
+        var ultimos7Dias = new List<int>();
+        for (int i = 6; i >= 0; i--)
+        {
+            var fechaTarget = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd");
+            var dato = diasRaw.FirstOrDefault(d => d.Fecha == fechaTarget);
+            ultimos7Dias.Add(dato.Total); // 0 si no existe (default struct)
+        }
+
+        // Formatear tiempo total
+        var tiempoSpan = TimeSpan.FromSeconds(segundosReales);
+        string tiempoTexto;
+        
+        if (tiempoSpan.TotalDays >= 1)
+        {
+            int dias = (int)tiempoSpan.TotalDays;
+            int horas = tiempoSpan.Hours;
+            tiempoTexto = horas > 0 ? $"{dias} d {horas} h" : $"{dias} d";
+        }
+        else if (tiempoSpan.TotalHours >= 1)
+        {
+            int horas = (int)tiempoSpan.TotalHours;
+            int minutos = tiempoSpan.Minutes;
+            tiempoTexto = minutos > 0 ? $"{horas} h {minutos} min" : $"{horas} h";
+        }
+        else
+        {
+            tiempoTexto = $"{tiempoSpan.Minutes} min";
+        }
+
+        return new EstadisticasUsuario
+        {
+            TopCanciones = topCanciones,
+            TopArtistas = topArtistas.ToList(),
+            TiempoTotalEscuchado = tiempoTexto,
+            ReproduccionesUltimos7Dias = ultimos7Dias
+        };
     }
 }
 

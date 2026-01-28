@@ -1697,6 +1697,78 @@ footer p {
     font-size: 0.9rem;
 }
 
+/* ==========================================
+   COLA EDITABLE (Desktop)
+   ========================================== */
+
+.queue-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: grab;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.queue-song:hover .queue-drag-handle {
+    opacity: 1;
+}
+
+.queue-drag-handle:active {
+    cursor: grabbing;
+}
+
+.queue-song-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.queue-song:hover .queue-song-actions {
+    opacity: 1;
+}
+
+.queue-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.queue-remove-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ef4444;
+}
+
+.queue-remove-btn:active {
+    transform: scale(0.9);
+}
+
+/* Estados de Drag & Drop */
+.queue-song.dragging {
+    opacity: 0.4;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.queue-song.drag-over {
+    background: rgba(29, 185, 84, 0.2);
+    border: 1px dashed #1db954;
+}
+
 /* Player minimizado */
 .audio-player-global.minimized {
     transform: translateY(calc(100% - 35px));

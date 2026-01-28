@@ -842,6 +842,41 @@
             font-size: 0.85rem;
         }
     </style>
+    <style>
+        /* Modal imagen pantalla completa */
+        .modal-fullscreen-img {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: zoom-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-fullscreen-img.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-fullscreen-img img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-fullscreen-img.visible img {
+            transform: scale(1);
+        }
+    </style>
 
     <main class="container">
         <div id="contenido">
@@ -1009,6 +1044,14 @@
         </div>
     </div>
 
+    <!-- Modal imagen pantalla completa -->
+    <div class="modal-fullscreen-img" id="modalImagenFullScreen" onclick="cerrarModalImagen()">
+        <img id="imgFullScreen" src="" alt="Pantalla completa" onclick="event.stopPropagation()">
+        <button class="btn-cerrar-modal"
+            style="position:absolute; top:20px; right:30px; color:white; font-size:2rem; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"
+            onclick="cerrarModalImagen()">&times;</button>
+    </div>
+
     <input type="file" id="inputPortada" accept="image/*" style="display: none;">
 
     <div id="toastContainer" class="toast-container"></div>
@@ -1018,6 +1061,27 @@
             'use strict';
 
             function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+            // Globales para el modal de imagen
+            window.abrirModalImagen = function (src) {
+                if (!src) return;
+                const m = document.getElementById('modalImagenFullScreen');
+                const img = document.getElementById('imgFullScreen');
+                // Prevenir cache
+                img.src = src;
+                m.classList.add('visible');
+                document.body.style.overflow = 'hidden';
+            }
+
+            window.cerrarModalImagen = function () {
+                const m = document.getElementById('modalImagenFullScreen');
+                m.classList.remove('visible');
+                // Restaurar overflow solo si no hay otros modales abiertos
+                const algunModalAbierto = document.querySelectorAll('.modal.activo').length > 0;
+                if (!algunModalAbierto) {
+                    document.body.style.overflow = '';
+                }
+            }
 
             function mostrarToast(mensaje, tipo = 'info') {
                 const container = document.getElementById('toastContainer');
@@ -1208,12 +1272,12 @@
                 
                 <section class="seccion">
                     <div class="album-detalle-header">
-                        <div class="album-detalle-portada">
+                        <div class="album-detalle-portada" onclick="abrirModalImagen('${a.tienePortada ? `/api/albumes/${a.id}/portada` : ''}')" style="${a.tienePortada ? 'cursor: zoom-in' : ''}">
                             ${a.tienePortada
                         ? `<img src="/api/albumes/${a.id}/portada" alt="${escapeHtml(a.nombre)}">`
                         : `<div class="placeholder">${a.esSingle ? ICONOS.musica : ICONOS.cd}</div>`
                     }
-                            <button class="btn-subir-portada" onclick="subirPortada()">📷 Cambiar</button>
+                            <button class="btn-subir-portada" onclick="event.stopPropagation(); subirPortada()">📷 Cambiar</button>
                         </div>
                         <div class="album-detalle-info">
                             <h2>${escapeHtml(a.nombre)}${(a.esSingle || a.EsSingle) ? '<span class="badge-single">Single</span>' : ''}</h2>
@@ -1917,7 +1981,7 @@
             window.previsualizarPortadaModal = previsualizarPortadaModal;
 
             // Mover modales al body para asegurar que cubran toda la pantalla
-            ['modalNuevoAlbum', 'modalAgregarCanciones', 'modalEditarAlbum'].forEach(id => {
+            ['modalNuevoAlbum', 'modalAgregarCanciones', 'modalEditarAlbum', 'modalImagenFullScreen'].forEach(id => {
                 const modal = document.getElementById(id);
                 if (modal) {
                     modal.classList.add('modal-moved');

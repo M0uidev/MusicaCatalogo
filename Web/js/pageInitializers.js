@@ -2,24 +2,24 @@
 // PAGE INITIALIZERS - Funciones de inicialización por página
 // ============================================
 
-(function() {
+(function () {
     'use strict';
 
     // Sistema de inicializadores de páginas
     window.PageInitializers = {
-        
+
         /**
          * Inicializador para index.html
          */
         index() {
             console.log('Inicializando página: index');
-            
+
             // Cargar estadísticas
             this.loadStats();
-            
+
             // Generar código QR si existe la biblioteca
             this.generateQR();
-            
+
             return {
                 cleanup: () => {
                     // Cleanup si es necesario
@@ -34,10 +34,10 @@
             try {
                 const resp = await fetch('/api/estadisticas');
                 if (!resp.ok) return;
-                
+
                 const stats = await resp.json();
                 const container = document.getElementById('resumenColeccion');
-                
+
                 if (container) {
                     container.innerHTML = `
                         <div class="resumen-card">
@@ -90,12 +90,12 @@
             const qrContainer = document.getElementById('codigoQR');
             if (qrContainer && typeof QRCode !== 'undefined') {
                 qrContainer.innerHTML = '';
-                
+
                 try {
                     // Obtener IPs del servidor
                     const resp = await fetch('/api/red');
                     const data = await resp.json();
-                    
+
                     // Usar la primera IP de la red local (no localhost)
                     let url = window.location.origin;
                     if (data.ips && data.ips.length > 0) {
@@ -103,7 +103,10 @@
                         const ipLocal = data.ips.find(ip => ip.startsWith('192.168')) || data.ips[0];
                         url = `http://${ipLocal}:${data.puerto}`;
                     }
-                    
+
+                    // Agregar /player.html para ir directo al reproductor móvil
+                    url += '/player.html';
+
                     new QRCode(qrContainer, {
                         text: url,
                         width: 180,
@@ -113,8 +116,8 @@
                         correctLevel: QRCode.CorrectLevel.M
                     });
                 } catch (err) {
-                    // Fallback a la URL actual
-                    const url = window.location.origin;
+                    // Fallback a la URL actual + /player.html
+                    const url = window.location.origin + '/player.html';
                     new QRCode(qrContainer, {
                         text: url,
                         width: 180,
@@ -132,57 +135,57 @@
         buscar() {
             console.log('Inicializando página: buscar');
             // El script inline de buscar.html se ejecutará automáticamente
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         albumes() {
             console.log('Inicializando página: albumes');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         medios() {
             console.log('Inicializando página: medios');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         medio() {
             console.log('Inicializando página: medio');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         interpretes() {
             console.log('Inicializando página: interpretes');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         interprete() {
             console.log('Inicializando página: interprete');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         cancion() {
             console.log('Inicializando página: cancion');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         'perfil-cancion'() {
             console.log('Inicializando página: perfil-cancion');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         estadisticas() {
             console.log('Inicializando página: estadisticas');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         diagnostico() {
             console.log('Inicializando página: diagnostico');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         },
 
         duplicados() {
             console.log('Inicializando página: duplicados');
-            return { cleanup: () => {} };
+            return { cleanup: () => { } };
         }
     };
 

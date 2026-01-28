@@ -995,13 +995,59 @@
         const idCancion = params.get('id');
         const tipoCancion = params.get('tipo') || 'cassette';
         const fromPage = params.get('fromPage') || '1';
+        const fromIdx = params.get('fromIdx') || '0';
+
+        // Capturar filtros
+        const filterParams = new URLSearchParams();
+        if (params.has('q')) filterParams.set('q', params.get('q'));
+        if (params.has('artista')) filterParams.set('artista', params.get('artista'));
+        if (params.has('anio')) filterParams.set('anio', params.get('anio'));
+        if (params.has('album')) filterParams.set('album', params.get('album'));
+        if (params.has('orden')) filterParams.set('orden', params.get('orden'));
+        if (params.has('filterTipo')) filterParams.set('tipo', params.get('filterTipo'));
+
+        const filterQuery = filterParams.toString() ? '&' + filterParams.toString() : '';
+
         let cancionActual = null;
         let modoEdicion = false;
 
-        async function cargarCancion() {
+        // Helper para preservar cambios no guardados
+        function obtenerValoresFormulario() {
+            const inputTema = document.getElementById('inputTema');
+            if (!inputTema) return null;
+
+            const valores = {
+                tema: inputTema.value,
+                interprete: document.getElementById('inputInterprete').value,
+                linkExterno: document.getElementById('inputLink').value,
+                esOriginal: document.getElementById('inputEsOriginal').checked
+            };
+
+            const inputLado = document.getElementById('inputLado');
+            if (inputLado) valores.lado = inputLado.value;
+
+            const inputDesde = document.getElementById('inputDesde');
+            if (inputDesde) valores.desde = inputDesde.value;
+
+            const inputHasta = document.getElementById('inputHasta');
+            if (inputHasta) valores.hasta = inputHasta.value;
+
+            const inputUbicacion = document.getElementById('inputUbicacion');
+            if (inputUbicacion) valores.ubicacion = inputUbicacion.value;
+
+            return valores;
+        }
+
+        async function cargarCancion(preservarEdicion = false) {
             if (!idCancion) {
                 document.getElementById('contenido').innerHTML = '<p class="error">ID de canción no especificado</p>';
                 return;
+            }
+
+            // Capturar valores antes de recargar si se solicita
+            let valoresPreservados = null;
+            if (preservarEdicion) {
+                valoresPreservados = obtenerValoresFormulario();
             }
 
             try {
@@ -1012,6 +1058,19 @@
                 }
 
                 cancionActual = await resp.json();
+
+                // Restaurar valores editados
+                if (valoresPreservados) {
+                    cancionActual.tema = valoresPreservados.tema;
+                    cancionActual.interprete = valoresPreservados.interprete;
+                    cancionActual.linkExterno = valoresPreservados.linkExterno;
+                    cancionActual.esOriginal = valoresPreservados.esOriginal;
+                    if (valoresPreservados.lado) cancionActual.lado = valoresPreservados.lado;
+                    if (valoresPreservados.desde) cancionActual.desde = valoresPreservados.desde;
+                    if (valoresPreservados.hasta) cancionActual.hasta = valoresPreservados.hasta;
+                    if (valoresPreservados.ubicacion) cancionActual.ubicacion = valoresPreservados.ubicacion;
+                }
+
                 renderizarCancion();
             } catch (error) {
                 console.error('Error:', error);
@@ -1019,17 +1078,117 @@
             }
         }
 
+        // Actualizar funciones que recargan la página para preservar estado
+        document.getElementById('inputPortada').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const resp = await fetch(`/api/canciones/${idCancion}/portada?tipo=${tipoCancion}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    cargarCancion(true); // Preservar edición
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al subir la portada');
+            }
+        });
+
+        async function eliminarPortada() {
+            if (!confirm('¿Deseas eliminar la portada personalizada? Se usará la imagen del álbum o del original si existe.')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/canciones/${idCancion}/portada?tipo=${tipoCancion}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    cargarCancion(true); // Preservar edición
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la portada');
+            }
+        }
+
+        async function asignarAlbumACancion(idAlbum) {
+            try {
+                const resp = await fetch(`/api/albumes/asignar-cancion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idCancion: parseInt(idCancion),
+                        tipo: tipoCancion,
+                        idAlbum: idAlbum
+                    })
+                });
+
+                const result = await resp.json();
+                if (result.exito) {
+                    // Recargar la canción para actualizar la portada
+                    await cargarCancion(true); // Preservar edición
+                } else {
+                    alert('Error: ' + result.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al asignar álbum');
+            }
+        }
+
+        // ... (audio functions) ...
+
+        // En subirAudio
+        /* 
+           ... inside xhr load event ...
+           if (result.exito) {
+                texto.textContent = '¡Subida exitosa!';
+                setTimeout(() => {
+                    progreso.style.display = 'none';
+                    cargarCancion(true); // Preservar edición
+                }, 1000);
+           }
+        */
+
+        // En eliminarAudio
+        /*
+           if (result.exito) {
+                alert('Audio eliminado correctamente');
+                cargarCancion(true); // Preservar edición
+           }
+        */
+
+        // Cargar al iniciar
+        cargarCancion();
+
         function renderizarCancion() {
             const c = cancionActual;
             const esCassette = c.tipo === 'cassette';
-            const tienePortada = c.tienePortada || c.tienePortadaAlbum;
+            const tienePortada = c.tienePortada || c.tienePortadaEmbebida || c.tienePortadaAlbum;
 
-            // Determinar URL de portada
+            // Determinar URL de portada (Prioridad: Embebida > Álbum > Manual)
             let portadaUrl = null;
-            if (c.tienePortada) {
+            if (c.tienePortadaEmbebida) {
                 portadaUrl = `/api/canciones/${c.id}/portada?tipo=${c.tipo}`;
             } else if (c.tienePortadaAlbum && c.idAlbum) {
                 portadaUrl = `/api/albumes/${c.idAlbum}/portada`;
+            } else if (c.tienePortada) {
+                portadaUrl = `/api/canciones/${c.id}/portada?tipo=${c.tipo}`;
             }
 
             // Determinar icono de link externo
@@ -1079,7 +1238,7 @@
                     : `<button class="btn-cambiar-portada" onclick="cambiarPortada()">
                                     📷 ${c.tienePortadaAlbum ? 'Cambiar personalizada' : 'Subir portada'}
                                    </button>
-                        ${c.idAlbum && !c.tienePortada ? `<span class="badge-portada-info" style="position:absolute; top:0.75rem; left:0.75rem; font-size:0.75rem; color:white; background:rgba(0,0,0,0.6); padding:0.2rem 0.5rem; border-radius:4px; backdrop-filter:blur(4px);">💿 Del Álbum</span>` : ''}`
+                        ${c.idAlbum && !c.tienePortadaEmbebida ? `<span class="badge-portada-info" style="position:absolute; top:0.75rem; left:0.75rem; font-size:0.75rem; color:white; background:rgba(0,0,0,0.6); padding:0.2rem 0.5rem; border-radius:4px; backdrop-filter:blur(4px);">💿 Del Álbum</span>` : ''}`
                 }
                         </div>
                         
@@ -1186,9 +1345,6 @@
                                             <label style="font-weight: 500; color: #3b82f6; margin: 0;">📀 Archivo de Audio</label>
                                             ${c.tieneArchivoAudio ? `
                                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <span style="font-size: 0.85rem; color: var(--color-texto-secundario);">
-                                                        ${c.duracionSegundos ? Math.floor(c.duracionSegundos / 60) + ':' + (c.duracionSegundos % 60).toString().padStart(2, '0') : '--:--'}
-                                                    </span>
                                                     <span style="display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-radius: 4px; font-weight: 600;">
                                                         ${escapeHtml(c.formatoAudio || 'AUDIO').toUpperCase()}
                                                     </span>
@@ -1210,7 +1366,7 @@
                                                 <button type="button" onclick="document.getElementById('inputArchivoAudio').click()" style="width: 100%; padding: 0.6rem 1rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radio); font-weight: 500; cursor: pointer;">
                                                     📤 Subir archivo de audio
                                                 </button>
-                                                <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Formatos: MP3, WAV, M4A, FLAC, OGG (máx. 20MB)</p>
+                                                <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-top: 0.5rem; margin-bottom: 0;">Formatos: MP3, WAV, M4A, FLAC, OGG</p>
                                             </div>
                                             <div id="progresoSubidaAudio" style="display: none; margin-top: 0.75rem;">
                                                 <div style="width: 100%; height: 8px; background: rgba(59, 130, 246, 0.2); border-radius: 4px; overflow: hidden;">
@@ -1267,7 +1423,7 @@
 
                                 <div class="botones-accion">
                                     <button class="btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
-                                    <a href="buscar.html?p=${fromPage}" class="btn-cancelar" data-spa-link style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+                                    <a href="buscar.html?p=${fromPage}&highlight=${idCancion}&highlightTipo=${tipoCancion}&highlightNext=1&fromIdx=${fromIdx}${filterQuery}" class="btn-cancelar" data-spa-link style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
                                 </div>
                             </div>
                         </div>
@@ -1424,7 +1580,7 @@
                 const result = await resp.json();
                 if (result.exito) {
                     // Recargar la canción para actualizar la portada
-                    await cargarCancion();
+                    await cargarCancion(true);
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1826,41 +1982,7 @@
 
         // Las funciones de cover/version ya no son necesarias - el sistema lo maneja automáticamente
 
-        async function cargarCancion() {
-            try {
-                const resp = await fetch(`/api/canciones/${idCancion}?tipo=${tipoCancion}`);
-                if (!resp.ok) {
-                    throw new Error(`HTTP error! status: ${resp.status}`);
-                }
-                cancionActual = await resp.json();
-                renderizarCancion();
 
-                // Actualizar los badges de meta en la vista
-                let html = '';
-                if (cancionActual.esCover) {
-                    html += '<span class="meta-badge" style="background:var(--color-primario-claro); color:var(--color-primario);">Cover</span>';
-                }
-                if (cancionActual.esOriginal) {
-                    html += '<span class="meta-badge" style="background:#dcfce7; color:#166534;">Original</span>';
-                }
-                // Asumiendo que tienes un elemento para estos badges, por ejemplo, un div con id 'cancionMetaBadges'
-                // Si no existe, este código no hará nada o causará un error si no se maneja.
-                // Para este ejemplo, lo comentamos o asumimos que existe.
-                // document.getElementById('cancionMetaBadges').innerHTML = html;
-
-                // Formulario
-                document.getElementById('inputTema').value = cancionActual.tema;
-                document.getElementById('inputInterprete').value = cancionActual.interprete;
-                document.getElementById('inputLink').value = cancionActual.linkExterno || '';
-
-                // Original
-                document.getElementById('inputEsOriginal').checked = cancionActual.esOriginal;
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('contenido').innerHTML = '<p class="error">Error al cargar la canción</p>';
-            }
-        }
 
         async function guardarCambios() {
             const tema = document.getElementById('inputTema').value.trim();
@@ -1899,8 +2021,8 @@
 
                 const result = await resp.json();
                 if (result.exito) {
-                    // Redirigir a buscar.html con la página y highlight de la canción editada
-                    const returnUrl = `buscar.html?p=${fromPage}&highlight=${idCancion}&highlightTipo=${tipoCancion}`;
+                    // Redirigir a buscar.html con la página y highlight de la canción siguiente
+                    const returnUrl = `buscar.html?p=${fromPage}&highlight=${idCancion}&highlightTipo=${tipoCancion}&highlightNext=1&fromIdx=${fromIdx}${filterQuery}`;
                     if (window.SPARouter) {
                         SPARouter.navigateTo(returnUrl);
                     } else {
@@ -1934,7 +2056,7 @@
 
                 const result = await resp.json();
                 if (result.exito) {
-                    cargarCancion();
+                    cargarCancion(true);
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1956,7 +2078,7 @@
 
                 const result = await resp.json();
                 if (result.exito) {
-                    cargarCancion();
+                    cargarCancion(true);
                 } else {
                     alert('Error: ' + result.mensaje);
                 }
@@ -1973,11 +2095,14 @@
             if (!file) return;
 
             // Validar tamaño (20MB)
+            // Validar tamaño eliminada
+            /*
             if (file.size > 20 * 1024 * 1024) {
                 alert('El archivo es demasiado grande. Tamaño máximo: 20MB');
                 input.value = '';
                 return;
             }
+            */
 
             // Validar extensión
             const ext = file.name.split('.').pop().toLowerCase();
@@ -2016,7 +2141,7 @@
                             texto.textContent = '¡Subida exitosa!';
                             setTimeout(() => {
                                 progreso.style.display = 'none';
-                                cargarCancion();
+                                cargarCancion(true);
                             }, 1000);
                         } else {
                             alert('Error: ' + result.mensaje);
@@ -2067,7 +2192,7 @@
                 const result = await resp.json();
                 if (result.exito) {
                     alert('Audio eliminado correctamente');
-                    cargarCancion();
+                    cargarCancion(true);
                 } else {
                     alert('Error: ' + result.mensaje);
                 }

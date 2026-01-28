@@ -988,6 +988,40 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
         }
+
+        /* Modal imagen pantalla completa */
+        .modal-fullscreen-img {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: zoom-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-fullscreen-img.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-fullscreen-img img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-fullscreen-img.visible img {
+            transform: scale(1);
+        }
     </style>
 
     <main class="container">
@@ -1039,6 +1073,8 @@
                         <option value="todos">Todas</option>
                         <option value="original">Solo originales</option>
                         <option value="cover">Solo covers</option>
+                        <option value="con-archivo">Con archivo</option>
+                        <option value="sin-archivo">Sin archivo</option>
                     </select>
                 </div>
             </div>
@@ -1111,6 +1147,15 @@
         </div>
     </div>
 
+    <!-- Modal imagen pantalla completa -->
+    <div class="modal-fullscreen-img" id="modalImagenFullScreen" onclick="cerrarModalImagen()">
+        <img id="imgFullScreen" src="" alt="Pantalla completa" onclick="event.stopPropagation()">
+        <button class="btn-cerrar-modal"
+            style="position:absolute; top:20px; right:30px; color:white; font-size:2rem; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"
+            onclick="cerrarModalImagen()">&times;</button>
+    </div>
+
+
     <script>
         // Envolver en IIFE para evitar contaminación de scope global
         (function () {
@@ -1118,7 +1163,7 @@
 
             // Fix: Move modal to body to ensure it covers full screen (escaping any parent transforms)
             // and cleanup any orphaned modals from previous navigations
-            const existingModals = document.querySelectorAll('.modal-versiones-moved');
+            const existingModals = document.querySelectorAll('.modal-versiones-moved, .modal-fullscreen-moved');
             existingModals.forEach(m => m.remove());
 
             const modalElement = document.getElementById('modalVersiones');
@@ -1127,11 +1172,17 @@
                 document.body.appendChild(modalElement);
             }
 
+            const modalImgElement = document.getElementById('modalImagenFullScreen');
+            if (modalImgElement) {
+                modalImgElement.classList.add('modal-fullscreen-moved');
+                document.body.appendChild(modalImgElement);
+            }
+
             let todasLasCanciones = [];
             let perfilesUnicos = [];
             let perfilesFiltrados = [];
             let paginaActual = 1;
-            const cancionesPorPagina = 50;
+            const cancionesPorPagina = 54;
 
             // Estado de filtros
             let filtros = {
@@ -1279,7 +1330,9 @@
                                     esAlbumSingleArtista = inst.esAlbumSingle;
                                 }
                                 if (inst.archivoAudio) tieneAudioArtista = true;
-                                if (inst.tienePortada) portadaPropiaArtista = { id: inst.id, tipo: inst.tipo };
+                                if (inst.tienePortada || inst.tienePortadaEmbebida) {
+                                    portadaPropiaArtista = { id: inst.id, tipo: inst.tipo };
+                                }
                                 if (inst.tipo === 'cassette') tieneCassetteArtista = true;
                                 if (inst.tipo === 'cd') tieneCdArtista = true;
                             }
@@ -1360,11 +1413,15 @@
                 if (filtros.album === 'con-album') res = res.filter(p => p.idAlbum && p.idAlbum > 0);
                 else if (filtros.album === 'sin-album') res = res.filter(p => !p.idAlbum || p.idAlbum <= 0);
 
-                // Filtro por tipo (original/cover)
+                // Filtro por tipo (original/cover/con-archivo/sin-archivo)
                 if (filtros.tipo === 'original') {
                     res = res.filter(p => !p.esCover);
                 } else if (filtros.tipo === 'cover') {
                     res = res.filter(p => p.esCover);
+                } else if (filtros.tipo === 'con-archivo') {
+                    res = res.filter(p => p.tieneAudio);
+                } else if (filtros.tipo === 'sin-archivo') {
+                    res = res.filter(p => !p.tieneAudio);
                 }
 
                 switch (filtros.orden) {
@@ -1400,9 +1457,12 @@
                 }
 
                 grid.innerHTML = pagina.map((p, idx) => {
-                    const imgUrl = p.portadaPropia
-                        ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
-                        : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+                    const hasImage = p.portadaPropia || p.idAlbum;
+                    const imgUrl = hasImage
+                        ? (p.portadaPropia
+                            ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
+                            : `/api/albumes/${p.idAlbum}/portada`)
+                        : null;
 
                     const ins = p.artistas[0].instancias[0];
                     const editUrl = (p.totalArtistas > 1 || p.totalInstancias > 1)
@@ -1456,18 +1516,32 @@
 
             function abrirModalVersiones(idx) {
                 const p = perfilesFiltrados[idx]; if (!p) return;
+                const idxEnPagina = idx % cancionesPorPagina; // Índice dentro de la página actual
                 const m = document.getElementById('modalVersiones');
                 document.getElementById('modalVersionesTitulo').innerHTML = `${escapeHtml(p.tema)} <small>${escapeHtml(p.interprete)}</small>`;
                 const pc = document.getElementById('modalPortada');
 
                 // Determinar imagen de cabecera (prioridad: portada propia > portada álbum > placeholder)
-                const headerImgUrl = p.portadaPropia
-                    ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
-                    : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
+                const hasImage = p.portadaPropia || p.idAlbum;
+                const headerImgUrl = hasImage
+                    ? (p.portadaPropia
+                        ? `/api/canciones/${p.portadaPropia.id}/portada?tipo=${p.portadaPropia.tipo}`
+                        : `/api/albumes/${p.idAlbum}/portada`)
+                    : null;
 
                 pc.innerHTML = headerImgUrl
                     ? `<img src="${headerImgUrl}" class="modal-versiones-portada" onerror="this.parentElement.innerHTML='<div class=\\'modal-versiones-portada-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\\'/></svg></div>'">`
                     : '<div class="modal-versiones-portada-placeholder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg></div>';
+
+                // Configurar click para pantalla completa
+                if (headerImgUrl) {
+                    pc.onclick = function () { abrirModalImagen(headerImgUrl); };
+                    pc.style.cursor = 'zoom-in';
+                } else {
+                    pc.onclick = null;
+                    pc.style.cursor = 'default';
+                }
+
 
                 // Flatten instances
                 let allInstances = [];
@@ -1488,11 +1562,12 @@
                     }
 
                     // Prioridad: Portada propia de la instancia > Portada del álbum de la instancia > Portada del perfil principal
-                    const coverImg = (i.tienePortada)
-                        ? `/api/canciones/${i.id}/portada?tipo=${i.tipo}`
-                        : ((i.idAlbum && i.idAlbum > 0)
-                            ? `/api/albumes/${i.idAlbum}/portada`
-                            : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null));
+                    const hasInstanceImage = i.tienePortada || i.tienePortadaEmbebida || (i.idAlbum && i.idAlbum > 0);
+                    const coverImg = hasInstanceImage
+                        ? ((i.tienePortada || i.tienePortadaEmbebida)
+                            ? `/api/canciones/${i.id}/portada?tipo=${i.tipo}`
+                            : `/api/albumes/${i.idAlbum}/portada`)
+                        : (p.idAlbum ? `/api/albumes/${p.idAlbum}/portada` : null);
 
                     const coverHtml = coverImg
                         ? `<img src="${coverImg}" class="track-cover-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -1510,6 +1585,15 @@
                     const playButton = hasAudio
                         ? `<button class="btn-play" data-id="${i.id}" data-tipo="${i.tipo}" onclick="togglePlayCancion(this, ${i.id}, '${i.tipo}')" title="Reproducir"><i data-lucide="play"></i></button>`
                         : `<button class="btn-play disabled" disabled title="No disponible"><i data-lucide="play"></i></button>`;
+
+                    const filterParams = new URLSearchParams();
+                    if (filtros.busqueda) filterParams.set('q', filtros.busqueda);
+                    if (filtros.artista !== 'todos') filterParams.set('artista', filtros.artista);
+                    if (filtros.anio !== 'todos') filterParams.set('anio', filtros.anio);
+                    if (filtros.album !== 'todos') filterParams.set('album', filtros.album);
+                    if (filtros.orden !== 'tema') filterParams.set('orden', filtros.orden);
+                    if (filtros.tipo !== 'todos') filterParams.set('filterTipo', filtros.tipo);
+                    const filterQuery = filterParams.toString() ? '&' + filterParams.toString() : '';
 
                     return `
                 <div class="track-row">
@@ -1539,7 +1623,7 @@
                                 <i data-lucide="ellipsis"></i>
                             </button>
                             <div class="dropdown-menu">
-                            <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual())}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual()}">
+                            <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual()+'&fromIdx=${idxEnPagina}' + '${filterQuery}')}else{window.location.href='cancion.html?id=${i.id}&tipo=${i.tipo}&fromPage='+getPaginaActual()+'&fromIdx=${idxEnPagina}' + '${filterQuery}'}">
                                     <i data-lucide="settings"></i> Editar Canción
                                 </button>
                                 <button class="dropdown-item" onclick="document.body.style.overflow='';if(window.SPARouter){SPARouter.navigateTo('medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}')}else{window.location.href='medio.html?num=${encodeURIComponent(i.numMedio)}&cancion=${i.id}&tipo=${i.tipo}'}">
@@ -1585,6 +1669,24 @@
                 input.classList.remove('error');
             }
 
+            // Globales para el modal de imagen
+            window.abrirModalImagen = function (src) {
+                if (!src) return;
+                const m = document.getElementById('modalImagenFullScreen');
+                const img = document.getElementById('imgFullScreen');
+                // Prevenir cache
+                img.src = src;
+                m.classList.add('visible');
+            }
+
+            window.cerrarModalImagen = function () {
+                const m = document.getElementById('modalImagenFullScreen');
+                m.classList.remove('visible');
+                // No tocamos overflow porque el modalVersiones ya lo maneja
+            }
+
+
+
             function irAPagina(pagina) {
                 const totalPaginas = Math.ceil(perfilesFiltrados.length / cancionesPorPagina);
                 if (pagina >= 1 && pagina <= totalPaginas && pagina !== paginaActual) {
@@ -1601,24 +1703,75 @@
                 const params = new URLSearchParams(window.location.search);
                 const highlightId = params.get('highlight');
                 const highlightTipo = params.get('highlightTipo');
+                const highlightNext = params.get('highlightNext') === '1';
+                const fromIdx = parseInt(params.get('fromIdx') || '-1');
 
                 if (!highlightId || highlightPendiente === highlightId) return;
                 highlightPendiente = highlightId;
 
                 // Buscar la tarjeta de la canción
                 setTimeout(() => {
-                    const card = document.querySelector(`.cancion-card[data-song-id="${highlightId}"]`);
-                    if (card) {
+                    let targetCard = null;
+                    const allCards = Array.from(document.querySelectorAll('.cancion-card'));
+
+                    if (highlightNext) {
+                        // Buscar la canción siguiente en la lista visible
+                        const currentIndex = allCards.findIndex(card => card.dataset.songId === highlightId);
+                        // Detectar si era la última canción de la página
+                        const eraUltimaEnPagina = (currentIndex === allCards.length - 1) ||
+                            (currentIndex === -1 && fromIdx >= 0 && fromIdx >= allCards.length - 1);
+
+                        if (currentIndex !== -1 && currentIndex < allCards.length - 1) {
+                            // Hay una canción siguiente en esta página
+                            targetCard = allCards[currentIndex + 1];
+                        } else if (eraUltimaEnPagina) {
+                            // Era la última de la página, avanzar a la página siguiente
+                            const totalPaginas = Math.ceil(perfilesFiltrados.length / cancionesPorPagina);
+                            if (paginaActual < totalPaginas) {
+                                // Avanzar a la página siguiente y mostrar primera canción
+                                paginaActual++;
+                                highlightPendiente = null; // Reset para permitir nuevo highlight
+                                sincronizarURL();
+                                renderizarCanciones();
+
+                                // Después de renderizar, hacer highlight en la primera canción
+                                setTimeout(() => {
+                                    const newCards = document.querySelectorAll('.cancion-card');
+                                    if (newCards.length > 0) {
+                                        const firstCard = newCards[0];
+                                        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        setTimeout(() => {
+                                            firstCard.classList.add('highlight-cancion');
+                                            setTimeout(() => firstCard.classList.remove('highlight-cancion'), 1500);
+                                        }, 300);
+                                    }
+                                    limpiarParametrosHighlight();
+                                }, 150);
+                                return;
+                            } else {
+                                // Es la última página, quedarse en la última canción
+                                targetCard = allCards[allCards.length - 1] || null;
+                            }
+                        } else {
+                            // No se encontró la canción original, buscar la primera de la página
+                            targetCard = allCards[0] || null;
+                        }
+                    } else {
+                        // Comportamiento original: buscar la canción exacta
+                        targetCard = document.querySelector(`.cancion-card[data-song-id="${highlightId}"]`);
+                    }
+
+                    if (targetCard) {
                         // Scroll suave a la tarjeta
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                         // Aplicar animación de highlight
                         setTimeout(() => {
-                            card.classList.add('highlight-cancion');
+                            targetCard.classList.add('highlight-cancion');
 
                             // Remover clase después de la animación
                             setTimeout(() => {
-                                card.classList.remove('highlight-cancion');
+                                targetCard.classList.remove('highlight-cancion');
                             }, 1500);
                         }, 300);
 
@@ -1632,6 +1785,8 @@
                 const url = new URL(window.location.href);
                 url.searchParams.delete('highlight');
                 url.searchParams.delete('highlightTipo');
+                url.searchParams.delete('highlightNext');
+                url.searchParams.delete('fromIdx');
                 window.history.replaceState({}, '', url.toString());
             }
 
